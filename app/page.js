@@ -85,7 +85,7 @@ export default function Home() {
             and watch your Faith Tree grow!
           </p>
 
-          <button
+              <button
             style={{
               border: "none",
               borderRadius: "18px",
