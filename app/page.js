@@ -85,20 +85,21 @@ export default function Home() {
             and watch your Faith Tree grow!
           </p>
 
-              <button
-            style={{
-              border: "none",
-              borderRadius: "18px",
-              padding: "16px 30px",
-              fontSize: "19px",
-              fontWeight: "700",
-              cursor: "pointer",
-              background: "#6b9e5b",
-              color: "white",
-            }}
-          >
-            🌟 Start Today's Adventure
-          </button>
+         <a
+  href="/lessons"
+  style={{
+    display: "inline-block",
+    textDecoration: "none",
+    borderRadius: "18px",
+    padding: "16px 30px",
+    fontSize: "19px",
+    fontWeight: "700",
+    background: "#6b9e5b",
+    color: "white",
+  }}
+>
+  🌟 Start Today's Adventure
+</a>
         </div>
       </section>
 
