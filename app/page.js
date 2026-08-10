@@ -86,7 +86,7 @@ export default function Home() {
           </p>
 
          <a
-  href="/lessons"
+  href="/Lessons"
   style={{
     display: "inline-block",
     textDecoration: "none",
