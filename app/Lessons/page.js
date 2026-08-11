@@ -1,3 +1,4 @@
+"use client";
 const lesson = {
   day: 1,
   title: "God Creates the World",
@@ -82,6 +83,7 @@ export default function Lessons() {
           <p style={{ lineHeight: "1.7" }}>{lesson.prayer}</p>
 
           <button
+onClick={() => alert("🎉 Great job! You completed Day 1! 🌱")}
             style={{
               width: "100%",
               marginTop: "20px",
