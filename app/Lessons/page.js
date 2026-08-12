@@ -376,7 +376,16 @@ export default function Lessons() {
           </section>
 
           <button
-            onClick={toggleComplete}
+          onClick={() => {
+  toggleComplete();
+  if (!isCompleted) {
+    alert(
+      lesson.day === 180
+        ? "🎉 YOU DID IT! 🎉\n\n🏆 All 180 Bible lessons are complete!\n🌳 Your Faith Tree has fully grown!"
+        : `🎉 Congratulations! 🎉\n\nDay ${lesson.day} Complete!\n🌳 Your Faith Tree is growing!\n⭐ Keep going — you're doing great!`
+    );
+  }
+}}
             style={{
               width: "100%",
               padding: "17px",
