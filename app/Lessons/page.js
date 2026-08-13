@@ -73,7 +73,130 @@ const days = Array.from({ length: 180 }, (_, index) => {
   const day = index + 1;
   const week = Math.floor(index / 4);
   const dayOfWeek = index % 4;
+
+  // 45 weeks × 4 homeschool days = 180 days
   const theme = themes[week % themes.length];
+
+  // Special review/exam days
+  if (day === 88) {
+    return {
+      day,
+      title: "Midterm Review",
+      bibleReference: "Review Days 1–87",
+      theme: "Look back at everything you have learned!",
+      lessonType: "Review",
+      lesson:
+        "Today we review the Bible stories, truths, memory passages, and faith lessons from the first half of our adventure.",
+      activity:
+        "Ask a parent to review your favorite Bible stories with you. Tell them three things you remember learning about God.",
+      memoryVerse: "Choose your favorite memory passage from Days 1–87.",
+      kindnessMission:
+        "Encourage someone by telling them something kind about them.",
+      prayer:
+        "Dear God, thank You for everything I have learned. Help me remember Your Word and continue growing in faith. Amen."
+    };
+  }
+
+  if (day === 89) {
+    return {
+      day,
+      title: "Midterm Exam",
+      bibleReference: "Review Days 1–88",
+      theme: "Show what you have learned!",
+      lessonType: "Exam",
+      lesson:
+        "Today is your midterm Bible exam. Do your best and remember that learning God's Word is more important than getting every answer perfect.",
+      activity:
+        "Complete your parent-provided midterm exam or review questions.",
+      memoryVerse: "Choose one memory passage to recite to your parent.",
+      kindnessMission:
+        "Thank someone who has helped you learn.",
+      prayer:
+        "Dear God, please help me remember what I have learned and do my very best. Thank You for helping me grow. Amen."
+    };
+  }
+
+  if (day === 178) {
+    return {
+      day,
+      title: "Final Review",
+      bibleReference: "Review Days 1–177",
+      theme: "Look how far you have come!",
+      lessonType: "Review",
+      lesson:
+        "Today we review the most important lessons from our entire Faith Foundations adventure.",
+      activity:
+        "Choose your three favorite Bible stories and explain what each one taught you about God.",
+      memoryVerse: "Choose your favorite memory passage from the entire course.",
+      kindnessMission:
+        "Encourage someone who is still learning.",
+      prayer:
+        "Dear God, thank You for carrying me through this journey. Help me keep Your Word in my heart. Amen."
+    };
+  }
+
+  if (day === 179) {
+    return {
+      day,
+      title: "Final Exam",
+      bibleReference: "Review Days 1–178",
+      theme: "You are almost there!",
+      lessonType: "Final Exam",
+      lesson:
+        "Today is your final Bible exam. Remember everything you have learned and do your very best.",
+      activity:
+        "Complete your parent-provided final exam or review questions.",
+      memoryVerse: "Recite your favorite memory verse to your parent.",
+      kindnessMission:
+        "Celebrate someone else's accomplishment today.",
+      prayer:
+        "Dear God, thank You for helping me learn Your Word. Help me continue following You every day. Amen."
+    };
+  }
+
+  if (day === 180) {
+    return {
+      day,
+      title: "YOU DID IT!",
+      bibleReference: "Philippians 3:13-14",
+      theme: "Keep growing in faith!",
+      lessonType: "Celebration",
+      lesson:
+        "You completed all 180 Bible lessons! Your Faith Foundations adventure is complete, but your journey with God continues every day.",
+      activity:
+        "Celebrate with your family. Share your favorite lesson, favorite memory verse, and one way you want to keep growing in faith.",
+      memoryVerse:
+        "Philippians 3:14 — Press toward the mark for the prize of the high calling of God in Christ Jesus.",
+      kindnessMission:
+        "Celebrate someone else and encourage them to keep growing too.",
+      prayer:
+        "Dear God, thank You for helping me complete my 180 Bible lessons. Help me keep reading Your Word, praying, obeying You, and growing in faith. In Jesus' name, Amen."
+    };
+  }
+
+  const lessonTypes = [
+    {
+      title: "Learn",
+      activity:
+        `Read ${theme[1]} in your KJV Bible with a parent. Talk about what happened and what it teaches us about God.`
+    },
+    {
+      title: "Explore",
+      activity:
+        `Draw a picture about ${theme[0]}. Label three things you learned from today's Bible passage.`
+    },
+    {
+      title: "Practice",
+      activity:
+        `Choose one lesson from ${theme[0]} and practice it today. Tell your parent how you put God's Word into action.`
+    },
+    {
+      title: "Live It",
+      activity:
+        `Tell someone what you learned about ${theme[0]}. Then find one way to live out today's Bible lesson.`
+    }
+  ];
+
   const type = lessonTypes[dayOfWeek];
 
   return {
@@ -82,9 +205,15 @@ const days = Array.from({ length: 180 }, (_, index) => {
     bibleReference: theme[1],
     theme: theme[2],
     lessonType: type.title,
-    lesson: `Today we are learning about ${theme[0].toLowerCase()}. Read ${theme[1]} in your KJV Bible. Think about what this passage teaches us about God and how you can apply it to your life.`,
+
+    lesson:
+      `Today we are learning about ${theme[0].toLowerCase()}. Read ${theme[1]} in your KJV Bible. Think about what this passage teaches us about God and how you can apply it to your life.`,
+
     activity: type.activity,
-    memoryVerse: `Today's memory passage: ${theme[1]}`,
+
+    memoryVerse:
+      `Read ${theme[1]} in your KJV Bible and choose one verse or truth from the passage to remember.`,
+
     kindnessMission:
       dayOfWeek === 0
         ? "Do one helpful thing for someone without being asked."
@@ -93,10 +222,11 @@ const days = Array.from({ length: 180 }, (_, index) => {
         : dayOfWeek === 2
         ? "Help with a household job with a cheerful attitude."
         : "Pray for someone who needs encouragement.",
-    prayer: `Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen.`
+
+    prayer:
+      `Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen.`
   };
 });
-
 export default function Lessons() {
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState([]);
