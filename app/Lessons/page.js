@@ -410,7 +410,7 @@ export default function Lessons() {
             marginTop: "25px",
             fontSize: "15px"
           }}
-        >
+        > 
           <p>🌳 Every lesson helps your Faith Tree grow!</p>
           <p>
             Completed: {completed.length} / 180 days
