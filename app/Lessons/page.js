@@ -411,10 +411,45 @@ export default function Lessons() {
             fontSize: "15px"
           }}
         > 
-          <p>🌳 Every lesson helps your Faith Tree grow!</p>
-          <p>
-            Completed: {completed.length} / 180 days
-          </p>
+          <div style={{ marginTop: "25px", textAlign: "center" }}>
+  <div style={{ fontSize: "70px", marginBottom: "10px" }}>
+    {completed.length === 0
+      ? "🌱"
+      : completed.length < 30
+      ? "🌿"
+      : completed.length < 60
+      ? "🌳"
+      : completed.length < 90
+      ? "🌳🌳"
+      : completed.length < 120
+      ? "🌳🌳🌳"
+      : completed.length < 150
+      ? "🌲🌳🌲"
+      : completed.length < 180
+      ? "🌲🌳🌲🌳"
+      : "🌲🌳🌲🌳🌲"}
+  </div>
+
+  <p style={{ fontSize: "18px", fontWeight: "bold" }}>
+    🌳 Your Faith Tree is growing!
+  </p>
+
+  <p style={{ fontSize: "16px" }}>
+    Completed: {completed.length} / 180 days
+  </p>
+
+  <p style={{ fontSize: "15px" }}>
+    {completed.length === 0
+      ? "Start your Bible adventure!"
+      : completed.length < 60
+      ? "Your faith is taking root! 🌱"
+      : completed.length < 120
+      ? "Look how much your Faith Tree has grown! 🌳"
+      : completed.length < 180
+      ? "Your Faith Tree is almost fully grown! ⭐"
+      : "🏆 Your Faith Tree is fully grown! You did it!"}
+  </p>
+</div>
         </footer>
       </div>
     </main>
