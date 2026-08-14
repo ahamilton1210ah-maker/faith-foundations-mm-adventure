@@ -229,18 +229,36 @@ const days = Array.from({ length: 180 }, (_, index) => {
 });
 export default function Lessons() {
   const [currentDay, setCurrentDay] = useState(1);
-  const [completed, setCompleted] = useState([]);
+  const [completed, setCompleted] = useState(() => {
+  if (typeof window === "undefined") return [];
+  const saved = localStorage.getItem("faithTreeCompleted");
+  return saved ? JSON.parse(saved) : [];
+});
 
   const lesson = days[currentDay - 1];
   const isCompleted = completed.includes(currentDay);
 
   function toggleComplete() {
-    if (isCompleted) {
-      setCompleted(completed.filter((day) => day !== currentDay));
-    } else {
-      setCompleted([...completed, currentDay]);
-    }
+  let updated;
+
+  if (isCompleted) {
+    updated = completed.filter((day) => day !== currentDay);
+  } else {
+    updated = [...completed, currentDay];
+
+    alert(
+      lesson.day === 180
+        ? "🎉 YOU DID IT! 🎉\n\n🏆 All 180 Bible lessons are complete!\n🌳 Your Faith Tree has fully grown!"
+        : `🎉 Congratulations! 🎉\n\nDay ${lesson.day} Complete!\n🌱 Your Faith Tree is taking root!\n🌳 Every lesson helps your tree grow!\n⭐ Keep going — you're doing great!`
+    );
   }
+
+  setCompleted(updated);
+  localStorage.setItem(
+    "faithTreeCompleted",
+    JSON.stringify(updated)
+  );
+}
 
   function previousDay() {
     if (currentDay > 1) {
