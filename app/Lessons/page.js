@@ -490,6 +490,39 @@ function stopReading() {
             <p style={{ fontSize: "18px", lineHeight: "1.7" }}>
               {lesson.lesson}
             </p>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "15px" }}>
+  <button
+    onClick={readLessonAloud}
+    style={{
+      padding: "12px 18px",
+      border: "none",
+      borderRadius: "12px",
+      background: "#315c48",
+      color: "white",
+      fontSize: "16px",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    🔊 Read Lesson Aloud
+  </button>
+
+  <button
+    onClick={stopReading}
+    style={{
+      padding: "12px 18px",
+      border: "none",
+      borderRadius: "12px",
+      background: "#777",
+      color: "white",
+      fontSize: "16px",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    ⏹️ Stop
+  </button>
+</div>
           </section>
 
           <section
