@@ -238,6 +238,32 @@ export default function Lessons() {
   const lesson = days[currentDay - 1];
   const isCompleted = completed.includes(currentDay);
 
+  function readLessonAloud() {
+  if (typeof window === "undefined") return;
+
+  window.speechSynthesis.cancel();
+
+  const text = `
+    ${lesson.title}.
+    Today's theme is ${lesson.theme}.
+    ${lesson.lesson}
+    Today's activity is ${lesson.activity}
+    Kindness mission: ${lesson.kindnessMission}
+    ${lesson.prayer}
+  `;
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.rate = 0.9;
+  speech.pitch = 1;
+
+  window.speechSynthesis.speak(speech);
+}
+
+function stopReading() {
+  if (typeof window === "undefined") return;
+  window.speechSynthesis.cancel();
+}
+  
   function toggleComplete() {
   let updated;
 
