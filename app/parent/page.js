@@ -1,18 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ParentProgress() {
-  const [completedDays, setCompletedDays] = useState("");
-  const [grade, setGrade] = useState("");
-  const [notes, setNotes] = useState("");
+  const [completedDays, setCompletedDays] = useState([]);
+  const [midtermScore, setMidtermScore] = useState(null);
+  const [finalScore, setFinalScore] = useState(null);
 
-  const completed = Math.max(
-    0,
-    Math.min(180, Number(completedDays) || 0)
-  );
+  useEffect(() => {
+    const savedDays = localStorage.getItem("faithTreeCompleted");
+
+    if (savedDays) {
+      try {
+        setCompletedDays(JSON.parse(savedDays));
+      } catch {
+        setCompletedDays([]);
+      }
+    }
+
+    const savedMidterm = localStorage.getItem("faithMidtermScore");
+    const savedFinal = localStorage.getItem("faithFinalScore");
+
+    if (savedMidterm !== null) {
+      setMidtermScore(Number(savedMidterm));
+    }
+
+    if (savedFinal !== null) {
+      setFinalScore(Number(savedFinal));
+    }
+  }, []);
+
+  const completed = completedDays.length;
 
   const percentage = Math.round((completed / 180) * 100);
+
+  let tree = "🌱";
+  let treeMessage = "Your faith is taking root!";
+
+  if (completed >= 180) {
+    tree = "🌳🏆";
+    treeMessage = "Your Faith Tree has fully grown!";
+  } else if (completed >= 150) {
+    tree = "🌲🌳🌲";
+    treeMessage = "Your Faith Tree is almost fully grown!";
+  } else if (completed >= 120) {
+    tree = "🌳🌳🌳";
+    treeMessage = "Your Faith Tree is growing strong!";
+  } else if (completed >= 60) {
+    tree = "🌳";
+    treeMessage = "Look how much your Faith Tree has grown!";
+  }
+
+  const currentDay =
+    completed >= 180 ? 180 : completed + 1;
 
   function printReport() {
     window.print();
@@ -30,25 +70,27 @@ export default function ParentProgress() {
     >
       <div
         style={{
-          maxWidth: "800px",
+          maxWidth: "850px",
           margin: "0 auto"
         }}
       >
         <header
           style={{
             textAlign: "center",
-            marginBottom: "25px"
+            marginBottom: "30px"
           }}
         >
-          <div style={{ fontSize: "60px" }}>👩‍🏫🌳</div>
+          <div style={{ fontSize: "65px" }}>
+            🌳📚
+          </div>
 
           <h1
             style={{
               color: "#315c48",
-              marginBottom: "5px"
+              marginBottom: "8px"
             }}
           >
-            Parent Progress
+            👩‍🏫 Parent Dashboard
           </h1>
 
           <p>
@@ -59,193 +101,268 @@ export default function ParentProgress() {
         <section
           style={{
             background: "white",
-            borderRadius: "22px",
-            padding: "25px",
-            marginBottom: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.08)"
+            borderRadius: "20px",
+            padding: "30px",
+            textAlign: "center",
+            marginBottom: "22px",
+            boxShadow: "0 4px 15px rgba(0,0,0,.1)"
           }}
         >
-          <h2>📊 Student Progress</h2>
+          <div style={{ fontSize: "75px" }}>
+            {tree}
+          </div>
 
-          <label
+          <h2>{treeMessage}</h2>
+
+          <p
             style={{
-              display: "block",
-              marginTop: "18px",
+              fontSize: "24px",
               fontWeight: "bold"
             }}
           >
-            Completed Bible Days
-          </label>
-
-          <input
-            type="number"
-            min="0"
-            max="180"
-            value={completedDays}
-            onChange={(e) => setCompletedDays(e.target.value)}
-            placeholder="Example: 45"
-            style={{
-              width: "100%",
-              padding: "13px",
-              marginTop: "8px",
-              borderRadius: "10px",
-              border: "1px solid #ccc",
-              fontSize: "17px",
-              boxSizing: "border-box"
-            }}
-          />
+            {completed} / 180 Lessons Complete
+          </p>
 
           <div
             style={{
-              marginTop: "20px",
-              background: "#e9f4ed",
-              borderRadius: "15px",
-              padding: "18px",
-              textAlign: "center"
+              width: "100%",
+              height: "28px",
+              background: "#ddd",
+              borderRadius: "20px",
+              overflow: "hidden",
+              marginTop: "15px"
             }}
           >
-            <div style={{ fontSize: "42px" }}>
-              {percentage >= 100
-                ? "🏆"
-                : percentage >= 75
-                ? "🌲"
-                : percentage >= 50
-                ? "🌳"
-                : percentage >= 25
-                ? "🌿"
-                : "🌱"}
-            </div>
-
-            <h3>
-              {completed} / 180 Days
-            </h3>
-
-            <p>{percentage}% Complete</p>
-
             <div
               style={{
-                height: "18px",
-                background: "#ddd",
-                borderRadius: "20px",
-                overflow: "hidden"
+                width: `${percentage}%`,
+                height: "100%",
+                background: "#315c48",
+                transition: "width .5s"
+              }}
+            />
+          </div>
+
+          <p
+            style={{
+              fontSize: "18px",
+              marginTop: "12px"
+            }}
+          >
+            {percentage}% Complete
+          </p>
+        </section>
+
+        <section
+          style={{
+            background: "#fffaf0",
+            borderRadius: "20px",
+            padding: "25px",
+            marginBottom: "22px"
+          }}
+        >
+          <h2>📅 Current Progress</h2>
+
+          <p>
+            📖 Next lesson:{" "}
+            <strong>
+              Day {currentDay}
+            </strong>
+          </p>
+
+          <p>
+            ⭐ Lessons completed:{" "}
+            <strong>{completed}</strong>
+          </p>
+
+          <p>
+            📈 Lessons remaining:{" "}
+            <strong>{180 - completed}</strong>
+          </p>
+
+          <p>
+            🌳 Faith Tree progress:{" "}
+            <strong>{percentage}%</strong>
+          </p>
+        </section>
+
+        <section
+          style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "25px",
+            marginBottom: "22px"
+          }}
+        >
+          <h2>📝 Exams & Reviews</h2>
+
+          <div
+            style={{
+              padding: "18px",
+              background: "#f0f7ff",
+              borderRadius: "15px",
+              marginBottom: "15px"
+            }}
+          >
+            <h3>📚 Midterm</h3>
+
+            <p>
+              👀 Parent Preview:{" "}
+              <strong>Available Now</strong>
+            </p>
+
+            <p>
+              🔒 Student Unlocks:{" "}
+              <strong>Day 90</strong>
+            </p>
+
+            <p>
+              📝 Student Score:{" "}
+              <strong>
+                {midtermScore === null
+                  ? "Not Taken"
+                  : `${midtermScore}%`}
+              </strong>
+            </p>
+
+            <a
+              href="/Midterm"
+              style={{
+                display: "inline-block",
+                padding: "12px 18px",
+                borderRadius: "12px",
+                background: "#315c48",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: "bold"
               }}
             >
-              <div
-                style={{
-                  width: `${percentage}%`,
-                  height: "100%",
-                  background: "#6b9e5b",
-                  transition: "width .3s"
-                }}
-              />
-            </div>
+              👀 Preview Midterm
+            </a>
+          </div>
+
+          <div
+            style={{
+              padding: "18px",
+              background: "#fff4df",
+              borderRadius: "15px"
+            }}
+          >
+            <h3>🏆 Final Exam</h3>
+
+            <p>
+              👀 Parent Preview:{" "}
+              <strong>Available Now</strong>
+            </p>
+
+            <p>
+              🔒 Student Unlocks:{" "}
+              <strong>Day 180</strong>
+            </p>
+
+            <p>
+              🏆 Student Score:{" "}
+              <strong>
+                {finalScore === null
+                  ? "Not Taken"
+                  : `${finalScore}%`}
+              </strong>
+            </p>
+
+            <a
+              href="/Final"
+              style={{
+                display: "inline-block",
+                padding: "12px 18px",
+                borderRadius: "12px",
+                background: "#315c48",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: "bold"
+              }}
+            >
+              👀 Preview Final
+            </a>
           </div>
         </section>
 
         <section
           style={{
-            background: "white",
-            borderRadius: "22px",
+            background: "#eef7e9",
+            borderRadius: "20px",
             padding: "25px",
-            marginBottom: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.08)"
+            marginBottom: "22px"
           }}
         >
-          <h2>📝 Grade</h2>
+          <h2>🌟 Course Status</h2>
 
-          <select
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "13px",
-              borderRadius: "10px",
-              border: "1px solid #ccc",
-              fontSize: "17px"
-            }}
-          >
-            <option value="">Select Grade</option>
-            <option>A — Excellent</option>
-            <option>B — Very Good</option>
-            <option>C — Good</option>
-            <option>D — Needs Improvement</option>
-            <option>Incomplete</option>
-          </select>
+          {completed === 0 && (
+            <p>
+              🌱 The adventure is ready to begin!
+            </p>
+          )}
+
+          {completed > 0 && completed < 90 && (
+            <p>
+              🌱 Your child is building a strong
+              foundation of faith.
+            </p>
+          )}
+
+          {completed >= 90 && completed < 180 && (
+            <p>
+              🎉 Great progress! Your child has reached
+              the middle of the Faith Foundations adventure.
+            </p>
+          )}
+
+          {completed === 180 && (
+            <p>
+              🎓🏆 Congratulations! All 180 Bible lessons
+              are complete!
+            </p>
+          )}
         </section>
 
         <section
           style={{
             background: "white",
-            borderRadius: "22px",
+            borderRadius: "20px",
             padding: "25px",
-            marginBottom: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.08)"
+            marginBottom: "25px"
           }}
         >
-          <h2>✏️ Parent Notes</h2>
-
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Write notes about the student's progress..."
-            rows="7"
-            style={{
-              width: "100%",
-              padding: "13px",
-              borderRadius: "10px",
-              border: "1px solid #ccc",
-              fontSize: "16px",
-              boxSizing: "border-box",
-              resize: "vertical"
-            }}
-          />
-        </section>
-
-        <section
-          style={{
-            background: "white",
-            borderRadius: "22px",
-            padding: "25px",
-            marginBottom: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.08)"
-          }}
-        >
-          <h2>🏆 Course Status</h2>
+          <h2>🖨️ Printable Progress Report</h2>
 
           <p>
-            {completed === 180
-              ? "🎉 The entire 180-day Bible course is complete!"
-              : `Keep going! ${180 - completed} lesson${
-                  180 - completed === 1 ? "" : "s"
-                } remaining.`}
+            Use the button below to print or save this
+            progress report.
           </p>
-        </section>
 
-        <button
-          onClick={printReport}
-          style={{
-            width: "100%",
-            padding: "17px",
-            border: "none",
-            borderRadius: "15px",
-            background: "#315c48",
-            color: "white",
-            fontSize: "18px",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          🖨️ Print Progress Report
-        </button>
+          <button
+            onClick={printReport}
+            style={{
+              padding: "14px 22px",
+              border: "none",
+              borderRadius: "12px",
+              background: "#315c48",
+              color: "white",
+              fontSize: "17px",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🖨️ Print Progress Report
+          </button>
+        </section>
 
         <p
           style={{
             textAlign: "center",
-            marginTop: "25px",
-            fontSize: "14px"
+            fontSize: "18px"
           }}
         >
-          Faith Foundations: The M&M Adventure
+          🌳 Every lesson helps your Faith Tree grow!
         </p>
       </div>
     </main>
