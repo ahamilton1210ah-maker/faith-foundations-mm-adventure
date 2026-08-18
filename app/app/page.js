@@ -228,16 +228,16 @@ export default function Home() {
               Final Review
             </button>
 
-            <button
-              onClick={() => {
-                window.location.href = "/parent";
-              }}
-              style={buttonStyle("#777")}
-            >
-              👩‍🏫
-              <br />
-              Parent Dashboard
-            </button>
+           <button
+  onClick={() => {
+    window.location.href = "/Lessons";
+  }}
+  style={buttonStyle("#777")}
+>
+  👀
+  <br />
+  Preview Lessons
+</button>
           </div>
         </section>
 
