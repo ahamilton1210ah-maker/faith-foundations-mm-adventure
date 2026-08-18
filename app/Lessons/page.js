@@ -318,12 +318,23 @@ function toggleComplete() {
         `🌳 Your Faith Tree is almost fully grown!`;
     }
 
-    if (currentDay === 180) {
-      message =
-        `🎉 YOU DID IT! 🎉\n\n` +
-        `🏆 All 180 Bible lessons are complete!\n` +
-        `🌳 Your Faith Tree has fully grown!\n` +
-        `🏅 You earned the Faith Foundations Champion badge!`;
+            if (currentDay === 150) {
+          message =
+            `🌲 AMAZING! 🌲\n\n` +
+            `You've completed 150 Bible lessons!\n` +
+            `🏅 You earned the Faith Champion badge!\n` +
+            `🌳 Your Faith Tree is almost fully grown!\n` +
+            `⭐ Only 30 more lessons to go!`;
+        }
+
+        if (currentDay === 180) {
+          message =
+            `🎉 YOU DID IT! 🎉\n\n` +
+            `🏆 All 180 Bible lessons are complete!\n` +
+            `🌳 Your Faith Tree has fully grown!\n` +
+            `🏅 You are a Faith Foundations Champion!\n` +
+            `❤️ Keep growing in God's Word!`;
+
     }
 
     alert(message);
