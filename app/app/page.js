@@ -240,7 +240,74 @@ export default function Home() {
 </button>
           </div>
         </section>
+{/* BADGES */}
+<section
+  style={{
+    background: "white",
+    borderRadius: "20px",
+    padding: "22px",
+    marginBottom: "18px"
+  }}
+>
+  <h2>🏅 Faith Badges</h2>
 
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+      gap: "12px",
+      marginTop: "15px"
+    }}
+  >
+    <div style={badgeStyle(completedCount >= 10)}>
+      🌱
+      <br />
+      <strong>First Steps</strong>
+      <br />
+      <small>10 Lessons</small>
+    </div>
+
+    <div style={badgeStyle(completedCount >= 25)}>
+      🌿
+      <br />
+      <strong>Growing Strong</strong>
+      <br />
+      <small>25 Lessons</small>
+    </div>
+
+    <div style={badgeStyle(completedCount >= 50)}>
+      🌳
+      <br />
+      <strong>Faith Builder</strong>
+      <br />
+      <small>50 Lessons</small>
+    </div>
+
+    <div style={badgeStyle(completedCount >= 90)}>
+      🏆
+      <br />
+      <strong>Halfway Hero</strong>
+      <br />
+      <small>90 Lessons</small>
+    </div>
+
+    <div style={badgeStyle(completedCount >= 135)}>
+      ⭐
+      <br />
+      <strong>Faith Champion</strong>
+      <br />
+      <small>135 Lessons</small>
+    </div>
+
+    <div style={badgeStyle(completedCount >= 180)}>
+      🏆
+      <br />
+      <strong>Faith Foundations Champion</strong>
+      <br />
+      <small>180 Lessons</small>
+    </div>
+  </div>
+</section>
         {/* ENCOURAGEMENT */}
         <section
           style={{
@@ -270,7 +337,18 @@ export default function Home() {
     </main>
   );
 }
-
+function badgeStyle(earned) {
+  return {
+    padding: "18px 10px",
+    borderRadius: "16px",
+    textAlign: "center",
+    background: earned ? "#fff4c2" : "#eeeeee",
+    opacity: earned ? 1 : 0.45,
+    fontSize: "18px",
+    lineHeight: "1.5",
+    border: earned ? "2px solid #d6b656" : "2px solid #ddd"
+  };
+}
 function buttonStyle(background) {
   return {
     padding: "18px 10px",
