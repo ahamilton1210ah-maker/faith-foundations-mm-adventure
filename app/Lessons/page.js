@@ -264,7 +264,7 @@ function stopReading() {
   window.speechSynthesis.cancel();
 }
   
-  function toggleComplete() {
+function toggleComplete() {
   let updated;
 
   if (isCompleted) {
@@ -272,14 +272,65 @@ function stopReading() {
   } else {
     updated = [...completed, currentDay];
 
-    alert(
-      lesson.day === 180
-        ? "🎉 YOU DID IT! 🎉\n\n🏆 All 180 Bible lessons are complete!\n🌳 Your Faith Tree has fully grown!"
-        : `🎉 Congratulations! 🎉\n\nDay ${lesson.day} Complete!\n🌱 Your Faith Tree is taking root!\n🌳 Every lesson helps your tree grow!\n⭐ Keep going — you're doing great!`
-    );
+    let message =
+      `🎉 Congratulations! 🎉\n\n` +
+      `Day ${currentDay} Complete!\n` +
+      `🌳 Your Faith Tree is growing!\n` +
+      `⭐ Keep going — you're doing great!`;
+
+    if (currentDay === 10) {
+      message =
+        `🌱 AMAZING! 🌱\n\n` +
+        `You've completed 10 Bible lessons!\n` +
+        `🏅 You earned the First Steps badge!\n` +
+        `🌳 Your Faith Tree is taking root!`;
+    }
+
+    if (currentDay === 25) {
+      message =
+        `🌿 GREAT JOB! 🌿\n\n` +
+        `You've completed 25 Bible lessons!\n` +
+        `🏅 You earned the Growing Strong badge!\n` +
+        `🌳 Look how your Faith Tree is growing!`;
+    }
+
+    if (currentDay === 50) {
+      message =
+        `🌳 FAITH BUILDER! 🌳\n\n` +
+        `You've completed 50 Bible lessons!\n` +
+        `🏅 You earned the Faith Builder badge!\n` +
+        `⭐ Keep growing!`;
+    }
+
+    if (currentDay === 90) {
+      message =
+        `🎉 HALF WAY THERE! 🎉\n\n` +
+        `You've completed 90 Bible lessons!\n` +
+        `🏅 You earned the Halfway Hero badge!\n` +
+        `📝 Your Midterm is now unlocked!`;
+    }
+
+    if (currentDay === 135) {
+      message =
+        `🌟 AMAZING PROGRESS! 🌟\n\n` +
+        `You've completed 135 Bible lessons!\n` +
+        `🏅 You earned the Faith Champion badge!\n` +
+        `🌳 Your Faith Tree is almost fully grown!`;
+    }
+
+    if (currentDay === 180) {
+      message =
+        `🎉 YOU DID IT! 🎉\n\n` +
+        `🏆 All 180 Bible lessons are complete!\n` +
+        `🌳 Your Faith Tree has fully grown!\n` +
+        `🏅 You earned the Faith Foundations Champion badge!`;
+    }
+
+    alert(message);
   }
 
   setCompleted(updated);
+
   localStorage.setItem(
     "faithTreeCompleted",
     JSON.stringify(updated)
