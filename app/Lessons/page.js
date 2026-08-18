@@ -645,16 +645,7 @@ function toggleComplete() {
           </section>
 
           <button
-          onClick={() => {
-  toggleComplete();
-  if (!isCompleted) {
-    alert(
-      lesson.day === 180
-        ? "🎉 YOU DID IT! 🎉\n\n🏆 All 180 Bible lessons are complete!\n🌳 Your Faith Tree has fully grown!"
-        : `🎉 Congratulations! 🎉\n\nDay ${lesson.day} Complete!\n🌳 Your Faith Tree is growing!\n⭐ Keep going — you're doing great!`
-    );
-  }
-}}
+         onClick={toggleComplete}
             style={{
               width: "100%",
               padding: "17px",
@@ -671,6 +662,60 @@ function toggleComplete() {
               ? "✅ Day Completed!"
               : "🌱 Complete Day " + lesson.day}
           </button>
+            <div
+  style={{
+    display: "flex",
+    gap: "10px",
+    marginTop: "15px"
+  }}
+>
+  <button
+    onClick={() => setCurrentDay(currentDay - 1)}
+    disabled={currentDay === 1}
+    style={{
+      flex: 1,
+      padding: "14px",
+      border: "none",
+      borderRadius: "14px",
+      background: currentDay === 1 ? "#ccc" : "#315c48",
+      color: "white",
+      fontSize: "16px",
+      fontWeight: "bold",
+      cursor: currentDay === 1 ? "not-allowed" : "pointer"
+    }}
+  >
+    ⬅️ Previous
+  </button>
+
+  <button
+    onClick={() => setCurrentDay(currentDay + 1)}
+    disabled={currentDay === 180}
+    style={{
+      flex: 1,
+      padding: "14px",
+      border: "none",
+      borderRadius: "14px",
+      background: currentDay === 180 ? "#ccc" : "#6b9e5b",
+      color: "white",
+      fontSize: "16px",
+      fontWeight: "bold",
+      cursor: currentDay === 180 ? "not-allowed" : "pointer"
+    }}
+  >
+    Next ➡️
+  </button>
+</div>
+
+<p
+  style={{
+    textAlign: "center",
+    fontSize: "15px",
+    fontWeight: "bold",
+    marginTop: "12px"
+  }}
+>
+  📖 Day {currentDay} of 180
+</p>
         </section>
 
         <footer
