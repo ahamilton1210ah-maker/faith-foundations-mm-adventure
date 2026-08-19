@@ -228,9 +228,9 @@ export default function Home() {
               Final Review
             </button>
 
-           <button
+       <button
   onClick={() => {
-    window.location.href = "/Lessons";
+    window.location.href = "/Lessons?parent=true";
   }}
   style={buttonStyle("#777")}
 >
