@@ -1,6 +1,6 @@
-"use client";
+""use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const themes = [
   ["God Created the World", "Genesis 1", "God is the Creator"],
@@ -228,6 +228,12 @@ const days = Array.from({ length: 180 }, (_, index) => {
   };
 });
 export default function Lessons() {
+  const [isParentPreview, setIsParentPreview] = useState(false);
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  setIsParentPreview(params.get("parent") === "true");
+}, []);
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState(() => {
   if (typeof window === "undefined") return [];
