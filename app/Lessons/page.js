@@ -230,20 +230,12 @@ const days = Array.from({ length: 180 }, (_, index) => {
 export default function Lessons() {
   const [isParentPreview, setIsParentPreview] = useState(false);
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  setIsParentPreview(params.get("parent") === "true");
-}, []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setIsParentPreview(params.get("parent") === "true");
+  }, []);
+
   const [currentDay, setCurrentDay] = useState(1);
-  const [completed, setCompleted] = useState(() => {
-  if (typeof window === "undefined") return [];
-  const saved = localStorage.getItem("faithTreeCompleted");
-  return saved ? JSON.parse(saved) : [];
-});
-
-  const lesson = days[currentDay - 1];
-  const isCompleted = completed.includes(currentDay);
-
   function readLessonAloud() {
   if (typeof window === "undefined") return;
 
@@ -355,21 +347,29 @@ function toggleComplete() {
 }
 
   function previousDay() {
-    if (currentDay > 1) {
-      setCurrentDay(currentDay - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  if (currentDay > 1) {
+    setCurrentDay(currentDay - 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
+}
 
-  function nextDay() {
-    if (currentDay < 180) {
-      setCurrentDay(currentDay + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+function nextDay() {
+  if (currentDay < 180) {
+    if (!isParentPreview && !completed.includes(currentDay)) {
+      alert(
+        `🔒 Day ${currentDay + 1} is locked!\n\n` +
+        `🌱 Complete Day ${currentDay} first to unlock your next Bible adventure!`
+      );
+      return;
     }
-  }
 
-  return (
-    <main
+    setCurrentDay(currentDay + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+return (
+  <main
       style={{
         minHeight: "100vh",
         background: "#f5f1e8",
