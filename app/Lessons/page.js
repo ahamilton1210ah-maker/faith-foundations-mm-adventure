@@ -353,6 +353,13 @@ function toggleComplete() {
   }
 }
 
+function previousDay() {
+  if (currentDay > 1) {
+    setCurrentDay(currentDay - 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 function nextDay() {
   if (currentDay < 180) {
     if (!isParentPreview && !completed.includes(currentDay)) {
