@@ -195,17 +195,16 @@ export default function Home() {
               marginTop: "15px"
             }}
           >
-            <button
-              onClick={() => {
-                window.location.href = "/Lessons";
-              }}
-              style={buttonStyle("#315c48")}
-            >
-              📚
-              <br />
-              Bible Lessons
-            </button>
-
+           <button
+  onClick={() => {
+    window.location.href = "/Lessons?parent=true";
+  }}
+  style={buttonStyle("#777")}
+>
+  👀
+  <br />
+  Preview Lessons
+</button>
             <button
               onClick={() => {
                 window.location.href = "/Midterm";
