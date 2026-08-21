@@ -236,6 +236,14 @@ export default function Lessons() {
   }, []);
 
   const [currentDay, setCurrentDay] = useState(1);
+  const [completed, setCompleted] = useState(() => {
+  if (typeof window === "undefined") return [];
+  const saved = localStorage.getItem("faithTreeCompleted");
+  return saved ? JSON.parse(saved) : [];
+});
+
+const lesson = days[currentDay - 1];
+const isCompleted = completed.includes(currentDay);
   function readLessonAloud() {
   if (typeof window === "undefined") return;
 
