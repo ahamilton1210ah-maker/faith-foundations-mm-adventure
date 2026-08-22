@@ -353,8 +353,6 @@ function toggleComplete() {
     JSON.stringify(updated)
   );
 }
-smooth" });
-  }
 
 function previousDay() {
   if (currentDay > 1) {
