@@ -688,7 +688,7 @@ return (
   }}
 >
   <button
-    onClick={() => setCurrentDay(currentDay - 1)}
+onClick={previousDay}
     disabled={currentDay === 1}
     style={{
       flex: 1,
@@ -706,7 +706,7 @@ return (
   </button>
 
   <button
-    onClick={() => setCurrentDay(currentDay + 1)}
+onClick={nextDay}
     disabled={currentDay === 180}
     style={{
       flex: 1,
