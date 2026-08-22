@@ -353,13 +353,8 @@ function toggleComplete() {
     JSON.stringify(updated)
   );
 }
-
-  function previousDay() {
-  if (currentDay > 1) {
-    setCurrentDay(currentDay - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+smooth" });
   }
-}
 
 function previousDay() {
   if (currentDay > 1) {
@@ -665,24 +660,26 @@ return (
             </p>
           </section>
 
-          <button
-         onClick={toggleComplete}
-            style={{
-              width: "100%",
-              padding: "17px",
-              border: "none",
-              borderRadius: "16px",
-              background: isCompleted ? "#315c48" : "#6b9e5b",
-              color: "white",
-              fontSize: "19px",
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}
-          >
-            {isCompleted
-              ? "✅ Day Completed!"
-              : "🌱 Complete Day " + lesson.day}
-          </button>
+          {!isParentPreview && (
+  <button
+    onClick={toggleComplete}
+    style={{
+      width: "100%",
+      padding: "17px",
+      border: "none",
+      borderRadius: "16px",
+      background: isCompleted ? "#315c48" : "#6b9e5b",
+      color: "white",
+      fontSize: "19px",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    {isCompleted
+      ? "✅ Day Completed!"
+      : "🌱 Complete Day " + lesson.day}
+  </button>
+)}
             <div
   style={{
     display: "flex",
