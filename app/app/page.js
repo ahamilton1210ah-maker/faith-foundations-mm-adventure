@@ -237,6 +237,16 @@ export default function Home() {
   <br />
   Preview Lessons
 </button>
+    <button
+  onClick={() => {
+    window.location.href = "/parent";
+  }}
+  style={buttonStyle("#777")}
+>
+  👩‍🏫
+  <br />
+  Parent Dashboard
+</button>
           </div>
         </section>
 {/* BADGES */}
