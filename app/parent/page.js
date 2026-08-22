@@ -55,8 +55,347 @@ export default function ParentProgress() {
     completed >= 180 ? 180 : completed + 1;
 
   function printReport() {
-    window.print();
+  const completedCount = completed.length;
+  const percentage = Math.round((completedCount / 180) * 100);
+
+  const courseStatus =
+    completedCount === 0
+      ? "Not Started"
+      : completedCount >= 180
+      ? "Completed"
+      : "In Progress";
+
+  const faithTree =
+    completedCount === 0
+      ? "🌱 Taking Root"
+      : completedCount < 30
+      ? "🌿 Growing"
+      : completedCount < 60
+      ? "🌳 Growing Strong"
+      : completedCount < 90
+      ? "🌳🌳 Growing"
+      : completedCount < 120
+      ? "🌳🌳🌳 Well Established"
+      : completedCount < 150
+      ? "🌲🌳🌲 Almost Fully Grown"
+      : completedCount < 180
+      ? "🌲🌳🌲🌳 Nearly Complete"
+      : "🌲🌳🌲🌳🌲 Fully Grown";
+
+  const badges = [
+    {
+      name: "First Steps",
+      lessons: 10,
+      earned: completedCount >= 10
+    },
+    {
+      name: "Growing Strong",
+      lessons: 25,
+      earned: completedCount >= 25
+    },
+    {
+      name: "Faith Builder",
+      lessons: 50,
+      earned: completedCount >= 50
+    },
+    {
+      name: "Halfway Hero",
+      lessons: 90,
+      earned: completedCount >= 90
+    },
+    {
+      name: "Faith Champion",
+      lessons: 135,
+      earned: completedCount >= 135
+    },
+    {
+      name: "Faith Foundations Champion",
+      lessons: 180,
+      earned: completedCount >= 180
+    }
+  ];
+
+  const reportWindow = window.open("", "_blank");
+
+  if (!reportWindow) {
+    alert("Please allow pop-ups to print the progress report.");
+    return;
   }
+
+  reportWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Faith Foundations Progress Report</title>
+
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            color: #24313a;
+            padding: 40px;
+            max-width: 800px;
+            margin: auto;
+          }
+
+          h1 {
+            text-align: center;
+            color: #315c48;
+            margin-bottom: 5px;
+          }
+
+          h2 {
+            color: #315c48;
+            border-bottom: 2px solid #315c48;
+            padding-bottom: 6px;
+            margin-top: 28px;
+          }
+
+          .subtitle {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 30px;
+          }
+
+          .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 25px;
+          }
+
+          .box {
+            border: 1px solid #ccc;
+            padding: 12px;
+            border-radius: 8px;
+          }
+
+          .progress {
+            font-size: 28px;
+            font-weight: bold;
+            color: #315c48;
+            text-align: center;
+            margin: 15px 0;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+          }
+
+          th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+          }
+
+          th {
+            background: #e9f4ed;
+          }
+
+          .earned {
+            color: #315c48;
+            font-weight: bold;
+          }
+
+          .locked {
+            color: #888;
+          }
+
+          .notes {
+            border: 1px solid #ccc;
+            min-height: 100px;
+            padding: 10px;
+            margin-top: 10px;
+          }
+
+          .signature {
+            margin-top: 45px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+          }
+
+          .line {
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+          }
+
+          .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #666;
+          }
+
+          @media print {
+            body {
+              padding: 20px;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <h1>🌳 Faith Foundations</h1>
+
+        <div class="subtitle">
+          <strong>The M&M Adventure</strong><br />
+          Bible Curriculum Progress Report
+        </div>
+
+        <div class="info">
+          <div class="box">
+            <strong>Student:</strong><br />
+            ______________________________
+          </div>
+
+          <div class="box">
+            <strong>Grade:</strong><br />
+            3rd Grade
+          </div>
+
+          <div class="box">
+            <strong>School Year:</strong><br />
+            2026–2027
+          </div>
+
+          <div class="box">
+            <strong>Parent/Teacher:</strong><br />
+            ______________________________
+          </div>
+        </div>
+
+        <h2>📚 Course Progress</h2>
+
+        <div class="progress">
+          ${completedCount} / 180 Lessons Completed
+        </div>
+
+        <p style="text-align:center;">
+          <strong>${percentage}% Complete</strong>
+        </p>
+
+        <table>
+          <tr>
+            <th>Current Progress</th>
+            <td>${courseStatus}</td>
+          </tr>
+
+          <tr>
+            <th>Lessons Completed</th>
+            <td>${completedCount} of 180</td>
+          </tr>
+
+          <tr>
+            <th>Faith Tree</th>
+            <td>${faithTree}</td>
+          </tr>
+        </table>
+
+        <h2>🏅 Faith Badges</h2>
+
+        <table>
+          <tr>
+            <th>Badge</th>
+            <th>Requirement</th>
+            <th>Status</th>
+          </tr>
+
+          ${badges
+            .map(
+              (badge) => `
+                <tr>
+                  <td>${badge.name}</td>
+                  <td>${badge.lessons} Lessons</td>
+                  <td class="${badge.earned ? "earned" : "locked"}">
+                    ${badge.earned ? "✅ Earned" : "🔒 Not Yet Earned"}
+                  </td>
+                </tr>
+              `
+            )
+            .join("")}
+        </table>
+
+        <h2>📝 Exams & Reviews</h2>
+
+        <table>
+          <tr>
+            <th>Assessment</th>
+            <th>Status</th>
+            <th>Grade</th>
+          </tr>
+
+          <tr>
+            <td>Midterm Review</td>
+            <td>${completedCount >= 90 ? "🔓 Unlocked" : "🔒 Locked"}</td>
+            <td>__________</td>
+          </tr>
+
+          <tr>
+            <td>Midterm Exam</td>
+            <td>${completedCount >= 90 ? "🔓 Unlocked" : "🔒 Locked"}</td>
+            <td>__________</td>
+          </tr>
+
+          <tr>
+            <td>Final Review</td>
+            <td>${completedCount >= 180 ? "🔓 Unlocked" : "🔒 Locked"}</td>
+            <td>__________</td>
+          </tr>
+
+          <tr>
+            <td>Final Exam</td>
+            <td>${completedCount >= 180 ? "🔓 Unlocked" : "🔒 Locked"}</td>
+            <td>__________</td>
+          </tr>
+        </table>
+
+        <h2>📖 Course Status</h2>
+
+        <div class="box">
+          <strong>${courseStatus}</strong>
+          <br /><br />
+          Faith Foundations: The M&M Adventure
+          <br />
+          180 Bible lessons
+          <br />
+          Growing in God's Word — one day at a time!
+        </div>
+
+        <h2>📝 Parent/Teacher Notes</h2>
+
+        <div class="notes">
+          <br /><br /><br /><br />
+        </div>
+
+        <div class="signature">
+          <div class="line">
+            Parent/Teacher Signature
+          </div>
+
+          <div class="line">
+            Date
+          </div>
+        </div>
+
+        <div class="footer">
+          Faith Foundations: The M&M Adventure<br />
+          Growing in God's Word — one day at a time.
+        </div>
+
+      </body>
+    </html>
+  `);
+
+  reportWindow.document.close();
+
+  reportWindow.onload = function () {
+    reportWindow.focus();
+    reportWindow.print();
+  };
+}
 
   return (
     <main
