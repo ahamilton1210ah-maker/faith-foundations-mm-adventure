@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/* =========================================================
-   BIBLE THEMES
-========================================================= */
+const STORAGE_KEY = "faithTreeCompleted";
 
 const themes = [
   ["God Created the World", "Genesis 1", "God is the Creator"],
@@ -54,45 +52,18 @@ const themes = [
   ["Finish Strong", "Philippians 3:13-14", "Keep growing in faith"]
 ];
 
-/* =========================================================
-   LESSON TYPES
-========================================================= */
-
 const lessonTypes = [
-  {
-    title: "Learn",
-    activity:
-      "Read the Bible passage with a parent. Talk about what happened and what it teaches us about God."
-  },
-  {
-    title: "Explore",
-    activity:
-      "Draw a picture of today's Bible story. Label three things you learned from the passage."
-  },
-  {
-    title: "Practice",
-    activity:
-      "Choose one lesson from today's Bible story and practice it at home today."
-  },
-  {
-    title: "Live It",
-    activity:
-      "Tell someone in your family what you learned. Then find one way to live out today's lesson."
-  }
+  "Learn",
+  "Explore",
+  "Practice",
+  "Live It"
 ];
-
-/* =========================================================
-   CREATE ALL 180 DAYS
-========================================================= */
 
 const days = Array.from({ length: 180 }, (_, index) => {
   const day = index + 1;
   const week = Math.floor(index / 4);
   const dayOfWeek = index % 4;
-
   const theme = themes[week % themes.length];
-
-  /* ---------------- MIDTERM REVIEW ---------------- */
 
   if (day === 88) {
     return {
@@ -114,8 +85,6 @@ const days = Array.from({ length: 180 }, (_, index) => {
     };
   }
 
-  /* ---------------- MIDTERM EXAM ---------------- */
-
   if (day === 89) {
     return {
       day,
@@ -135,8 +104,6 @@ const days = Array.from({ length: 180 }, (_, index) => {
         "Dear God, please help me remember what I have learned and do my very best. Thank You for helping me grow. Amen."
     };
   }
-
-  /* ---------------- FINAL REVIEW ---------------- */
 
   if (day === 178) {
     return {
@@ -158,8 +125,6 @@ const days = Array.from({ length: 180 }, (_, index) => {
     };
   }
 
-  /* ---------------- FINAL EXAM ---------------- */
-
   if (day === 179) {
     return {
       day,
@@ -179,8 +144,6 @@ const days = Array.from({ length: 180 }, (_, index) => {
         "Dear God, thank You for helping me learn Your Word. Help me continue following You every day. Amen."
     };
   }
-
-  /* ---------------- DAY 180 ---------------- */
 
   if (day === 180) {
     return {
@@ -202,16 +165,12 @@ const days = Array.from({ length: 180 }, (_, index) => {
     };
   }
 
-  /* ---------------- NORMAL LESSON ---------------- */
-
-  const type = lessonTypes[dayOfWeek];
-
   return {
     day,
     title: theme[0],
     bibleReference: theme[1],
     theme: theme[2],
-    lessonType: type.title,
+    lessonType: lessonTypes[dayOfWeek],
 
     lesson:
       `Today we are learning about ${theme[0].toLowerCase()}. Read ${theme[1]} in your KJV Bible. Think about what this passage teaches us about God and how you can apply it to your life.`,
@@ -242,140 +201,168 @@ const days = Array.from({ length: 180 }, (_, index) => {
   };
 });
 
-/* =========================================================
-   LESSONS PAGE
-========================================================= */
+const badges = [
+  {
+    icon: "🌱",
+    name: "First Steps",
+    requirement: 10,
+    message: "10 Lessons"
+  },
+  {
+    icon: "🌿",
+    name: "Growing Strong",
+    requirement: 25,
+    message: "25 Lessons"
+  },
+  {
+    icon: "🌳",
+    name: "Faith Builder",
+    requirement: 50,
+    message: "50 Lessons"
+  },
+  {
+    icon: "🏆",
+    name: "Halfway Hero",
+    requirement: 90,
+    message: "90 Lessons"
+  },
+  {
+    icon: "⭐",
+    name: "Faith Champion",
+    requirement: 135,
+    message: "135 Lessons"
+  },
+  {
+    icon: "🏆",
+    name: "Faith Foundations Champion",
+    requirement: 180,
+    message: "180 Lessons"
+  }
+];
 
-export default function Lessons() {
-  const [isParentPreview, setIsParentPreview] = useState(false);
-  const [currentDay, setCurrentDay] = useState(1);
+function getSavedCompleted() {
+  if (typeof window === "undefined") return [];
 
-  /* =======================================================
-     LOAD COMPLETED LESSONS
-  ======================================================= */
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
 
-  const [completed, setCompleted] = useState(() => {
-    if (typeof window === "undefined") return [];
+    if (!saved) return [];
 
-    try {
-      const saved = localStorage.getItem("faithTreeCompleted");
+    const parsed = JSON.parse(saved);
 
-      if (!saved) return [];
+    if (!Array.isArray(parsed)) return [];
 
-      const parsed = JSON.parse(saved);
+    return [
+      ...new Set(
+        parsed
+          .map(Number)
+          .filter(
+            (day) =>
+              Number.isInteger(day) &&
+              day >= 1 &&
+              day <= 180
+          )
+      )
+    ].sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
 
-      if (!Array.isArray(parsed)) return [];
+function saveCompleted(daysCompleted) {
+  if (typeof window === "undefined") return;
 
-      return parsed
+  const cleanDays = [
+    ...new Set(
+      daysCompleted
         .map(Number)
         .filter(
           (day) =>
             Number.isInteger(day) &&
             day >= 1 &&
             day <= 180
-        );
-    } catch {
-      return [];
-    }
-  });
+        )
+    )
+  ].sort((a, b) => a - b);
 
-  /* =======================================================
-     PARENT PREVIEW
-  ======================================================= */
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(cleanDays)
+  );
 
+  // Tell the rest of the app immediately.
+  window.dispatchEvent(
+    new CustomEvent("faithTreeProgressUpdated", {
+      detail: {
+        completedDays: cleanDays,
+        completedCount: cleanDays.length
+      }
+    })
+  );
+
+  // Also notify other browser tabs.
+  window.dispatchEvent(new Event("storage"));
+}
+
+export default function Lessons() {
+  const [isParentPreview, setIsParentPreview] = useState(false);
+  const [currentDay, setCurrentDay] = useState(1);
+  const [completed, setCompleted] = useState([]);
+
+  // Load saved progress.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    setIsParentPreview(
-      params.get("parent") === "true"
-    );
+    setCompleted(getSavedCompleted());
   }, []);
 
-  /* =======================================================
-     SAVE COMPLETED LESSONS
-  ======================================================= */
-
+  // Detect parent preview.
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setIsParentPreview(params.get("parent") === "true");
+  }, []);
 
-    localStorage.setItem(
-      "faithTreeCompleted",
-      JSON.stringify(completed)
-    );
-  }, [completed]);
-
-  /* =======================================================
-     CURRENT LESSON
-  ======================================================= */
-
-  const lesson = days[currentDay - 1];
-
-  const isCompleted = completed.includes(currentDay);
-
-  /* =======================================================
-     FIND FIRST INCOMPLETE DAY
-     
-     This is the important student-lock system.
-     
-     Student can access:
-     - Every completed day
-     - The next incomplete day
-     
-     Parent can access:
-     - All 180 days
-  ======================================================= */
-
-  const nextUnlockedDay = (() => {
-    for (let day = 1; day <= 180; day++) {
-      if (!completed.includes(day)) {
-        return day;
-      }
+  // Keep progress synchronized.
+  useEffect(() => {
+    function syncProgress() {
+      setCompleted(getSavedCompleted());
     }
 
-    return 180;
-  })();
-
-  /* =======================================================
-     CHECK IF A DAY IS AVAILABLE TO STUDENT
-  ======================================================= */
-
-  function isDayUnlocked(dayNumber) {
-    if (isParentPreview) return true;
-
-    return (
-      completed.includes(dayNumber) ||
-      dayNumber === nextUnlockedDay
+    window.addEventListener(
+      "faithTreeProgressUpdated",
+      syncProgress
     );
-  }
 
-  /* =======================================================
-     READ LESSON ALOUD
-  ======================================================= */
+    window.addEventListener(
+      "storage",
+      syncProgress
+    );
+
+    return () => {
+      window.removeEventListener(
+        "faithTreeProgressUpdated",
+        syncProgress
+      );
+
+      window.removeEventListener(
+        "storage",
+        syncProgress
+      );
+    };
+  }, []);
+
+  const lesson = days[currentDay - 1];
+  const isCompleted = completed.includes(currentDay);
 
   function readLessonAloud() {
     if (typeof window === "undefined") return;
-
-    if (!window.speechSynthesis) {
-      alert(
-        "Your device does not support Read Lesson Aloud."
-      );
-      return;
-    }
 
     window.speechSynthesis.cancel();
 
     const text = `
       ${lesson.title}.
-
       Today's theme is ${lesson.theme}.
-
       ${lesson.lesson}
-
       Today's activity is ${lesson.activity}
-
-      Kindness mission:
-      ${lesson.kindnessMission}
-
+      Kindness mission: ${lesson.kindnessMission}
       ${lesson.prayer}
     `;
 
@@ -388,58 +375,26 @@ export default function Lessons() {
     window.speechSynthesis.speak(speech);
   }
 
-  /* =======================================================
-     STOP READING
-  ======================================================= */
-
   function stopReading() {
     if (typeof window === "undefined") return;
 
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    window.speechSynthesis.cancel();
   }
 
-  /* =======================================================
-     COMPLETE LESSON
-  ======================================================= */
-
   function toggleComplete() {
-    if (isParentPreview) return;
-
-    /* -----------------------------------------------
-       UN-COMPLETE CURRENT DAY
-    ------------------------------------------------ */
+    let updated;
 
     if (isCompleted) {
-      const updated = completed.filter(
+      updated = completed.filter(
         (day) => day !== currentDay
       );
 
       setCompleted(updated);
+      saveCompleted(updated);
       return;
     }
 
-    /* -----------------------------------------------
-       SAFETY CHECK
-       
-       Student cannot complete a locked day.
-    ------------------------------------------------ */
-
-    if (!isDayUnlocked(currentDay)) {
-      alert(
-        `🔒 Day ${currentDay} is locked!\n\n` +
-        `🌱 Complete Day ${nextUnlockedDay} first to continue.`
-      );
-
-      return;
-    }
-
-    /* -----------------------------------------------
-       ADD CURRENT DAY
-    ------------------------------------------------ */
-
-    const updated = [
+    updated = [
       ...new Set([
         ...completed,
         currentDay
@@ -447,143 +402,84 @@ export default function Lessons() {
     ].sort((a, b) => a - b);
 
     setCompleted(updated);
-
-    /* -----------------------------------------------
-       CONGRATULATIONS MESSAGE
-    ------------------------------------------------ */
+    saveCompleted(updated);
 
     let message =
       `🎉 Congratulations! 🎉\n\n` +
       `Day ${currentDay} Complete!\n\n` +
-      `🌳 Your Faith Tree is growing!\n\n` +
+      `🌳 Your Faith Tree is growing!\n` +
       `⭐ Keep going — you're doing great!`;
 
-    /* FIRST STEPS */
-
-    if (
-      updated.length >= 10 &&
-      completed.length < 10
-    ) {
+    if (updated.length === 10) {
       message =
         `🌱 AMAZING! 🌱\n\n` +
         `You've completed 10 Bible lessons!\n\n` +
-        `🏅 You earned the First Steps badge!\n\n` +
+        `🏅 You earned the First Steps badge!\n` +
         `🌳 Your Faith Tree is taking root!`;
     }
 
-    /* GROWING STRONG */
-
-    else if (
-      updated.length >= 25 &&
-      completed.length < 25
-    ) {
+    if (updated.length === 25) {
       message =
         `🌿 GREAT JOB! 🌿\n\n` +
         `You've completed 25 Bible lessons!\n\n` +
-        `🏅 You earned the Growing Strong badge!\n\n` +
+        `🏅 You earned the Growing Strong badge!\n` +
         `🌳 Look how your Faith Tree is growing!`;
     }
 
-    /* FAITH BUILDER */
-
-    else if (
-      updated.length >= 50 &&
-      completed.length < 50
-    ) {
+    if (updated.length === 50) {
       message =
         `🌳 FAITH BUILDER! 🌳\n\n` +
         `You've completed 50 Bible lessons!\n\n` +
-        `🏅 You earned the Faith Builder badge!\n\n` +
+        `🏅 You earned the Faith Builder badge!\n` +
         `⭐ Keep growing!`;
     }
 
-    /* HALF WAY */
-
-    else if (
-      updated.length >= 90 &&
-      completed.length < 90
-    ) {
+    if (updated.length === 90) {
       message =
         `🎉 HALF WAY THERE! 🎉\n\n` +
         `You've completed 90 Bible lessons!\n\n` +
-        `🏅 You earned the Halfway Hero badge!\n\n` +
+        `🏅 You earned the Halfway Hero badge!\n` +
         `📝 Your Midterm is now unlocked!`;
     }
 
-    /* FAITH CHAMPION */
-
-    else if (
-      updated.length >= 135 &&
-      completed.length < 135
-    ) {
+    if (updated.length === 135) {
       message =
         `🌟 AMAZING PROGRESS! 🌟\n\n` +
         `You've completed 135 Bible lessons!\n\n` +
-        `🏅 You earned the Faith Champion badge!\n\n` +
+        `🏅 You earned the Faith Champion badge!\n` +
         `🌳 Your Faith Tree is almost fully grown!`;
     }
 
-    /* FINAL CHAMPION */
-
-    else if (
-      updated.length >= 180 &&
-      completed.length < 180
-    ) {
+    if (updated.length === 180) {
       message =
         `🎉 YOU DID IT! 🎉\n\n` +
-        `🏆 All 180 Bible lessons are complete!\n\n` +
-        `🌳 Your Faith Tree has fully grown!\n\n` +
-        `🏅 You are a Faith Foundations Champion!\n\n` +
+        `🏆 All 180 Bible lessons are complete!\n` +
+        `🌳 Your Faith Tree has fully grown!\n` +
+        `🏅 You are a Faith Foundations Champion!\n` +
         `❤️ Keep growing in God's Word!`;
     }
 
     alert(message);
   }
 
-  /* =======================================================
-     PREVIOUS DAY
-  ======================================================= */
-
   function previousDay() {
-    if (currentDay <= 1) return;
-
-    const targetDay = currentDay - 1;
-
-    if (!isDayUnlocked(targetDay)) {
-      return;
-    }
-
-    setCurrentDay(targetDay);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
-
-  /* =======================================================
-     NEXT DAY
-  ======================================================= */
-
-  function nextDay() {
-    if (currentDay >= 180) return;
-
-    /* Parent Preview can move freely */
-
-    if (isParentPreview) {
-      setCurrentDay(currentDay + 1);
+    if (currentDay > 1) {
+      setCurrentDay(currentDay - 1);
 
       window.scrollTo({
         top: 0,
         behavior: "smooth"
       });
-
-      return;
     }
+  }
 
-    /* Student must complete current lesson */
+  function nextDay() {
+    if (currentDay >= 180) return;
 
-    if (!completed.includes(currentDay)) {
+    if (
+      !isParentPreview &&
+      !completed.includes(currentDay)
+    ) {
       alert(
         `🔒 Day ${currentDay + 1} is locked!\n\n` +
         `🌱 Complete Day ${currentDay} first to unlock your next Bible adventure!`
@@ -592,9 +488,7 @@ export default function Lessons() {
       return;
     }
 
-    const targetDay = currentDay + 1;
-
-    setCurrentDay(targetDay);
+    setCurrentDay(currentDay + 1);
 
     window.scrollTo({
       top: 0,
@@ -602,52 +496,8 @@ export default function Lessons() {
     });
   }
 
-  /* =======================================================
-     BADGES
-  ======================================================= */
-
-  const badges = [
-    {
-      icon: "🌱",
-      name: "First Steps",
-      requirement: 10,
-      message: "10 Lessons"
-    },
-    {
-      icon: "🌿",
-      name: "Growing Strong",
-      requirement: 25,
-      message: "25 Lessons"
-    },
-    {
-      icon: "🌳",
-      name: "Faith Builder",
-      requirement: 50,
-      message: "50 Lessons"
-    },
-    {
-      icon: "🏆",
-      name: "Halfway Hero",
-      requirement: 90,
-      message: "90 Lessons"
-    },
-    {
-      icon: "⭐",
-      name: "Faith Champion",
-      requirement: 135,
-      message: "135 Lessons"
-    },
-    {
-      icon: "🏆",
-      name: "Faith Foundations Champion",
-      requirement: 180,
-      message: "180 Lessons"
-    }
-  ];
-
-  /* =======================================================
-     PAGE
-  ======================================================= */
+  const completionPercent =
+    Math.round((completed.length / 180) * 100);
 
   return (
     <main
@@ -665,11 +515,6 @@ export default function Lessons() {
           margin: "0 auto"
         }}
       >
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <header
           style={{
             textAlign: "center",
@@ -718,10 +563,63 @@ export default function Lessons() {
           )}
         </header>
 
-        {/* =================================================
-            DAY NAVIGATION
-        ================================================= */}
+        {/* PROGRESS */}
+        <section
+          style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "20px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)"
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontWeight: "bold",
+              marginBottom: "8px"
+            }}
+          >
+            <span>🌳 Faith Progress</span>
+            <span>
+              {completed.length} / 180
+            </span>
+          </div>
 
+          <div
+            style={{
+              width: "100%",
+              height: "16px",
+              background: "#e4e4e4",
+              borderRadius: "20px",
+              overflow: "hidden"
+            }}
+          >
+            <div
+              style={{
+                width: `${completionPercent}%`,
+                height: "100%",
+                background: "#6b9e5b",
+                borderRadius: "20px",
+                transition: "width .4s ease"
+              }}
+            />
+          </div>
+
+          <p
+            style={{
+              textAlign: "center",
+              margin: "8px 0 0",
+              fontWeight: "bold"
+            }}
+          >
+            {completionPercent}% complete
+          </p>
+        </section>
+
+        {/* DAY NAVIGATION */}
         <section
           style={{
             background: "white",
@@ -740,16 +638,9 @@ export default function Lessons() {
               gap: "10px"
             }}
           >
-
-            {/* PREVIOUS */}
-
             <button
               onClick={previousDay}
-              disabled={
-                currentDay === 1 ||
-                (!isParentPreview &&
-                  !isDayUnlocked(currentDay - 1))
-              }
+              disabled={currentDay === 1}
               style={{
                 padding: "10px 15px",
                 borderRadius: "12px",
@@ -767,14 +658,11 @@ export default function Lessons() {
 
             <strong
               style={{
-                fontSize: "18px",
-                textAlign: "center"
+                fontSize: "18px"
               }}
             >
               Day {currentDay} of 180
             </strong>
-
-            {/* NEXT */}
 
             <button
               onClick={nextDay}
@@ -795,22 +683,19 @@ export default function Lessons() {
             </button>
           </div>
 
-          {/* =================================================
-              JUMP TO DAY
-          ================================================= */}
-
+          {/* STUDENT JUMP-TO */}
           <div
             style={{
               marginTop: "18px",
               background: "#e9f4ed",
               borderRadius: "15px",
-              padding: "14px",
+              padding: "12px",
               textAlign: "center"
             }}
           >
             <label>
               <strong>
-                Jump to a day:
+                Jump to a day:{" "}
               </strong>
 
               <select
@@ -819,39 +704,46 @@ export default function Lessons() {
                   const selectedDay =
                     Number(e.target.value);
 
-                  if (
-                    isParentPreview ||
-                    isDayUnlocked(selectedDay)
-                  ) {
+                  // Parent can preview any day.
+                  if (isParentPreview) {
                     setCurrentDay(selectedDay);
-
-                    window.scrollTo({
-                      top: 0,
-                      behavior: "smooth"
-                    });
-
                     return;
                   }
 
-                  alert(
-                    `🔒 Day ${selectedDay} is locked!\n\n` +
-                    `🌱 Complete Day ${nextUnlockedDay} first to unlock your next Bible adventure!`
-                  );
+                  // Student can only jump to
+                  // completed days or the next
+                  // unlocked day.
+                  const maxUnlocked =
+                    Math.min(
+                      completed.length + 1,
+                      180
+                    );
+
+                  if (
+                    selectedDay <= maxUnlocked
+                  ) {
+                    setCurrentDay(selectedDay);
+                  } else {
+                    alert(
+                      `🔒 Day ${selectedDay} is locked!\n\n` +
+                      `🌱 Complete your current lessons first to unlock more days.`
+                    );
+                  }
                 }}
                 style={{
                   padding: "8px",
                   borderRadius: "8px",
-                  fontSize: "16px",
-                  marginLeft: "8px",
-                  maxWidth: "100%"
+                  fontSize: "16px"
                 }}
               >
                 {days.map((item) => {
                   const unlocked =
-                    isDayUnlocked(item.day);
-
-                  const completedDay =
-                    completed.includes(item.day);
+                    isParentPreview ||
+                    item.day <=
+                      Math.min(
+                        completed.length + 1,
+                        180
+                      );
 
                   return (
                     <option
@@ -859,37 +751,19 @@ export default function Lessons() {
                       value={item.day}
                       disabled={!unlocked}
                     >
-                      {unlocked
-                        ? completedDay
-                          ? `✅ Day ${item.day} — Completed`
-                          : `🌱 Day ${item.day}`
-                        : `🔒 Day ${item.day} — Locked`}
+                      Day {item.day}
+                      {!unlocked
+                        ? " 🔒"
+                        : ""}
                     </option>
                   );
                 })}
               </select>
             </label>
-
-            {!isParentPreview && (
-              <p
-                style={{
-                  margin:
-                    "10px 0 0",
-                  fontSize: "13px",
-                  color: "#315c48"
-                }}
-              >
-                🌱 Complete each lesson to unlock
-                the next adventure!
-              </p>
-            )}
           </div>
         </section>
 
-        {/* =================================================
-            LESSON
-        ================================================= */}
-
+        {/* LESSON */}
         <section
           style={{
             background: "white",
@@ -899,9 +773,6 @@ export default function Lessons() {
               "0 4px 15px rgba(0,0,0,.08)"
           }}
         >
-
-          {/* LESSON HEADER */}
-
           <div
             style={{
               textAlign: "center",
@@ -911,11 +782,7 @@ export default function Lessons() {
               marginBottom: "22px"
             }}
           >
-            <div
-              style={{
-                fontSize: "50px"
-              }}
-            >
+            <div style={{ fontSize: "50px" }}>
               📖
             </div>
 
@@ -946,22 +813,9 @@ export default function Lessons() {
             >
               📖 {lesson.bibleReference}
             </p>
-
-            <p
-              style={{
-                marginTop: "10px",
-                fontWeight: "bold",
-                color: "#315c48"
-              }}
-            >
-              {lesson.lessonType}
-            </p>
           </div>
 
-          {/* =================================================
-              THEME
-          ================================================= */}
-
+          {/* THEME */}
           <section
             style={{
               background: "#fffaf0",
@@ -983,10 +837,7 @@ export default function Lessons() {
             </p>
           </section>
 
-          {/* =================================================
-              LESSON
-          ================================================= */}
-
+          {/* LESSON */}
           <section
             style={{
               marginBottom: "18px"
@@ -1013,16 +864,13 @@ export default function Lessons() {
                 marginTop: "15px"
               }}
             >
-
               <button
                 onClick={readLessonAloud}
                 style={{
-                  padding:
-                    "12px 18px",
+                  padding: "12px 18px",
                   border: "none",
                   borderRadius: "12px",
-                  background:
-                    "#315c48",
+                  background: "#315c48",
                   color: "white",
                   fontSize: "16px",
                   fontWeight: "bold",
@@ -1035,8 +883,7 @@ export default function Lessons() {
               <button
                 onClick={stopReading}
                 style={{
-                  padding:
-                    "12px 18px",
+                  padding: "12px 18px",
                   border: "none",
                   borderRadius: "12px",
                   background: "#777",
@@ -1048,14 +895,10 @@ export default function Lessons() {
               >
                 ⏹️ Stop
               </button>
-
             </div>
           </section>
 
-          {/* =================================================
-              ACTIVITY
-          ================================================= */}
-
+          {/* ACTIVITY */}
           <section
             style={{
               background: "#f0f7ff",
@@ -1078,10 +921,7 @@ export default function Lessons() {
             </p>
           </section>
 
-          {/* =================================================
-              MEMORY VERSE
-          ================================================= */}
-
+          {/* MEMORY VERSE */}
           <section
             style={{
               background: "#eef7e9",
@@ -1108,15 +948,11 @@ export default function Lessons() {
                 fontSize: "15px"
               }}
             >
-              Read the passage in your KJV Bible
-              and practice remembering it.
+              Read the passage in your KJV Bible and practice remembering it.
             </p>
           </section>
 
-          {/* =================================================
-              KINDNESS
-          ================================================= */}
-
+          {/* KINDNESS */}
           <section
             style={{
               background: "#fff4e8",
@@ -1138,10 +974,7 @@ export default function Lessons() {
             </p>
           </section>
 
-          {/* =================================================
-              PRAYER
-          ================================================= */}
-
+          {/* PRAYER */}
           <section
             style={{
               background: "#f5f0ff",
@@ -1164,10 +997,7 @@ export default function Lessons() {
             </p>
           </section>
 
-          {/* =================================================
-              COMPLETE BUTTON
-          ================================================= */}
-
+          {/* COMPLETE */}
           {!isParentPreview && (
             <button
               onClick={toggleComplete}
@@ -1192,10 +1022,7 @@ export default function Lessons() {
             </button>
           )}
 
-          {/* =================================================
-              BOTTOM NAVIGATION
-          ================================================= */}
-
+          {/* BOTTOM NAVIGATION */}
           <div
             style={{
               display: "flex",
@@ -1203,16 +1030,9 @@ export default function Lessons() {
               marginTop: "15px"
             }}
           >
-
             <button
               onClick={previousDay}
-              disabled={
-                currentDay === 1 ||
-                (!isParentPreview &&
-                  !isDayUnlocked(
-                    currentDay - 1
-                  ))
-              }
+              disabled={currentDay === 1}
               style={{
                 flex: 1,
                 padding: "14px",
@@ -1224,11 +1044,7 @@ export default function Lessons() {
                     : "#315c48",
                 color: "white",
                 fontSize: "16px",
-                fontWeight: "bold",
-                cursor:
-                  currentDay === 1
-                    ? "not-allowed"
-                    : "pointer"
+                fontWeight: "bold"
               }}
             >
               ⬅️ Previous
@@ -1236,9 +1052,7 @@ export default function Lessons() {
 
             <button
               onClick={nextDay}
-              disabled={
-                currentDay === 180
-              }
+              disabled={currentDay === 180}
               style={{
                 flex: 1,
                 padding: "14px",
@@ -1250,16 +1064,11 @@ export default function Lessons() {
                     : "#6b9e5b",
                 color: "white",
                 fontSize: "16px",
-                fontWeight: "bold",
-                cursor:
-                  currentDay === 180
-                    ? "not-allowed"
-                    : "pointer"
+                fontWeight: "bold"
               }}
             >
               Next ➡️
             </button>
-
           </div>
 
           <p
@@ -1272,13 +1081,9 @@ export default function Lessons() {
           >
             📖 Day {currentDay} of 180
           </p>
-
         </section>
 
-        {/* =================================================
-            FAITH BADGES
-        ================================================= */}
-
+        {/* FAITH BADGES */}
         <section
           style={{
             background: "white",
@@ -1289,7 +1094,6 @@ export default function Lessons() {
               "0 4px 15px rgba(0,0,0,.08)"
           }}
         >
-
           <h2
             style={{
               textAlign: "center"
@@ -1305,8 +1109,7 @@ export default function Lessons() {
               marginBottom: "20px"
             }}
           >
-            Keep completing Bible lessons to
-            earn badges!
+            Keep completing Bible lessons to earn badges!
           </p>
 
           <div
@@ -1317,9 +1120,7 @@ export default function Lessons() {
               gap: "12px"
             }}
           >
-
             {badges.map((badge) => {
-
               const earned =
                 completed.length >=
                 badge.requirement;
@@ -1328,37 +1129,31 @@ export default function Lessons() {
                 <div
                   key={badge.name}
                   style={{
-                    padding:
-                      "18px 10px",
+                    padding: "18px 10px",
                     borderRadius: "16px",
                     textAlign: "center",
-                    background:
-                      earned
-                        ? "#e9f4ed"
-                        : "#f3f3f3",
-                    border:
-                      earned
-                        ? "2px solid #6b9e5b"
-                        : "2px solid #ddd",
+                    background: earned
+                      ? "#e9f4ed"
+                      : "#f3f3f3",
+                    border: earned
+                      ? "2px solid #6b9e5b"
+                      : "2px solid #ddd",
                     opacity:
-                      earned
-                        ? 1
-                        : 0.55,
-                    boxShadow:
-                      earned
-                        ? "0 3px 10px rgba(107,158,91,.2)"
-                        : "none"
+                      earned ? 1 : 0.55,
+                    boxShadow: earned
+                      ? "0 3px 10px rgba(107,158,91,.2)"
+                      : "none",
+                    transition:
+                      "all .3s ease"
                   }}
                 >
-
                   <div
                     style={{
                       fontSize: "42px",
                       marginBottom: "8px",
-                      filter:
-                        earned
-                          ? "none"
-                          : "grayscale(1)"
+                      filter: earned
+                        ? "none"
+                        : "grayscale(1)"
                     }}
                   >
                     {badge.icon}
@@ -1386,28 +1181,22 @@ export default function Lessons() {
                     style={{
                       marginTop: "8px",
                       fontWeight: "bold",
-                      color:
-                        earned
-                          ? "#315c48"
-                          : "#777"
+                      color: earned
+                        ? "#315c48"
+                        : "#777"
                     }}
                   >
                     {earned
                       ? "✅ Earned"
                       : "🔒 Locked"}
                   </div>
-
                 </div>
               );
             })}
-
           </div>
         </section>
 
-        {/* =================================================
-            FAITH TREE
-        ================================================= */}
-
+        {/* FAITH TREE */}
         <footer
           style={{
             textAlign: "center",
@@ -1415,14 +1204,12 @@ export default function Lessons() {
             fontSize: "15px"
           }}
         >
-
           <div
             style={{
               marginTop: "25px",
               textAlign: "center"
             }}
           >
-
             <div
               style={{
                 fontSize: "70px",
@@ -1460,8 +1247,7 @@ export default function Lessons() {
                 fontSize: "16px"
               }}
             >
-              Completed:{" "}
-              {completed.length} / 180 days
+              Completed: {completed.length} / 180 days
             </p>
 
             <p
@@ -1479,11 +1265,8 @@ export default function Lessons() {
                 ? "Your Faith Tree is almost fully grown! ⭐"
                 : "🏆 Your Faith Tree is fully grown! You did it!"}
             </p>
-
           </div>
-
         </footer>
-
       </div>
     </main>
   );
