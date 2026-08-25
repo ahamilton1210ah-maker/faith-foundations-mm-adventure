@@ -11,29 +11,32 @@ export default function Parent() {
   const [completed, setCompleted] = useState([]);
   const [error, setError] = useState("");
 
-  // Check if parent already unlocked this session
   useEffect(() => {
-    const parentAccess = sessionStorage.getItem("parentAccess");
+    const parentAccess =
+      sessionStorage.getItem("parentAccess");
 
     if (parentAccess === "true") {
       setUnlocked(true);
     }
   }, []);
 
-  // Load student progress
   useEffect(() => {
     if (!unlocked) return;
 
     function loadProgress() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved =
+          localStorage.getItem(STORAGE_KEY);
 
-        if (saved) {
-          const parsed = JSON.parse(saved);
+        if (!saved) {
+          setCompleted([]);
+          return;
+        }
 
-          if (Array.isArray(parsed)) {
-            setCompleted(parsed);
-          }
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          setCompleted(parsed);
         }
       } catch {
         setCompleted([]);
@@ -42,7 +45,6 @@ export default function Parent() {
 
     loadProgress();
 
-    // Update if student completes a lesson
     function syncProgress() {
       loadProgress();
     }
@@ -74,18 +76,28 @@ export default function Parent() {
     e.preventDefault();
 
     if (password === PARENT_PASSWORD) {
-      sessionStorage.setItem("parentAccess", "true");
+      sessionStorage.setItem(
+        "parentAccess",
+        "true"
+      );
+
       setUnlocked(true);
       setError("");
       setPassword("");
     } else {
-      setError("❌ Incorrect password. Please try again.");
+      setError(
+        "❌ Incorrect password. Please try again."
+      );
+
       setPassword("");
     }
   }
 
   function logout() {
-    sessionStorage.removeItem("parentAccess");
+    sessionStorage.removeItem(
+      "parentAccess"
+    );
+
     setUnlocked(false);
     setPassword("");
   }
@@ -95,29 +107,37 @@ export default function Parent() {
   }
 
   function openStudentLessons() {
-    window.location.href = "/lessons?parent=true";
+    window.location.href =
+      "/lessons?parent=true";
   }
 
   const count = completed.length;
-  const percentage = Math.round((count / 180) * 100);
+
+  const percentage = Math.round(
+    (count / 180) * 100
+  );
 
   let tree = "🌱";
-  let message = "Your faith is taking root!";
+  let message =
+    "Your faith is taking root!";
 
   if (count >= 180) {
     tree = "🌳🏆";
-    message = "Your Faith Tree is fully grown!";
+    message =
+      "Your Faith Tree is fully grown!";
   } else if (count >= 120) {
     tree = "🌳🌳🌳";
-    message = "Your Faith Tree is growing strong!";
+    message =
+      "Your Faith Tree is growing strong!";
   } else if (count >= 60) {
     tree = "🌳";
-    message = "Look how much your Faith Tree has grown!";
+    message =
+      "Look how much your Faith Tree has grown!";
   }
 
-  // --------------------------------------------------
-  // PASSWORD SCREEN
-  // --------------------------------------------------
+  /* --------------------------------
+     PASSWORD SCREEN
+  -------------------------------- */
 
   if (!unlocked) {
     return (
@@ -147,7 +167,6 @@ export default function Parent() {
           <div
             style={{
               fontSize: "70px",
-              marginBottom: "10px",
             }}
           >
             🔐
@@ -156,7 +175,6 @@ export default function Parent() {
           <h1
             style={{
               color: "#315c48",
-              marginBottom: "5px",
             }}
           >
             Parent Dashboard
@@ -165,7 +183,6 @@ export default function Parent() {
           <h2
             style={{
               fontSize: "20px",
-              marginTop: "5px",
               color: "#555",
             }}
           >
@@ -174,15 +191,13 @@ export default function Parent() {
 
           <p
             style={{
-              fontSize: "16px",
               lineHeight: "1.6",
-              marginTop: "20px",
+              fontSize: "16px",
             }}
           >
             This area is for parents only.
             <br />
-            Please enter your parent password
-            to continue.
+            Enter the parent password to continue.
           </p>
 
           <form onSubmit={handleLogin}>
@@ -192,7 +207,7 @@ export default function Parent() {
               onChange={(e) =>
                 setPassword(e.target.value)
               }
-              placeholder="Enter parent password"
+              placeholder="Parent password"
               autoComplete="off"
               style={{
                 width: "100%",
@@ -203,7 +218,6 @@ export default function Parent() {
                 border: "2px solid #ddd",
                 fontSize: "17px",
                 textAlign: "center",
-                outline: "none",
               }}
             />
 
@@ -212,7 +226,6 @@ export default function Parent() {
                 style={{
                   color: "#b3261e",
                   fontWeight: "bold",
-                  marginTop: "12px",
                 }}
               >
                 {error}
@@ -223,7 +236,7 @@ export default function Parent() {
               type="submit"
               style={{
                 width: "100%",
-                marginTop: "18px",
+                marginTop: "15px",
                 padding: "16px",
                 border: "none",
                 borderRadius: "14px",
@@ -231,30 +244,35 @@ export default function Parent() {
                 color: "white",
                 fontSize: "18px",
                 fontWeight: "bold",
-                cursor: "pointer",
               }}
             >
               🔓 Enter Parent Dashboard
             </button>
           </form>
 
-          <p
+          <button
+            onClick={() => {
+              window.location.href = "/";
+            }}
             style={{
-              marginTop: "25px",
-              fontSize: "14px",
-              color: "#777",
+              marginTop: "20px",
+              border: "none",
+              background: "transparent",
+              color: "#315c48",
+              fontWeight: "bold",
+              cursor: "pointer",
             }}
           >
-            🌳 Faith Foundations: The M&M Adventure
-          </p>
+            ← Back to Home
+          </button>
         </div>
       </main>
     );
   }
 
-  // --------------------------------------------------
-  // PARENT DASHBOARD
-  // --------------------------------------------------
+  /* --------------------------------
+     PARENT DASHBOARD
+  -------------------------------- */
 
   return (
     <main
@@ -272,8 +290,6 @@ export default function Parent() {
           margin: "0 auto",
         }}
       >
-        {/* HEADER */}
-
         <header
           style={{
             textAlign: "center",
@@ -291,31 +307,22 @@ export default function Parent() {
           <h1
             style={{
               color: "#315c48",
-              margin: "5px 0",
             }}
           >
             Parent Dashboard
           </h1>
 
-          <h2
-            style={{
-              margin: "5px 0",
-              fontSize: "22px",
-            }}
-          >
+          <h2>
             Faith Foundations: The M&M Adventure
           </h2>
 
-          <p
-            style={{
-              fontSize: "16px",
-            }}
-          >
-            Monitor your child's Bible learning journey.
+          <p>
+            Monitor your child's Bible learning
+            journey.
           </p>
         </header>
 
-        {/* PARENT BUTTONS */}
+        {/* BUTTONS */}
 
         <section
           className="no-print"
@@ -331,8 +338,6 @@ export default function Parent() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(200px, 1fr))",
               gap: "12px",
             }}
           >
@@ -346,7 +351,6 @@ export default function Parent() {
                 color: "white",
                 fontSize: "16px",
                 fontWeight: "bold",
-                cursor: "pointer",
               }}
             >
               👀 Preview Student Lessons
@@ -362,7 +366,6 @@ export default function Parent() {
                 color: "white",
                 fontSize: "16px",
                 fontWeight: "bold",
-                cursor: "pointer",
               }}
             >
               🖨️ Print Progress Report
@@ -378,7 +381,6 @@ export default function Parent() {
                 color: "white",
                 fontSize: "16px",
                 fontWeight: "bold",
-                cursor: "pointer",
               }}
             >
               🔒 Lock Parent Dashboard
@@ -386,11 +388,9 @@ export default function Parent() {
           </div>
         </section>
 
-        {/* PRINTABLE REPORT */}
+        {/* REPORT */}
 
         <div id="printReport">
-          {/* REPORT HEADER */}
-
           <section
             style={{
               background: "white",
@@ -405,7 +405,6 @@ export default function Parent() {
               style={{
                 textAlign: "center",
                 color: "#315c48",
-                marginTop: "0",
               }}
             >
               📋 Student Progress Report
@@ -417,7 +416,6 @@ export default function Parent() {
                 gridTemplateColumns:
                   "1fr 1fr",
                 gap: "15px",
-                marginTop: "20px",
               }}
             >
               <div
@@ -470,16 +468,15 @@ export default function Parent() {
             </div>
           </section>
 
-          {/* FAITH TREE */}
+          {/* TREE */}
 
           <section
             style={{
               background: "white",
               borderRadius: "20px",
               padding: "25px",
-              margin: "20px auto",
-              maxWidth: "600px",
               textAlign: "center",
+              marginBottom: "20px",
               boxShadow:
                 "0 4px 15px rgba(0,0,0,.12)",
             }}
@@ -487,7 +484,6 @@ export default function Parent() {
             <div
               style={{
                 fontSize: "70px",
-                margin: "15px",
               }}
             >
               {tree}
@@ -518,16 +514,14 @@ export default function Parent() {
                   width: `${percentage}%`,
                   height: "100%",
                   background: "#315c48",
-                  transition: "width .5s",
                 }}
               />
             </div>
 
             <p
               style={{
-                fontSize: "18px",
-                marginTop: "12px",
                 fontWeight: "bold",
+                fontSize: "18px",
               }}
             >
               {percentage}% Complete
@@ -541,32 +535,19 @@ export default function Parent() {
               background: "#fff4df",
               borderRadius: "20px",
               padding: "25px",
-              margin: "20px auto",
-              maxWidth: "600px",
+              marginBottom: "20px",
             }}
           >
-            <h2
-              style={{
-                textAlign: "center",
-              }}
-            >
-              📚 Course Progress
-            </h2>
+            <h2>📚 Course Progress</h2>
 
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
+            <p>
               📖 Bible Lessons:{" "}
-              <strong>{count} / 180</strong>
+              <strong>
+                {count} / 180
+              </strong>
             </p>
 
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
+            <p>
               📝 Midterm Review:{" "}
               <strong>
                 {count >= 88
@@ -575,11 +556,7 @@ export default function Parent() {
               </strong>
             </p>
 
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
+            <p>
               📝 Midterm Exam:{" "}
               <strong>
                 {count >= 89
@@ -588,11 +565,7 @@ export default function Parent() {
               </strong>
             </p>
 
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
+            <p>
               🏆 Final Review:{" "}
               <strong>
                 {count >= 178
@@ -601,11 +574,7 @@ export default function Parent() {
               </strong>
             </p>
 
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
+            <p>
               🏆 Final Exam:{" "}
               <strong>
                 {count >= 179
@@ -615,15 +584,14 @@ export default function Parent() {
             </p>
           </section>
 
-          {/* COMPLETED LESSONS */}
+          {/* COMPLETED DAYS */}
 
           <section
             style={{
               background: "white",
               borderRadius: "20px",
               padding: "25px",
-              margin: "20px auto",
-              maxWidth: "600px",
+              marginBottom: "20px",
             }}
           >
             <h2
@@ -638,7 +606,6 @@ export default function Parent() {
               <p
                 style={{
                   textAlign: "center",
-                  color: "#777",
                 }}
               >
                 No lessons completed yet.
@@ -676,8 +643,7 @@ export default function Parent() {
               background: "white",
               borderRadius: "20px",
               padding: "25px",
-              margin: "20px auto",
-              maxWidth: "600px",
+              marginBottom: "20px",
             }}
           >
             <h2>📝 Parent Notes</h2>
@@ -695,12 +661,9 @@ export default function Parent() {
             </div>
           </section>
 
-          {/* REPORT FOOTER */}
-
-          <section
+          <footer
             style={{
               textAlign: "center",
-              marginTop: "30px",
               padding: "20px",
             }}
           >
@@ -714,26 +677,26 @@ export default function Parent() {
 
             <p
               style={{
-                fontSize: "18px",
                 fontWeight: "bold",
+                fontSize: "18px",
               }}
             >
-              Every lesson helps your Faith Tree grow!
+              Every lesson helps your Faith Tree
+              grow!
             </p>
 
             <p
               style={{
-                fontSize: "14px",
                 color: "#777",
               }}
             >
               Faith Foundations: The M&M Adventure
             </p>
-          </section>
+          </footer>
         </div>
       </div>
 
-      {/* PRINT STYLES */}
+      {/* PRINTING */}
 
       <style jsx global>{`
         @media print {
@@ -748,10 +711,6 @@ export default function Parent() {
           main {
             background: white !important;
             padding: 0 !important;
-          }
-
-          #printReport {
-            width: 100%;
           }
 
           section {
