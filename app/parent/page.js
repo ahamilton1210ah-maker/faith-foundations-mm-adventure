@@ -265,8 +265,7 @@ fontWeight: "bold",
 >
 🔒 Lock Dashboard </button> </div>
 
-```
-    <h1> Parent dashboard </h1>
+    <h1> Parent Dashboard</h1>
 
     <h2>
       Faith Foundations: The M&M Adventure
