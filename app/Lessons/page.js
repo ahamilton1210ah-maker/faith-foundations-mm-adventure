@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const STORAGE_KEY = "faithTreeCompleted";
 
@@ -290,7 +291,6 @@ function saveCompleted(daysCompleted) {
     JSON.stringify(cleanDays)
   );
 
-  // Tell the rest of the app immediately.
   window.dispatchEvent(
     new CustomEvent("faithTreeProgressUpdated", {
       detail: {
@@ -299,28 +299,48 @@ function saveCompleted(daysCompleted) {
       }
     })
   );
-
-  // Also notify other browser tabs.
-  window.dispatchEvent(new Event("storage"));
 }
 
 export default function Lessons() {
+  const router = useRouter();
+
   const [isParentPreview, setIsParentPreview] = useState(false);
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
-  // Load saved progress.
+  // LOAD PROGRESS
   useEffect(() => {
     setCompleted(getSavedCompleted());
+    setLoaded(true);
   }, []);
 
-  // Detect parent preview.
+  // DETECT PARENT PREVIEW
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setIsParentPreview(params.get("parent") === "true");
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    setIsParentPreview(
+      params.get("parent") === "true"
+    );
+
+    const requestedDay = Number(
+      params.get("day")
+    );
+
+    if (
+      Number.isInteger(requestedDay) &&
+      requestedDay >= 1 &&
+      requestedDay <= 180
+    ) {
+      setCurrentDay(requestedDay);
+    }
   }, []);
 
-  // Keep progress synchronized.
+  // SYNC PROGRESS
   useEffect(() => {
     function syncProgress() {
       setCompleted(getSavedCompleted());
@@ -350,7 +370,43 @@ export default function Lessons() {
   }, []);
 
   const lesson = days[currentDay - 1];
-  const isCompleted = completed.includes(currentDay);
+
+  if (!loaded || !lesson) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#f5f1e8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "30px",
+          fontFamily: "Arial, sans-serif"
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "20px",
+            textAlign: "center",
+            maxWidth: "500px"
+          }}
+        >
+          <div style={{ fontSize: "60px" }}>🌳</div>
+          <h2>Loading Faith Foundations...</h2>
+          <p>Please wait a moment.</p>
+        </div>
+      </main>
+    );
+  }
+
+  const isCompleted =
+    completed.includes(currentDay);
+
+  function goHome() {
+    router.push("/app");
+  }
 
   function readLessonAloud() {
     if (typeof window === "undefined") return;
@@ -362,6 +418,7 @@ export default function Lessons() {
       Today's theme is ${lesson.theme}.
       ${lesson.lesson}
       Today's activity is ${lesson.activity}
+      Memory verse: ${lesson.memoryVerse}
       Kindness mission: ${lesson.kindnessMission}
       ${lesson.prayer}
     `;
@@ -382,6 +439,8 @@ export default function Lessons() {
   }
 
   function toggleComplete() {
+    if (isParentPreview) return;
+
     let updated;
 
     if (isCompleted) {
@@ -463,14 +522,14 @@ export default function Lessons() {
   }
 
   function previousDay() {
-    if (currentDay > 1) {
-      setCurrentDay(currentDay - 1);
+    if (currentDay <= 1) return;
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    }
+    setCurrentDay(currentDay - 1);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 
   function nextDay() {
@@ -496,8 +555,31 @@ export default function Lessons() {
     });
   }
 
+  function selectDay(selectedDay) {
+    if (isParentPreview) {
+      setCurrentDay(selectedDay);
+      return;
+    }
+
+    const maxUnlocked = Math.min(
+      completed.length + 1,
+      180
+    );
+
+    if (selectedDay <= maxUnlocked) {
+      setCurrentDay(selectedDay);
+    } else {
+      alert(
+        `🔒 Day ${selectedDay} is locked!\n\n` +
+        `🌱 Complete your current lesson first to unlock more days.`
+      );
+    }
+  }
+
   const completionPercent =
-    Math.round((completed.length / 180) * 100);
+    Math.round(
+      (completed.length / 180) * 100
+    );
 
   return (
     <main
@@ -515,10 +597,12 @@ export default function Lessons() {
           margin: "0 auto"
         }}
       >
+
+        {/* HEADER */}
         <header
           style={{
             textAlign: "center",
-            padding: "25px 10px"
+            padding: "15px 10px 25px"
           }}
         >
           <div style={{ fontSize: "58px" }}>
@@ -553,14 +637,35 @@ export default function Lessons() {
               style={{
                 background: "#fff4df",
                 borderRadius: "12px",
-                padding: "10px",
+                padding: "12px",
                 fontWeight: "bold",
                 marginTop: "12px"
               }}
             >
               👀 Parent Preview Mode
+              <br />
+              <small>
+                You can view all 180 lessons.
+              </small>
             </div>
           )}
+
+          <button
+            onClick={goHome}
+            style={{
+              marginTop: "15px",
+              padding: "11px 18px",
+              border: "none",
+              borderRadius: "12px",
+              background: "#315c48",
+              color: "white",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🏠 Back to Home
+          </button>
         </header>
 
         {/* PROGRESS */}
@@ -583,6 +688,7 @@ export default function Lessons() {
             }}
           >
             <span>🌳 Faith Progress</span>
+
             <span>
               {completed.length} / 180
             </span>
@@ -619,7 +725,7 @@ export default function Lessons() {
           </p>
         </section>
 
-        {/* DAY NAVIGATION */}
+        {/* NAVIGATION */}
         <section
           style={{
             background: "white",
@@ -683,13 +789,13 @@ export default function Lessons() {
             </button>
           </div>
 
-          {/* STUDENT JUMP-TO */}
+          {/* DAY SELECTOR */}
           <div
             style={{
               marginTop: "18px",
               background: "#e9f4ed",
               borderRadius: "15px",
-              padding: "12px",
+              padding: "14px",
               textAlign: "center"
             }}
           >
@@ -700,36 +806,11 @@ export default function Lessons() {
 
               <select
                 value={currentDay}
-                onChange={(e) => {
-                  const selectedDay =
-                    Number(e.target.value);
-
-                  // Parent can preview any day.
-                  if (isParentPreview) {
-                    setCurrentDay(selectedDay);
-                    return;
-                  }
-
-                  // Student can only jump to
-                  // completed days or the next
-                  // unlocked day.
-                  const maxUnlocked =
-                    Math.min(
-                      completed.length + 1,
-                      180
-                    );
-
-                  if (
-                    selectedDay <= maxUnlocked
-                  ) {
-                    setCurrentDay(selectedDay);
-                  } else {
-                    alert(
-                      `🔒 Day ${selectedDay} is locked!\n\n` +
-                      `🌱 Complete your current lessons first to unlock more days.`
-                    );
-                  }
-                }}
+                onChange={(e) =>
+                  selectDay(
+                    Number(e.target.value)
+                  )
+                }
                 style={{
                   padding: "8px",
                   borderRadius: "8px",
@@ -773,6 +854,8 @@ export default function Lessons() {
               "0 4px 15px rgba(0,0,0,.08)"
           }}
         >
+
+          {/* LESSON TITLE */}
           <div
             style={{
               textAlign: "center",
@@ -812,6 +895,15 @@ export default function Lessons() {
               }}
             >
               📖 {lesson.bibleReference}
+            </p>
+
+            <p
+              style={{
+                marginTop: "10px",
+                fontWeight: "bold"
+              }}
+            >
+              Lesson Type: {lesson.lessonType}
             </p>
           </div>
 
@@ -1083,7 +1175,7 @@ export default function Lessons() {
           </p>
         </section>
 
-        {/* FAITH BADGES */}
+        {/* BADGES */}
         <section
           style={{
             background: "white",
@@ -1142,9 +1234,7 @@ export default function Lessons() {
                       earned ? 1 : 0.55,
                     boxShadow: earned
                       ? "0 3px 10px rgba(107,158,91,.2)"
-                      : "none",
-                    transition:
-                      "all .3s ease"
+                      : "none"
                   }}
                 >
                   <div
@@ -1206,67 +1296,53 @@ export default function Lessons() {
         >
           <div
             style={{
-              marginTop: "25px",
-              textAlign: "center"
+              fontSize: "70px",
+              marginBottom: "10px"
             }}
           >
-            <div
-              style={{
-                fontSize: "70px",
-                marginBottom: "10px"
-              }}
-            >
-              {completed.length === 0
-                ? "🌱"
-                : completed.length < 30
-                ? "🌿"
-                : completed.length < 60
-                ? "🌳"
-                : completed.length < 90
-                ? "🌳🌳"
-                : completed.length < 120
-                ? "🌳🌳🌳"
-                : completed.length < 150
-                ? "🌲🌳🌲"
-                : completed.length < 180
-                ? "🌲🌳🌲🌳"
-                : "🌲🌳🌲🌳🌲"}
-            </div>
-
-            <p
-              style={{
-                fontSize: "18px",
-                fontWeight: "bold"
-              }}
-            >
-              🌳 Your Faith Tree is growing!
-            </p>
-
-            <p
-              style={{
-                fontSize: "16px"
-              }}
-            >
-              Completed: {completed.length} / 180 days
-            </p>
-
-            <p
-              style={{
-                fontSize: "15px"
-              }}
-            >
-              {completed.length === 0
-                ? "Start your Bible adventure!"
-                : completed.length < 60
-                ? "Your faith is taking root! 🌱"
-                : completed.length < 120
-                ? "Look how much your Faith Tree has grown! 🌳"
-                : completed.length < 180
-                ? "Your Faith Tree is almost fully grown! ⭐"
-                : "🏆 Your Faith Tree is fully grown! You did it!"}
-            </p>
+            {completed.length === 0
+              ? "🌱"
+              : completed.length < 30
+              ? "🌿"
+              : completed.length < 60
+              ? "🌳"
+              : completed.length < 90
+              ? "🌳🌳"
+              : completed.length < 120
+              ? "🌳🌳🌳"
+              : completed.length < 150
+              ? "🌲🌳🌲"
+              : completed.length < 180
+              ? "🌲🌳🌲🌳"
+              : "🌲🌳🌲🌳🌲"}
           </div>
+
+          <p
+            style={{
+              fontSize: "18px",
+              fontWeight: "bold"
+            }}
+          >
+            🌳 Your Faith Tree is growing!
+          </p>
+
+          <p>
+            Completed: {completed.length} / 180 days
+          </p>
+
+          <p>
+            {completed.length === 0
+              ? "Start your Bible adventure!"
+              : completed.length < 60
+              ? "Your faith is taking root! 🌱"
+              : completed.length < 120
+              ? "Look how much your Faith Tree has grown! 🌳"
+              : completed.length < 180
+              ? "Your Faith Tree is almost fully grown! ⭐"
+              : "🏆 Your Faith Tree is fully grown! You did it!"}
+          </p>
         </footer>
+
       </div>
     </main>
   );
