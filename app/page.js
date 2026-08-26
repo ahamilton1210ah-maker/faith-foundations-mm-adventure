@@ -1,6 +1,9 @@
+```jsx
 "use client";
 
 import { useEffect, useState } from "react";
+
+const STORAGE_KEY = "faithTreeCompleted";
 
 export default function Home() {
   const [completed, setCompleted] = useState([]);
@@ -8,15 +11,26 @@ export default function Home() {
   useEffect(() => {
     function loadProgress() {
       try {
-        const saved = localStorage.getItem(
-          "faithTreeCompleted"
-        );
+        const saved = localStorage.getItem(STORAGE_KEY);
 
         if (saved) {
           const parsed = JSON.parse(saved);
 
           if (Array.isArray(parsed)) {
-            setCompleted(parsed);
+            const clean = [
+              ...new Set(
+                parsed
+                  .map(Number)
+                  .filter(
+                    (day) =>
+                      Number.isInteger(day) &&
+                      day >= 1 &&
+                      day <= 180
+                  )
+              ),
+            ].sort((a, b) => a - b);
+
+            setCompleted(clean);
           }
         }
       } catch {
@@ -58,6 +72,34 @@ export default function Home() {
   const percentage = Math.round(
     (count / 180) * 100
   );
+
+  /*
+   * FIND THE NEXT LESSON
+   *
+   * Example:
+   * Nothing completed → Day 1
+   * Days 1-10 completed → Day 11
+   * Days 1-37 completed → Day 38
+   *
+   * This also handles situations where a lesson was
+   * completed out of order.
+   */
+  let nextLesson = 1;
+
+  for (let day = 1; day <= 180; day++) {
+    if (!completed.includes(day)) {
+      nextLesson = day;
+      break;
+    }
+  }
+
+  if (count >= 180) {
+    nextLesson = 180;
+  }
+
+  function startTodayLesson() {
+    window.location.href = `/Lessons?day=${nextLesson}`;
+  }
 
   let tree = "🌱";
   let treeMessage =
@@ -193,9 +235,7 @@ export default function Home() {
           </p>
 
           <button
-            onClick={() => {
-              window.location.href = "/Lessons";
-            }}
+            onClick={startTodayLesson}
             style={{
               width: "100%",
               padding: "18px",
@@ -209,8 +249,22 @@ export default function Home() {
               cursor: "pointer",
             }}
           >
-            🌱 Start Today's Lesson
+            {count >= 180
+              ? "🏆 Review Day 180"
+              : `🌱 Start Day ${nextLesson}`}
           </button>
+
+          <p
+            style={{
+              marginTop: "12px",
+              fontSize: "14px",
+              color: "#777",
+            }}
+          >
+            {count >= 180
+              ? "You've completed all 180 lessons!"
+              : `Your next lesson is Day ${nextLesson}.`}
+          </p>
         </section>
 
         {/* PROGRESS */}
@@ -362,3 +416,4 @@ export default function Home() {
     </main>
   );
 }
+```
