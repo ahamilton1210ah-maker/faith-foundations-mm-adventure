@@ -194,7 +194,7 @@ export default function Home() {
 
           <button
             onClick={() => {
-              window.location.href = "/lessons";
+              window.location.href = "/Lessons";
             }}
             style={{
               width: "100%",
