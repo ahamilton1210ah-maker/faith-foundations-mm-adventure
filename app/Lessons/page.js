@@ -1,3 +1,4 @@
+```javascript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -211,6 +212,7 @@ function getCompleted() {
 
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
+
     if (!saved) return [];
 
     const data = JSON.parse(saved);
@@ -221,7 +223,7 @@ function getCompleted() {
       data
         .map(Number)
         .filter(
-          n =>
+          (n) =>
             Number.isInteger(n) &&
             n >= 1 &&
             n <= 180
@@ -235,7 +237,8 @@ function getCompleted() {
 function saveCompleted(list) {
   if (typeof window === "undefined") return;
 
-  const clean = [...new Set(list)].sort((a, b) => a - b);
+  const clean = [...new Set(list)]
+    .sort((a, b) => a - b);
 
   localStorage.setItem(
     STORAGE_KEY,
@@ -247,52 +250,141 @@ function saveCompleted(list) {
   );
 }
 
+function getFirstIncomplete(completedList) {
+  for (let day = 1; day <= 180; day++) {
+    if (!completedList.includes(day)) {
+      return day;
+    }
+  }
+
+  return 180;
+}
+
 export default function Lessons() {
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState([]);
   const [parentPreview, setParentPreview] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
+  /*
+    LOAD STUDENT PROGRESS
+
+    IMPORTANT:
+    Students automatically open at the first
+    lesson they have NOT completed.
+
+    Parents preview starts at Day 1.
+  */
   useEffect(() => {
-    setCompleted(getCompleted());
+    const savedCompleted = getCompleted();
+
+    setCompleted(savedCompleted);
 
     const params = new URLSearchParams(
       window.location.search
     );
 
-    setParentPreview(
-      params.get("parent") === "true"
-    );
+    const isParent =
+      params.get("parent") === "true";
+
+    setParentPreview(isParent);
+
+    if (!isParent) {
+      const firstIncomplete =
+        getFirstIncomplete(savedCompleted);
+
+      setCurrentDay(firstIncomplete);
+    } else {
+      setCurrentDay(1);
+    }
+
+    setLoaded(true);
   }, []);
 
+  /*
+    KEEP PROGRESS IN SYNC
+  */
   useEffect(() => {
-    const update = () => {
-      setCompleted(getCompleted());
-    };
+    function updateProgress() {
+      const updated = getCompleted();
+
+      setCompleted(updated);
+
+      /*
+        Only automatically move the student if
+        the current lesson has become completed
+        and they are on the first incomplete lesson.
+      */
+      if (!parentPreview) {
+        const firstIncomplete =
+          getFirstIncomplete(updated);
+
+        if (
+          currentDay < firstIncomplete &&
+          !updated.includes(currentDay)
+        ) {
+          setCurrentDay(firstIncomplete);
+        }
+      }
+    }
 
     window.addEventListener(
       "faithTreeProgressUpdated",
-      update
+      updateProgress
     );
 
     window.addEventListener(
       "storage",
-      update
+      updateProgress
     );
 
     return () => {
       window.removeEventListener(
         "faithTreeProgressUpdated",
-        update
+        updateProgress
       );
 
       window.removeEventListener(
         "storage",
-        update
+        updateProgress
       );
     };
-  }, []);
+  }, [currentDay, parentPreview]);
+
+  if (!loaded) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#f5f1e8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Arial, sans-serif"
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "30px",
+            borderRadius: "20px",
+            textAlign: "center"
+          }}
+        >
+          <div style={{ fontSize: "50px" }}>
+            🌳
+          </div>
+
+          <h2>
+            Loading your Faith Adventure...
+          </h2>
+        </div>
+      </main>
+    );
+  }
 
   const lesson = days[currentDay - 1];
+
   const isCompleted =
     completed.includes(currentDay);
 
@@ -300,12 +392,18 @@ export default function Lessons() {
     (completed.length / 180) * 100
   );
 
+  /*
+    COMPLETE LESSON
+  */
   function completeLesson() {
     if (parentPreview) return;
 
     if (isCompleted) return;
 
-    const updated = [...completed, currentDay]
+    const updated = [
+      ...completed,
+      currentDay
+    ]
       .filter(
         (value, index, array) =>
           array.indexOf(value) === index
@@ -313,6 +411,7 @@ export default function Lessons() {
       .sort((a, b) => a - b);
 
     setCompleted(updated);
+
     saveCompleted(updated);
 
     let message =
@@ -366,6 +465,10 @@ export default function Lessons() {
 
     alert(message);
 
+    /*
+      After completing a lesson, automatically
+      move to the next lesson.
+    */
     if (currentDay < 180) {
       setCurrentDay(currentDay + 1);
 
@@ -390,14 +493,30 @@ export default function Lessons() {
   function nextDay() {
     if (currentDay >= 180) return;
 
-    if (
-      !parentPreview &&
-      !completed.includes(currentDay)
-    ) {
+    /*
+      Parents can preview everything.
+    */
+    if (parentPreview) {
+      setCurrentDay(currentDay + 1);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      return;
+    }
+
+    /*
+      Student can only move forward after
+      completing the current lesson.
+    */
+    if (!completed.includes(currentDay)) {
       alert(
         `🔒 Day ${currentDay + 1} is locked!\n\n` +
         `Complete Day ${currentDay} first to unlock the next lesson.`
       );
+
       return;
     }
 
@@ -409,6 +528,9 @@ export default function Lessons() {
     });
   }
 
+  /*
+    READ LESSON ALOUD
+  */
   function readAloud() {
     if (typeof window === "undefined") return;
 
@@ -515,7 +637,9 @@ export default function Lessons() {
               fontWeight: "bold"
             }}
           >
-            <span>🌳 Faith Progress</span>
+            <span>
+              🌳 Faith Progress
+            </span>
 
             <span>
               {completed.length} / 180
@@ -535,7 +659,8 @@ export default function Lessons() {
               style={{
                 height: "100%",
                 width: `${percentage}%`,
-                background: "#6b9e5b"
+                background: "#6b9e5b",
+                transition: "width .4s ease"
               }}
             />
           </div>
@@ -571,7 +696,11 @@ export default function Lessons() {
             <button
               onClick={previousDay}
               disabled={currentDay === 1}
-              style={buttonStyle}
+              style={{
+                ...buttonStyle,
+                opacity:
+                  currentDay === 1 ? 0.5 : 1
+              }}
             >
               ← Previous
             </button>
@@ -583,7 +712,11 @@ export default function Lessons() {
             <button
               onClick={nextDay}
               disabled={currentDay === 180}
-              style={buttonStyle}
+              style={{
+                ...buttonStyle,
+                opacity:
+                  currentDay === 180 ? 0.5 : 1
+              }}
             >
               Next →
             </button>
@@ -613,17 +746,21 @@ export default function Lessons() {
                   return;
                 }
 
-                const maxUnlocked =
-                  Math.min(
-                    completed.length + 1,
-                    180
-                  );
+                const firstIncomplete =
+                  getFirstIncomplete(completed);
 
-                if (selected <= maxUnlocked) {
+                /*
+                  Student can view completed lessons
+                  and the current first incomplete lesson.
+                */
+                if (
+                  selected <= firstIncomplete
+                ) {
                   setCurrentDay(selected);
                 } else {
                   alert(
-                    "🔒 That lesson is locked!\n\nComplete your current lesson first."
+                    "🔒 That lesson is locked!\n\n" +
+                    "Complete your current lesson first to unlock the next lesson."
                   );
                 }
               }}
@@ -634,13 +771,12 @@ export default function Lessons() {
               }}
             >
               {days.map((item) => {
+                const firstIncomplete =
+                  getFirstIncomplete(completed);
+
                 const unlocked =
                   parentPreview ||
-                  item.day <=
-                    Math.min(
-                      completed.length + 1,
-                      180
-                    );
+                  item.day <= firstIncomplete;
 
                 return (
                   <option
@@ -708,9 +844,15 @@ export default function Lessons() {
               marginTop: "20px"
             }}
           >
-            <h2>⭐ Today's Theme</h2>
+            <h2>
+              ⭐ Today's Theme
+            </h2>
 
-            <p style={{ fontSize: "18px" }}>
+            <p
+              style={{
+                fontSize: "18px"
+              }}
+            >
               {lesson.theme}
             </p>
           </section>
@@ -718,7 +860,9 @@ export default function Lessons() {
           {/* LESSON */}
 
           <section>
-            <h2>📚 Let's Learn</h2>
+            <h2>
+              📚 Let's Learn
+            </h2>
 
             <p
               style={{
@@ -762,7 +906,9 @@ export default function Lessons() {
               marginTop: "20px"
             }}
           >
-            <h2>✏️ Today's Activity</h2>
+            <h2>
+              ✏️ Today's Activity
+            </h2>
 
             <p
               style={{
@@ -784,7 +930,9 @@ export default function Lessons() {
               marginTop: "20px"
             }}
           >
-            <h2>💡 Memory Verse</h2>
+            <h2>
+              💡 Memory Verse
+            </h2>
 
             <p style={{ fontSize: "18px" }}>
               {lesson.memoryVerse}
@@ -801,7 +949,9 @@ export default function Lessons() {
               marginTop: "20px"
             }}
           >
-            <h2>💚 Kindness Mission</h2>
+            <h2>
+              💚 Kindness Mission
+            </h2>
 
             <p style={{ fontSize: "18px" }}>
               {lesson.kindnessMission}
@@ -818,7 +968,9 @@ export default function Lessons() {
               marginTop: "20px"
             }}
           >
-            <h2>🙏 Prayer</h2>
+            <h2>
+              🙏 Prayer
+            </h2>
 
             <p
               style={{
@@ -847,7 +999,10 @@ export default function Lessons() {
                   : "#6b9e5b",
                 color: "white",
                 fontSize: "19px",
-                fontWeight: "bold"
+                fontWeight: "bold",
+                cursor: isCompleted
+                  ? "default"
+                  : "pointer"
               }}
             >
               {isCompleted
@@ -870,7 +1025,9 @@ export default function Lessons() {
               disabled={currentDay === 1}
               style={{
                 ...buttonStyle,
-                flex: 1
+                flex: 1,
+                opacity:
+                  currentDay === 1 ? 0.5 : 1
               }}
             >
               ⬅️ Previous
@@ -881,7 +1038,9 @@ export default function Lessons() {
               disabled={currentDay === 180}
               style={{
                 ...buttonStyle,
-                flex: 1
+                flex: 1,
+                opacity:
+                  currentDay === 180 ? 0.5 : 1
               }}
             >
               Next ➡️
@@ -952,7 +1111,11 @@ export default function Lessons() {
                       {requirement} Lessons
                     </div>
 
-                    <div style={{ marginTop: "6px" }}>
+                    <div
+                      style={{
+                        marginTop: "6px"
+                      }}
+                    >
                       {earned
                         ? "✅ Earned"
                         : "🔒 Locked"}
@@ -972,7 +1135,11 @@ export default function Lessons() {
             marginTop: "30px"
           }}
         >
-          <div style={{ fontSize: "65px" }}>
+          <div
+            style={{
+              fontSize: "65px"
+            }}
+          >
             {completed.length === 0
               ? "🌱"
               : completed.length < 30
@@ -1033,7 +1200,8 @@ const greenButton = {
   background: "#315c48",
   color: "white",
   fontSize: "16px",
-  fontWeight: "bold"
+  fontWeight: "bold",
+  cursor: "pointer"
 };
 
 const grayButton = {
@@ -1043,5 +1211,7 @@ const grayButton = {
   background: "#777",
   color: "white",
   fontSize: "16px",
-  fontWeight: "bold"
+  fontWeight: "bold",
+  cursor: "pointer"
 };
+```
