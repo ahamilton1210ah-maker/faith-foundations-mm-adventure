@@ -1,4 +1,3 @@
-```javascript
 "use client";
 
 import { useEffect, useState } from "react";
@@ -1214,4 +1213,3 @@ const grayButton = {
   fontWeight: "bold",
   cursor: "pointer"
 };
-```
