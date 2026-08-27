@@ -577,7 +577,31 @@ export default function Lessons() {
           margin: "0 auto"
         }}
       >
+{/* RETURN HOME */}
 
+<div
+  style={{
+    marginBottom: "10px",
+  }}
+>
+  <button
+    onClick={() => {
+      window.location.href = "/";
+    }}
+    style={{
+      padding: "12px 18px",
+      border: "none",
+      borderRadius: "12px",
+      background: "#315c48",
+      color: "white",
+      fontSize: "15px",
+      fontWeight: "bold",
+      cursor: "pointer",
+    }}
+  >
+    🏠 Return Home
+  </button>
+</div>
         {/* HEADER */}
 
         <header
