@@ -14,13 +14,15 @@ export default function Parent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const parentAccess = sessionStorage.getItem("parentAccess");
+    const parentAccess =
+      sessionStorage.getItem("parentAccess");
 
     if (parentAccess === "true") {
       setUnlocked(true);
     }
 
-    const savedNotes = localStorage.getItem(NOTES_KEY);
+    const savedNotes =
+      localStorage.getItem(NOTES_KEY);
 
     if (savedNotes) {
       setNotes(savedNotes);
@@ -32,7 +34,8 @@ export default function Parent() {
 
     function loadProgress() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved =
+          localStorage.getItem(STORAGE_KEY);
 
         if (!saved) {
           setCompleted([]);
@@ -41,11 +44,25 @@ export default function Parent() {
 
         const parsed = JSON.parse(saved);
 
-        if (Array.isArray(parsed)) {
-          setCompleted(parsed);
-        } else {
+        if (!Array.isArray(parsed)) {
           setCompleted([]);
+          return;
         }
+
+        const clean = [
+          ...new Set(
+            parsed
+              .map(Number)
+              .filter(
+                (day) =>
+                  Number.isInteger(day) &&
+                  day >= 1 &&
+                  day <= 180
+              )
+          ),
+        ].sort((a, b) => a - b);
+
+        setCompleted(clean);
       } catch {
         setCompleted([]);
       }
@@ -80,19 +97,26 @@ export default function Parent() {
     e.preventDefault();
 
     if (password === PARENT_PASSWORD) {
-      sessionStorage.setItem("parentAccess", "true");
+      sessionStorage.setItem(
+        "parentAccess",
+        "true"
+      );
 
       setUnlocked(true);
-      setError("");
       setPassword("");
+      setError("");
     } else {
-      setError("❌ Incorrect password. Please try again.");
+      setError(
+        "❌ Incorrect password. Please try again."
+      );
       setPassword("");
     }
   }
 
   function logout() {
-    sessionStorage.removeItem("parentAccess");
+    sessionStorage.removeItem(
+      "parentAccess"
+    );
 
     setUnlocked(false);
     setPassword("");
@@ -100,16 +124,39 @@ export default function Parent() {
 
   function saveNotes(value) {
     setNotes(value);
-    localStorage.setItem(NOTES_KEY, value);
+    localStorage.setItem(
+      NOTES_KEY,
+      value
+    );
   }
 
-  /*
-   * IMPORTANT:
-   * Your folder is app/Lessons
-   * so the URL must be /Lessons
-   */
+  function getNextLesson() {
+    for (let day = 1; day <= 180; day++) {
+      if (!completed.includes(day)) {
+        return day;
+      }
+    }
+
+    return null;
+  }
+
   function previewLessons() {
-    window.location.href = "/Lessons?parent=true";
+    window.location.href =
+      "/Lessons?parent=true";
+  }
+
+  function goToNextLesson() {
+    const nextLesson = getNextLesson();
+
+    if (!nextLesson) {
+      alert(
+        "🎉 All 180 lessons are complete!"
+      );
+      return;
+    }
+
+    window.location.href =
+      `/Lessons?parent=true&day=${nextLesson}`;
   }
 
   function printReport() {
@@ -134,26 +181,33 @@ export default function Parent() {
     );
 
     let tree = "🌱";
-    let treeMessage = "Your faith is taking root!";
+    let treeMessage =
+      "Your faith is taking root!";
 
     if (count >= 180) {
       tree = "🌳🏆";
-      treeMessage = "Your Faith Tree is fully grown!";
+      treeMessage =
+        "Your Faith Tree is fully grown!";
     } else if (count >= 150) {
       tree = "🌲🌳🌲";
-      treeMessage = "Your Faith Tree is almost fully grown!";
+      treeMessage =
+        "Your Faith Tree is almost fully grown!";
     } else if (count >= 120) {
       tree = "🌳🌳🌳";
-      treeMessage = "Your Faith Tree is growing strong!";
+      treeMessage =
+        "Your Faith Tree is growing strong!";
     } else if (count >= 90) {
       tree = "🌳🌳";
-      treeMessage = "Your Faith Tree is growing beautifully!";
+      treeMessage =
+        "Your Faith Tree is growing beautifully!";
     } else if (count >= 60) {
       tree = "🌳";
-      treeMessage = "Look how much your Faith Tree has grown!";
+      treeMessage =
+        "Look how much your Faith Tree has grown!";
     } else if (count >= 30) {
       tree = "🌿";
-      treeMessage = "Your faith is growing stronger!";
+      treeMessage =
+        "Your faith is growing stronger!";
     }
 
     const status =
@@ -163,13 +217,18 @@ export default function Parent() {
         ? "Completed"
         : "In Progress";
 
+    const nextLesson = getNextLesson();
+
     const badges = [
       ["First Steps", 10],
       ["Growing Strong", 25],
       ["Faith Builder", 50],
       ["Halfway Hero", 90],
       ["Faith Champion", 135],
-      ["Faith Foundations Champion", 180],
+      [
+        "Faith Foundations Champion",
+        180,
+      ],
     ];
 
     reportWindow.document.write(`
@@ -177,7 +236,9 @@ export default function Parent() {
       <html>
       <head>
 
-        <title>Faith Foundations Progress Report</title>
+        <title>
+          Faith Foundations Progress Report
+        </title>
 
         <style>
 
@@ -347,38 +408,49 @@ export default function Parent() {
 
         <div class="report">
 
-          <h1>🌳 Faith Foundations</h1>
+          <h1>
+            🌳 Faith Foundations
+          </h1>
 
           <div class="subtitle">
-            <strong>The M&M Adventure</strong><br>
+            <strong>
+              The M&M Adventure
+            </strong>
+            <br>
             Bible Curriculum Progress Report
           </div>
 
           <div class="info">
 
             <div class="box">
-              <strong>Student:</strong><br><br>
+              <strong>Student:</strong>
+              <br><br>
               M&M
             </div>
 
             <div class="box">
-              <strong>Grade:</strong><br><br>
+              <strong>Grade:</strong>
+              <br><br>
               3rd Grade
             </div>
 
             <div class="box">
-              <strong>School Year:</strong><br><br>
+              <strong>School Year:</strong>
+              <br><br>
               2026–2027
             </div>
 
             <div class="box">
-              <strong>Parent/Teacher:</strong><br><br>
+              <strong>Parent/Teacher:</strong>
+              <br><br>
               ______________________________
             </div>
 
           </div>
 
-          <h2>📚 Course Progress</h2>
+          <h2>
+            📚 Course Progress
+          </h2>
 
           <div class="tree">
             ${tree}
@@ -397,7 +469,9 @@ export default function Parent() {
           </div>
 
           <p class="center">
-            <strong>${percentage}% Complete</strong>
+            <strong>
+              ${percentage}% Complete
+            </strong>
           </p>
 
           <table>
@@ -414,23 +488,28 @@ export default function Parent() {
 
             <tr>
               <th>Lessons Remaining</th>
-              <td>${Math.max(0, 180 - count)}</td>
+              <td>${Math.max(
+                0,
+                180 - count
+              )}</td>
             </tr>
 
             <tr>
               <th>Next Lesson</th>
               <td>
                 ${
-                  count >= 180
-                    ? "Course Complete"
-                    : `Day ${count + 1}`
+                  nextLesson
+                    ? `Day ${nextLesson}`
+                    : "Course Complete"
                 }
               </td>
             </tr>
 
           </table>
 
-          <h2>🏅 Faith Badges</h2>
+          <h2>
+            🏅 Faith Badges
+          </h2>
 
           <table>
 
@@ -464,7 +543,9 @@ export default function Parent() {
 
           </table>
 
-          <h2>📝 Exams & Reviews</h2>
+          <h2>
+            📝 Exams & Reviews
+          </h2>
 
           <table>
 
@@ -477,9 +558,9 @@ export default function Parent() {
               <td>Midterm Review</td>
               <td>
                 ${
-                  count >= 90
+                  count >= 89
                     ? "🔓 Ready"
-                    : "🔒 Unlocks after Day 90"
+                    : "🔒 Unlocks after Day 89"
                 }
               </td>
             </tr>
@@ -488,9 +569,9 @@ export default function Parent() {
               <td>Midterm Exam</td>
               <td>
                 ${
-                  count >= 90
+                  count >= 88
                     ? "🔓 Ready"
-                    : "🔒 Unlocks after Day 90"
+                    : "🔒 Unlocks after Day 88"
                 }
               </td>
             </tr>
@@ -499,9 +580,9 @@ export default function Parent() {
               <td>Final Review</td>
               <td>
                 ${
-                  count >= 180
+                  count >= 177
                     ? "🔓 Ready"
-                    : "🔒 Unlocks after Day 180"
+                    : "🔒 Unlocks after Day 177"
                 }
               </td>
             </tr>
@@ -510,22 +591,23 @@ export default function Parent() {
               <td>Final Exam</td>
               <td>
                 ${
-                  count >= 180
+                  count >= 178
                     ? "🔓 Ready"
-                    : "🔒 Unlocks after Day 180"
+                    : "🔒 Unlocks after Day 178"
                 }
               </td>
             </tr>
 
           </table>
 
-          <h2>📝 Parent/Teacher Notes</h2>
+          <h2>
+            📝 Parent/Teacher Notes
+          </h2>
 
           <div class="notes">
             ${
-              notes
-                ? notes
-                : "No parent/teacher notes entered."
+              notes ||
+              "No parent/teacher notes entered."
             }
           </div>
 
@@ -542,10 +624,11 @@ export default function Parent() {
           </div>
 
           <div class="footer">
-
-            Faith Foundations: The M&M Adventure<br>
-            Growing in God's Word — one day at a time.
-
+            Faith Foundations:
+            The M&M Adventure
+            <br>
+            Growing in God's Word —
+            one day at a time.
           </div>
 
         </div>
@@ -569,27 +652,36 @@ export default function Parent() {
     Math.round((count / 180) * 100)
   );
 
+  const nextLesson = getNextLesson();
+
   let tree = "🌱";
-  let message = "Your faith is taking root!";
+  let message =
+    "Your faith is taking root!";
 
   if (count >= 180) {
     tree = "🌳🏆";
-    message = "Your Faith Tree is fully grown!";
+    message =
+      "Your Faith Tree is fully grown!";
   } else if (count >= 150) {
     tree = "🌲🌳🌲";
-    message = "Your Faith Tree is almost fully grown!";
+    message =
+      "Your Faith Tree is almost fully grown!";
   } else if (count >= 120) {
     tree = "🌳🌳🌳";
-    message = "Your Faith Tree is growing strong!";
+    message =
+      "Your Faith Tree is growing strong!";
   } else if (count >= 90) {
     tree = "🌳🌳";
-    message = "Your Faith Tree is growing beautifully!";
+    message =
+      "Your Faith Tree is growing beautifully!";
   } else if (count >= 60) {
     tree = "🌳";
-    message = "Look how much your Faith Tree has grown!";
+    message =
+      "Look how much your Faith Tree has grown!";
   } else if (count >= 30) {
     tree = "🌿";
-    message = "Your faith is growing stronger!";
+    message =
+      "Your faith is growing stronger!";
   }
 
   if (!unlocked) {
@@ -605,6 +697,7 @@ export default function Parent() {
           alignItems: "center",
         }}
       >
+
         <div
           style={{
             width: "100%",
@@ -613,23 +706,32 @@ export default function Parent() {
             borderRadius: "25px",
             padding: "35px 25px",
             textAlign: "center",
-            boxShadow: "0 5px 25px rgba(0,0,0,.12)",
+            boxShadow:
+              "0 5px 25px rgba(0,0,0,.12)",
           }}
         >
-          <div style={{ fontSize: "70px" }}>
+
+          <div
+            style={{ fontSize: "70px" }}
+          >
             🔐
           </div>
 
-          <h1 style={{ color: "#315c48" }}>
+          <h1
+            style={{ color: "#315c48" }}
+          >
             Parent Dashboard
           </h1>
 
-          <h2>Faith Foundations</h2>
+          <h2>
+            Faith Foundations
+          </h2>
 
           <p>
             This area is for parents only.
             <br />
-            Enter the parent password to continue.
+            Enter the parent password
+            to continue.
           </p>
 
           <form onSubmit={handleLogin}>
@@ -677,6 +779,7 @@ export default function Parent() {
                 color: "white",
                 fontSize: "18px",
                 fontWeight: "bold",
+                cursor: "pointer",
               }}
             >
               🔓 Enter Parent Dashboard
@@ -701,6 +804,7 @@ export default function Parent() {
           </button>
 
         </div>
+
       </main>
     );
   }
@@ -730,23 +834,31 @@ export default function Parent() {
           }}
         >
 
-          <div style={{ fontSize: "65px" }}>
+          <div
+            style={{ fontSize: "65px" }}
+          >
             👩‍🏫
           </div>
 
-          <h1 style={{ color: "#315c48" }}>
+          <h1
+            style={{ color: "#315c48" }}
+          >
             Parent Dashboard
           </h1>
 
           <h2>
-            Faith Foundations: The M&M Adventure
+            Faith Foundations:
+            The M&M Adventure
           </h2>
 
           <p>
-            Monitor your child's Bible learning journey.
+            Monitor your child's Bible
+            learning journey.
           </p>
 
         </header>
+
+        {/* ACTION BUTTONS */}
 
         <section
           className="no-print"
@@ -755,7 +867,8 @@ export default function Parent() {
             borderRadius: "20px",
             padding: "20px",
             marginBottom: "20px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.08)",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
 
@@ -783,12 +896,35 @@ export default function Parent() {
             </button>
 
             <button
+              onClick={goToNextLesson}
+              disabled={!nextLesson}
+              style={{
+                padding: "15px",
+                border: "none",
+                borderRadius: "14px",
+                background: nextLesson
+                  ? "#6b9e5b"
+                  : "#999",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: nextLesson
+                  ? "pointer"
+                  : "default",
+              }}
+            >
+              {nextLesson
+                ? `📖 Open Next Lesson — Day ${nextLesson}`
+                : "🎉 All 180 Lessons Complete"}
+            </button>
+
+            <button
               onClick={printReport}
               style={{
                 padding: "15px",
                 border: "none",
                 borderRadius: "14px",
-                background: "#6b9e5b",
+                background: "#315c48",
                 color: "white",
                 fontSize: "16px",
                 fontWeight: "bold",
@@ -818,6 +954,8 @@ export default function Parent() {
 
         </section>
 
+        {/* FAITH TREE */}
+
         <section
           style={{
             background: "white",
@@ -825,11 +963,14 @@ export default function Parent() {
             padding: "30px",
             textAlign: "center",
             marginBottom: "22px",
-            boxShadow: "0 4px 15px rgba(0,0,0,.1)",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
 
-          <div style={{ fontSize: "75px" }}>
+          <div
+            style={{ fontSize: "75px" }}
+          >
             {tree}
           </div>
 
@@ -859,6 +1000,8 @@ export default function Parent() {
                 width: `${percentage}%`,
                 height: "100%",
                 background: "#315c48",
+                transition:
+                  "width .4s ease",
               }}
             />
 
@@ -875,6 +1018,8 @@ export default function Parent() {
 
         </section>
 
+        {/* CURRENT PROGRESS */}
+
         <section
           style={{
             background: "#fffaf0",
@@ -884,28 +1029,43 @@ export default function Parent() {
           }}
         >
 
-          <h2>📅 Current Progress</h2>
+          <h2>
+            📅 Current Progress
+          </h2>
 
           <p>
             📖 Next lesson:{" "}
             <strong>
-              {count >= 180
-                ? "Course Complete"
-                : `Day ${count + 1}`}
+              {nextLesson
+                ? `Day ${nextLesson}`
+                : "Course Complete 🎉"}
             </strong>
           </p>
 
           <p>
             ⭐ Lessons completed:{" "}
-            <strong>{count}</strong>
+            <strong>
+              {count}
+            </strong>
           </p>
 
           <p>
             📈 Lessons remaining:{" "}
-            <strong>{180 - count}</strong>
+            <strong>
+              {180 - count}
+            </strong>
+          </p>
+
+          <p>
+            🌳 Faith Tree progress:{" "}
+            <strong>
+              {percentage}%
+            </strong>
           </p>
 
         </section>
+
+        {/* EXAMS */}
 
         <section
           style={{
@@ -916,45 +1076,49 @@ export default function Parent() {
           }}
         >
 
-          <h2>📝 Exams & Reviews</h2>
+          <h2>
+            📝 Exams & Reviews
+          </h2>
 
           <p>
             📚 Midterm Review:{" "}
             <strong>
-              {count >= 90
-                ? "Ready!"
-                : "🔒 Unlocks after Day 90"}
+              {count >= 89
+                ? "🔓 Ready!"
+                : "🔒 Unlocks after Day 89"}
             </strong>
           </p>
 
           <p>
             📝 Midterm Exam:{" "}
             <strong>
-              {count >= 90
-                ? "Ready!"
-                : "🔒 Unlocks after Day 90"}
+              {count >= 89
+                ? "🔓 Ready!"
+                : "🔒 Unlocks after Day 89"}
             </strong>
           </p>
 
           <p>
             🏆 Final Review:{" "}
             <strong>
-              {count >= 180
-                ? "Ready!"
-                : "🔒 Unlocks after Day 180"}
+              {count >= 178
+                ? "🔓 Ready!"
+                : "🔒 Unlocks after Day 178"}
             </strong>
           </p>
 
           <p>
             🏆 Final Exam:{" "}
             <strong>
-              {count >= 180
-                ? "Ready!"
-                : "🔒 Unlocks after Day 180"}
+              {count >= 179
+                ? "🔓 Ready!"
+                : "🔒 Unlocks after Day 179"}
             </strong>
           </p>
 
         </section>
+
+        {/* COMPLETED LESSONS */}
 
         <section
           style={{
@@ -965,10 +1129,14 @@ export default function Parent() {
           }}
         >
 
-          <h2>✅ Completed Lessons</h2>
+          <h2>
+            ✅ Completed Lessons
+          </h2>
 
           {completed.length === 0 ? (
-            <p>No lessons completed yet.</p>
+            <p>
+              No lessons completed yet.
+            </p>
           ) : (
             <div
               style={{
@@ -984,7 +1152,8 @@ export default function Parent() {
                   style={{
                     background: "#e9f4ed",
                     borderRadius: "10px",
-                    padding: "8px 12px",
+                    padding:
+                      "8px 12px",
                     fontWeight: "bold",
                   }}
                 >
@@ -997,7 +1166,7 @@ export default function Parent() {
 
         </section>
 
-        {/* REAL NOTES BOX */}
+        {/* NOTES */}
 
         <section
           className="no-print"
@@ -1009,11 +1178,14 @@ export default function Parent() {
           }}
         >
 
-          <h2>📝 Parent/Teacher Notes</h2>
+          <h2>
+            📝 Parent/Teacher Notes
+          </h2>
 
           <p>
-            Type notes here. They will automatically save
-            on this device and will also appear on the
+            Type notes here. They will
+            automatically save on this
+            device and appear on the
             printable report.
           </p>
 
@@ -1031,7 +1203,8 @@ export default function Parent() {
               borderRadius: "12px",
               border: "2px solid #ccc",
               fontSize: "16px",
-              fontFamily: "Arial, sans-serif",
+              fontFamily:
+                "Arial, sans-serif",
               resize: "vertical",
               background: "white",
               color: "#24313a",
@@ -1056,16 +1229,24 @@ export default function Parent() {
           }}
         >
 
-          <div style={{ fontSize: "55px" }}>
+          <div
+            style={{ fontSize: "55px" }}
+          >
             🌳
           </div>
 
-          <p style={{ fontWeight: "bold" }}>
-            Every lesson helps your Faith Tree grow!
+          <p
+            style={{ fontWeight: "bold" }}
+          >
+            Every lesson helps your
+            Faith Tree grow!
           </p>
 
-          <p style={{ color: "#777" }}>
-            Faith Foundations: The M&M Adventure
+          <p
+            style={{ color: "#777" }}
+          >
+            Faith Foundations:
+            The M&M Adventure
           </p>
 
         </footer>
