@@ -52,150 +52,158 @@ const themes = [
   ["Finish Strong", "Philippians 3:13-14", "Keep growing in faith"]
 ];
 
-const lessonTypes = ["Learn", "Explore", "Practice", "Live It"];
+const lessonTypes = [
+  "Learn",
+  "Explore",
+  "Practice",
+  "Live It"
+];
 
-const days = Array.from({ length: 180 }, (_, index) => {
-  const day = index + 1;
+const days = Array.from(
+  { length: 180 },
+  (_, index) => {
+    const day = index + 1;
 
-  if (day === 88) {
+    if (day === 88) {
+      return {
+        day,
+        title: "Midterm Review",
+        bibleReference: "Review Days 1–87",
+        theme: "Look back at everything you have learned!",
+        lessonType: "Review",
+        lesson:
+          "Today we review the Bible stories, truths, memory passages, and faith lessons from the first half of our adventure.",
+        activity:
+          "Ask a parent to review your favorite Bible stories with you. Tell them three things you remember learning about God.",
+        memoryVerse:
+          "Choose your favorite memory passage from Days 1–87.",
+        kindnessMission:
+          "Encourage someone by telling them something kind about them.",
+        prayer:
+          "Dear God, thank You for everything I have learned. Help me remember Your Word and continue growing in faith. Amen."
+      };
+    }
+
+    if (day === 89) {
+      return {
+        day,
+        title: "Midterm Exam",
+        bibleReference: "Review Days 1–88",
+        theme: "Show what you have learned!",
+        lessonType: "Exam",
+        lesson:
+          "Today is your midterm Bible exam. Do your best and remember that learning God's Word is more important than getting every answer perfect.",
+        activity:
+          "Complete your parent-provided midterm exam or review questions.",
+        memoryVerse:
+          "Choose one memory passage to recite to your parent.",
+        kindnessMission:
+          "Thank someone who has helped you learn.",
+        prayer:
+          "Dear God, please help me remember what I have learned and do my very best. Thank You for helping me grow. Amen."
+      };
+    }
+
+    if (day === 178) {
+      return {
+        day,
+        title: "Final Review",
+        bibleReference: "Review Days 1–177",
+        theme: "Look how far you have come!",
+        lessonType: "Review",
+        lesson:
+          "Today we review the most important lessons from our entire Faith Foundations adventure.",
+        activity:
+          "Choose your three favorite Bible stories and explain what each one taught you about God.",
+        memoryVerse:
+          "Choose your favorite memory passage from the entire course.",
+        kindnessMission:
+          "Encourage someone who is still learning.",
+        prayer:
+          "Dear God, thank You for carrying me through this journey. Help me keep Your Word in my heart. Amen."
+      };
+    }
+
+    if (day === 179) {
+      return {
+        day,
+        title: "Final Exam",
+        bibleReference: "Review Days 1–178",
+        theme: "You are almost there!",
+        lessonType: "Final Exam",
+        lesson:
+          "Today is your final Bible exam. Remember everything you have learned and do your very best.",
+        activity:
+          "Complete your parent-provided final exam or review questions.",
+        memoryVerse:
+          "Recite your favorite memory verse to your parent.",
+        kindnessMission:
+          "Celebrate someone else's accomplishment today.",
+        prayer:
+          "Dear God, thank You for helping me learn Your Word. Help me continue following You every day. Amen."
+      };
+    }
+
+    if (day === 180) {
+      return {
+        day,
+        title: "YOU DID IT!",
+        bibleReference: "Philippians 3:13-14",
+        theme: "Keep growing in faith!",
+        lessonType: "Celebration",
+        lesson:
+          "You completed all 180 Bible lessons! Your Faith Foundations adventure is complete, but your journey with God continues every day.",
+        activity:
+          "Celebrate with your family. Share your favorite lesson, favorite memory verse, and one way you want to keep growing in faith.",
+        memoryVerse:
+          "Philippians 3:14 — Press toward the mark for the prize of the high calling of God in Christ Jesus.",
+        kindnessMission:
+          "Celebrate someone else and encourage them to keep growing too.",
+        prayer:
+          "Dear God, thank You for helping me complete my 180 Bible lessons. Help me keep reading Your Word, praying, obeying You, and growing in faith. In Jesus' name, Amen."
+      };
+    }
+
+    const week = Math.floor(index / 4);
+    const dayOfWeek = index % 4;
+    const theme = themes[week % themes.length];
+
     return {
       day,
-      title: "Midterm Review",
-      bibleReference: "Review Days 1–87",
-      theme: "Look back at everything you have learned!",
-      lessonType: "Review",
+      title: theme[0],
+      bibleReference: theme[1],
+      theme: theme[2],
+      lessonType: lessonTypes[dayOfWeek],
+
       lesson:
-        "Today we review the Bible stories, truths, memory passages, and faith lessons from the first half of our adventure.",
+        `Today we are learning about ${theme[0].toLowerCase()}. Read ${theme[1]} in your KJV Bible. Think about what this passage teaches us about God and how you can apply it to your life.`,
+
       activity:
-        "Ask a parent to review your favorite Bible stories with you. Tell them three things you remember learning about God.",
+        dayOfWeek === 0
+          ? `Read ${theme[1]} in your KJV Bible with a parent. Talk about what happened and what it teaches us about God.`
+          : dayOfWeek === 1
+          ? `Draw a picture about ${theme[0]}. Label three things you learned from today's Bible passage.`
+          : dayOfWeek === 2
+          ? `Choose one lesson from ${theme[0]} and practice it today. Tell your parent how you put God's Word into action.`
+          : `Tell someone what you learned about ${theme[0]}. Then find one way to live out today's Bible lesson.`,
+
       memoryVerse:
-        "Choose your favorite memory passage from Days 1–87.",
+        `Read ${theme[1]} in your KJV Bible and choose one verse or truth from the passage to remember.`,
+
       kindnessMission:
-        "Encourage someone by telling them something kind about them.",
+        dayOfWeek === 0
+          ? "Do one helpful thing for someone without being asked."
+          : dayOfWeek === 1
+          ? "Give someone a genuine compliment today."
+          : dayOfWeek === 2
+          ? "Help with a household job with a cheerful attitude."
+          : "Pray for someone who needs encouragement.",
+
       prayer:
-        "Dear God, thank You for everything I have learned. Help me remember Your Word and continue growing in faith. Amen."
+        `Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen.`
     };
   }
-
-  if (day === 89) {
-    return {
-      day,
-      title: "Midterm Exam",
-      bibleReference: "Review Days 1–88",
-      theme: "Show what you have learned!",
-      lessonType: "Exam",
-      lesson:
-        "Today is your midterm Bible exam. Do your best and remember that learning God's Word is more important than getting every answer perfect.",
-      activity:
-        "Complete your parent-provided midterm exam or review questions.",
-      memoryVerse:
-        "Choose one memory passage to recite to your parent.",
-      kindnessMission:
-        "Thank someone who has helped you learn.",
-      prayer:
-        "Dear God, please help me remember what I have learned and do my very best. Thank You for helping me grow. Amen."
-    };
-  }
-
-  if (day === 178) {
-    return {
-      day,
-      title: "Final Review",
-      bibleReference: "Review Days 1–177",
-      theme: "Look how far you have come!",
-      lessonType: "Review",
-      lesson:
-        "Today we review the most important lessons from our entire Faith Foundations adventure.",
-      activity:
-        "Choose your three favorite Bible stories and explain what each one taught you about God.",
-      memoryVerse:
-        "Choose your favorite memory passage from the entire course.",
-      kindnessMission:
-        "Encourage someone who is still learning.",
-      prayer:
-        "Dear God, thank You for carrying me through this journey. Help me keep Your Word in my heart. Amen."
-    };
-  }
-
-  if (day === 179) {
-    return {
-      day,
-      title: "Final Exam",
-      bibleReference: "Review Days 1–178",
-      theme: "You are almost there!",
-      lessonType: "Final Exam",
-      lesson:
-        "Today is your final Bible exam. Remember everything you have learned and do your very best.",
-      activity:
-        "Complete your parent-provided final exam or review questions.",
-      memoryVerse:
-        "Recite your favorite memory verse to your parent.",
-      kindnessMission:
-        "Celebrate someone else's accomplishment today.",
-      prayer:
-        "Dear God, thank You for helping me learn Your Word. Help me continue following You every day. Amen."
-    };
-  }
-
-  if (day === 180) {
-    return {
-      day,
-      title: "YOU DID IT!",
-      bibleReference: "Philippians 3:13-14",
-      theme: "Keep growing in faith!",
-      lessonType: "Celebration",
-      lesson:
-        "You completed all 180 Bible lessons! Your Faith Foundations adventure is complete, but your journey with God continues every day.",
-      activity:
-        "Celebrate with your family. Share your favorite lesson, favorite memory verse, and one way you want to keep growing in faith.",
-      memoryVerse:
-        "Philippians 3:14 — Press toward the mark for the prize of the high calling of God in Christ Jesus.",
-      kindnessMission:
-        "Celebrate someone else and encourage them to keep growing too.",
-      prayer:
-        "Dear God, thank You for helping me complete my 180 Bible lessons. Help me keep reading Your Word, praying, obeying You, and growing in faith. In Jesus' name, Amen."
-    };
-  }
-
-  const week = Math.floor(index / 4);
-  const dayOfWeek = index % 4;
-  const theme = themes[week % themes.length];
-
-  return {
-    day,
-    title: theme[0],
-    bibleReference: theme[1],
-    theme: theme[2],
-    lessonType: lessonTypes[dayOfWeek],
-
-    lesson:
-      `Today we are learning about ${theme[0].toLowerCase()}. Read ${theme[1]} in your KJV Bible. Think about what this passage teaches us about God and how you can apply it to your life.`,
-
-    activity:
-      dayOfWeek === 0
-        ? `Read ${theme[1]} in your KJV Bible with a parent. Talk about what happened and what it teaches us about God.`
-        : dayOfWeek === 1
-        ? `Draw a picture about ${theme[0]}. Label three things you learned from today's Bible passage.`
-        : dayOfWeek === 2
-        ? `Choose one lesson from ${theme[0]} and practice it today. Tell your parent how you put God's Word into action.`
-        : `Tell someone what you learned about ${theme[0]}. Then find one way to live out today's Bible lesson.`,
-
-    memoryVerse:
-      `Read ${theme[1]} in your KJV Bible and choose one verse or truth from the passage to remember.`,
-
-    kindnessMission:
-      dayOfWeek === 0
-        ? "Do one helpful thing for someone without being asked."
-        : dayOfWeek === 1
-        ? "Give someone a genuine compliment today."
-        : dayOfWeek === 2
-        ? "Help with a household job with a cheerful attitude."
-        : "Pray for someone who needs encouragement.",
-
-    prayer:
-      `Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen.`
-  };
-});
+);
 
 const badges = [
   ["🌱", "First Steps", 10],
@@ -207,19 +215,48 @@ const badges = [
 ];
 
 function getCompleted() {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") {
+    return [];
+  }
 
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
 
-    if (!saved) return [];
+    if (!saved) {
+      return [];
+    }
 
     const data = JSON.parse(saved);
 
-    if (!Array.isArray(data)) return [];
+    if (!Array.isArray(data)) {
+      return [];
+    }
 
-    return [...new Set(
-      data
+    return [
+      ...new Set(
+        data
+          .map(Number)
+          .filter(
+            (n) =>
+              Number.isInteger(n) &&
+              n >= 1 &&
+              n <= 180
+          )
+      )
+    ].sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
+
+function saveCompleted(list) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const clean = [
+    ...new Set(
+      list
         .map(Number)
         .filter(
           (n) =>
@@ -227,17 +264,8 @@ function getCompleted() {
             n >= 1 &&
             n <= 180
         )
-    )].sort((a, b) => a - b);
-  } catch {
-    return [];
-  }
-}
-
-function saveCompleted(list) {
-  if (typeof window === "undefined") return;
-
-  const clean = [...new Set(list)]
-    .sort((a, b) => a - b);
+    )
+  ].sort((a, b) => a - b);
 
   localStorage.setItem(
     STORAGE_KEY,
@@ -249,38 +277,35 @@ function saveCompleted(list) {
   );
 }
 
-function getFirstIncomplete(completedList) {
-  for (let day = 1; day <= 180; day++) {
-    if (!completedList.includes(day)) {
-      return day;
-    }
-  }
-
-  return 180;
-}
-
 export default function Lessons() {
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState([]);
   const [parentPreview, setParentPreview] = useState(false);
-  const [loaded, setLoaded] = useState(false);
 
   /*
-    LOAD STUDENT PROGRESS
-
-    IMPORTANT:
-    Students automatically open at the first
-    lesson they have NOT completed.
-
-    Parents preview starts at Day 1.
-  */
+   * LOAD PROGRESS AND URL DAY
+   *
+   * Home sends:
+   * /Lessons?day=11
+   *
+   * Parent Preview sends:
+   * /Lessons?parent=true
+   *
+   * Parent Preview can open any day.
+   *
+   * Students can only open the next unlocked day.
+   */
   useEffect(() => {
-    const savedCompleted = getCompleted();
+    const completedLessons = getCompleted();
 
-    setCompleted(savedCompleted);
+    setCompleted(completedLessons);
 
     const params = new URLSearchParams(
       window.location.search
+    );
+
+    const requestedDay = Number(
+      params.get("day")
     );
 
     const isParent =
@@ -288,99 +313,74 @@ export default function Lessons() {
 
     setParentPreview(isParent);
 
-    if (!isParent) {
-      const firstIncomplete =
-        getFirstIncomplete(savedCompleted);
+    if (isParent) {
+      if (
+        requestedDay >= 1 &&
+        requestedDay <= 180
+      ) {
+        setCurrentDay(requestedDay);
+      }
 
-      setCurrentDay(firstIncomplete);
-    } else {
-      setCurrentDay(1);
+      return;
     }
 
-    setLoaded(true);
+    let nextUnlockedDay = 1;
+
+    for (let day = 1; day <= 180; day++) {
+      if (!completedLessons.includes(day)) {
+        nextUnlockedDay = day;
+        break;
+      }
+    }
+
+    if (completedLessons.length >= 180) {
+      nextUnlockedDay = 180;
+    }
+
+    if (
+      requestedDay >= 1 &&
+      requestedDay <= 180
+    ) {
+      if (requestedDay <= nextUnlockedDay) {
+        setCurrentDay(requestedDay);
+      } else {
+        setCurrentDay(nextUnlockedDay);
+      }
+    } else {
+      setCurrentDay(nextUnlockedDay);
+    }
   }, []);
 
   /*
-    KEEP PROGRESS IN SYNC
-  */
+   * KEEP PROGRESS IN SYNC
+   */
   useEffect(() => {
-    function updateProgress() {
-      const updated = getCompleted();
-
-      setCompleted(updated);
-
-      /*
-        Only automatically move the student if
-        the current lesson has become completed
-        and they are on the first incomplete lesson.
-      */
-      if (!parentPreview) {
-        const firstIncomplete =
-          getFirstIncomplete(updated);
-
-        if (
-          currentDay < firstIncomplete &&
-          !updated.includes(currentDay)
-        ) {
-          setCurrentDay(firstIncomplete);
-        }
-      }
+    function update() {
+      setCompleted(getCompleted());
     }
 
     window.addEventListener(
       "faithTreeProgressUpdated",
-      updateProgress
+      update
     );
 
     window.addEventListener(
       "storage",
-      updateProgress
+      update
     );
 
     return () => {
       window.removeEventListener(
         "faithTreeProgressUpdated",
-        updateProgress
+        update
       );
 
       window.removeEventListener(
         "storage",
-        updateProgress
+        update
       );
     };
-  }, [currentDay, parentPreview]);
-
-  if (!loaded) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#f5f1e8",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "Arial, sans-serif"
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: "30px",
-            borderRadius: "20px",
-            textAlign: "center"
-          }}
-        >
-          <div style={{ fontSize: "50px" }}>
-            🌳
-          </div>
-
-          <h2>
-            Loading your Faith Adventure...
-          </h2>
-        </div>
-      </main>
-    );
-  }
+  }, []);
 
   const lesson = days[currentDay - 1];
 
@@ -392,25 +392,25 @@ export default function Lessons() {
   );
 
   /*
-    COMPLETE LESSON
-  */
+   * COMPLETE LESSON
+   */
   function completeLesson() {
-    if (parentPreview) return;
+    if (parentPreview) {
+      return;
+    }
 
-    if (isCompleted) return;
+    if (isCompleted) {
+      return;
+    }
 
     const updated = [
-      ...completed,
-      currentDay
-    ]
-      .filter(
-        (value, index, array) =>
-          array.indexOf(value) === index
-      )
-      .sort((a, b) => a - b);
+      ...new Set([
+        ...completed,
+        currentDay
+      ])
+    ].sort((a, b) => a - b);
 
     setCompleted(updated);
-
     saveCompleted(updated);
 
     let message =
@@ -465,11 +465,16 @@ export default function Lessons() {
     alert(message);
 
     /*
-      After completing a lesson, automatically
-      move to the next lesson.
-    */
+     * Automatically move to the next lesson
+     */
     if (currentDay < 180) {
       setCurrentDay(currentDay + 1);
+
+      window.history.replaceState(
+        null,
+        "",
+        `/Lessons?day=${currentDay + 1}`
+      );
 
       window.scrollTo({
         top: 0,
@@ -482,6 +487,12 @@ export default function Lessons() {
     if (currentDay > 1) {
       setCurrentDay(currentDay - 1);
 
+      window.history.replaceState(
+        null,
+        "",
+        `/Lessons?day=${currentDay - 1}`
+      );
+
       window.scrollTo({
         top: 0,
         behavior: "smooth"
@@ -490,27 +501,14 @@ export default function Lessons() {
   }
 
   function nextDay() {
-    if (currentDay >= 180) return;
-
-    /*
-      Parents can preview everything.
-    */
-    if (parentPreview) {
-      setCurrentDay(currentDay + 1);
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-
+    if (currentDay >= 180) {
       return;
     }
 
-    /*
-      Student can only move forward after
-      completing the current lesson.
-    */
-    if (!completed.includes(currentDay)) {
+    if (
+      !parentPreview &&
+      !completed.includes(currentDay)
+    ) {
       alert(
         `🔒 Day ${currentDay + 1} is locked!\n\n` +
         `Complete Day ${currentDay} first to unlock the next lesson.`
@@ -521,17 +519,22 @@ export default function Lessons() {
 
     setCurrentDay(currentDay + 1);
 
+    window.history.replaceState(
+      null,
+      "",
+      `/Lessons?day=${currentDay + 1}`
+    );
+
     window.scrollTo({
       top: 0,
       behavior: "smooth"
     });
   }
 
-  /*
-    READ LESSON ALOUD
-  */
   function readAloud() {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
 
     window.speechSynthesis.cancel();
 
@@ -611,7 +614,8 @@ export default function Lessons() {
                 background: "#fff4df",
                 padding: "12px",
                 borderRadius: "12px",
-                fontWeight: "bold"
+                fontWeight: "bold",
+                marginTop: "15px"
               }}
             >
               👀 Parent Preview Mode
@@ -636,9 +640,7 @@ export default function Lessons() {
               fontWeight: "bold"
             }}
           >
-            <span>
-              🌳 Faith Progress
-            </span>
+            <span>🌳 Faith Progress</span>
 
             <span>
               {completed.length} / 180
@@ -742,24 +744,45 @@ export default function Lessons() {
 
                 if (parentPreview) {
                   setCurrentDay(selected);
+
+                  window.history.replaceState(
+                    null,
+                    "",
+                    `/Lessons?day=${selected}&parent=true`
+                  );
+
                   return;
                 }
 
-                const firstIncomplete =
-                  getFirstIncomplete(completed);
+                let maxUnlocked = 1;
 
-                /*
-                  Student can view completed lessons
-                  and the current first incomplete lesson.
-                */
-                if (
-                  selected <= firstIncomplete
+                for (
+                  let day = 1;
+                  day <= 180;
+                  day++
                 ) {
+                  if (!completed.includes(day)) {
+                    maxUnlocked = day;
+                    break;
+                  }
+                }
+
+                if (completed.length >= 180) {
+                  maxUnlocked = 180;
+                }
+
+                if (selected <= maxUnlocked) {
                   setCurrentDay(selected);
+
+                  window.history.replaceState(
+                    null,
+                    "",
+                    `/Lessons?day=${selected}`
+                  );
                 } else {
                   alert(
                     "🔒 That lesson is locked!\n\n" +
-                    "Complete your current lesson first to unlock the next lesson."
+                    "Complete your current lesson first."
                   );
                 }
               }}
@@ -770,12 +793,31 @@ export default function Lessons() {
               }}
             >
               {days.map((item) => {
-                const firstIncomplete =
-                  getFirstIncomplete(completed);
+                let unlocked = false;
 
-                const unlocked =
-                  parentPreview ||
-                  item.day <= firstIncomplete;
+                if (parentPreview) {
+                  unlocked = true;
+                } else {
+                  let maxUnlocked = 1;
+
+                  for (
+                    let day = 1;
+                    day <= 180;
+                    day++
+                  ) {
+                    if (!completed.includes(day)) {
+                      maxUnlocked = day;
+                      break;
+                    }
+                  }
+
+                  if (completed.length >= 180) {
+                    maxUnlocked = 180;
+                  }
+
+                  unlocked =
+                    item.day <= maxUnlocked;
+                }
 
                 return (
                   <option
@@ -801,6 +843,9 @@ export default function Lessons() {
             padding: "25px"
           }}
         >
+
+          {/* LESSON HEADER */}
+
           <div
             style={{
               textAlign: "center",
@@ -847,11 +892,7 @@ export default function Lessons() {
               ⭐ Today's Theme
             </h2>
 
-            <p
-              style={{
-                fontSize: "18px"
-              }}
-            >
+            <p style={{ fontSize: "18px" }}>
               {lesson.theme}
             </p>
           </section>
@@ -1057,11 +1098,19 @@ export default function Lessons() {
             marginTop: "20px"
           }}
         >
-          <h2 style={{ textAlign: "center" }}>
+          <h2
+            style={{
+              textAlign: "center"
+            }}
+          >
             🏅 Faith Badges
           </h2>
 
-          <p style={{ textAlign: "center" }}>
+          <p
+            style={{
+              textAlign: "center"
+            }}
+          >
             Keep completing lessons to earn badges!
           </p>
 
@@ -1076,7 +1125,8 @@ export default function Lessons() {
             {badges.map(
               ([icon, name, requirement]) => {
                 const earned =
-                  completed.length >= requirement;
+                  completed.length >=
+                  requirement;
 
                 return (
                   <div
@@ -1091,7 +1141,9 @@ export default function Lessons() {
                       border: earned
                         ? "2px solid #6b9e5b"
                         : "2px solid #ddd",
-                      opacity: earned ? 1 : 0.55
+                      opacity: earned
+                        ? 1
+                        : 0.55
                     }}
                   >
                     <div
@@ -1126,7 +1178,7 @@ export default function Lessons() {
           </div>
         </section>
 
-        {/* TREE */}
+        {/* FAITH TREE */}
 
         <footer
           style={{
@@ -1148,10 +1200,8 @@ export default function Lessons() {
               : completed.length < 90
               ? "🌳🌳"
               : completed.length < 120
-              ? "🌳🌳🌳"
-              : completed.length < 150
               ? "🌲🌳🌲"
-              : completed.length < 180
+              : completed.length < 150
               ? "🌲🌳🌲🌳"
               : "🌲🌳🌲🌳🌲"}
           </div>
