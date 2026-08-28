@@ -30,7 +30,11 @@ export default function Home() {
             ].sort((a, b) => a - b);
 
             setCompleted(clean);
+          } else {
+            setCompleted([]);
           }
+        } else {
+          setCompleted([]);
         }
       } catch {
         setCompleted([]);
@@ -73,16 +77,9 @@ export default function Home() {
   );
 
   /*
-   * FIND THE NEXT LESSON
-   *
-   * Example:
-   * Nothing completed → Day 1
-   * Days 1-10 completed → Day 11
-   * Days 1-37 completed → Day 38
-   *
-   * This also handles situations where a lesson was
-   * completed out of order.
+   * FIND NEXT LESSON
    */
+
   let nextLesson = 1;
 
   for (let day = 1; day <= 180; day++) {
@@ -99,6 +96,10 @@ export default function Home() {
   function startTodayLesson() {
     window.location.href = `/Lessons?day=${nextLesson}`;
   }
+
+  /*
+   * FAITH TREE
+   */
 
   let tree = "🌱";
   let treeMessage =
@@ -135,7 +136,7 @@ export default function Home() {
       style={{
         minHeight: "100vh",
         background: "#f5f1e8",
-        padding: "30px 20px 60px",
+        padding: "25px 16px 60px",
         fontFamily: "Arial, sans-serif",
         color: "#24313a",
       }}
@@ -146,59 +147,47 @@ export default function Home() {
           margin: "0 auto",
         }}
       >
-        {/* HEADER */}
+
+        {/* LOGO */}
 
         <header
           style={{
             textAlign: "center",
-            padding: "20px 10px",
+            padding: "10px 5px 20px",
           }}
         >
-          <div
+          <img
+            src="/faith-foundations-logo.png"
+            alt="Faith Foundations: The M&M Adventure"
             style={{
-              fontSize: "75px",
+              width: "100%",
+              maxWidth: "500px",
+              height: "auto",
+              display: "block",
+              margin: "0 auto",
+              borderRadius: "20px",
             }}
-          >
-            🌳
-          </div>
-
-          <h1
-            style={{
-              color: "#315c48",
-              fontSize: "38px",
-              margin: "5px 0",
-            }}
-          >
-            Faith Foundations
-          </h1>
-
-          <h2
-            style={{
-              fontSize: "24px",
-              margin: "5px 0 12px",
-            }}
-          >
-            The M&M Adventure
-          </h2>
+          />
 
           <p
             style={{
               fontSize: "18px",
               lineHeight: "1.6",
+              marginTop: "15px",
             }}
           >
             Growing in God's Word — one day at a time!
           </p>
         </header>
 
-        {/* STUDENT BUTTON */}
+        {/* STUDENT */}
 
         <section
           style={{
             background: "white",
             borderRadius: "25px",
             padding: "30px 25px",
-            marginTop: "20px",
+            marginTop: "10px",
             boxShadow:
               "0 5px 20px rgba(0,0,0,.10)",
             textAlign: "center",
@@ -364,7 +353,7 @@ export default function Home() {
           </p>
         </section>
 
-        {/* PARENT BUTTON */}
+        {/* PARENT DASHBOARD */}
 
         <section
           style={{
@@ -401,6 +390,8 @@ export default function Home() {
           </p>
         </section>
 
+        {/* FOOTER */}
+
         <footer
           style={{
             textAlign: "center",
@@ -409,8 +400,15 @@ export default function Home() {
             fontSize: "14px",
           }}
         >
-          Faith Foundations: The M&M Adventure
+          <p>
+            Faith Foundations: The M&M Adventure
+          </p>
+
+          <p>
+            Growing in God's Word — one day at a time. 🌱
+          </p>
         </footer>
+
       </div>
     </main>
   );
