@@ -274,8 +274,6 @@ const days = Array.from(
 
 /* =========================
    BADGES
-   THESE ARE THE SAME
-   THROUGHOUT THE APP
 ========================= */
 
 const badges = [
@@ -319,13 +317,14 @@ const badges = [
 
 /* =========================
    FAITH TREE
-   MATCHES BADGE MILESTONES
+   ALL APP AREAS USE THIS
 ========================= */
 
 function getFaithTree(completedCount) {
   if (completedCount >= 180) {
     return {
       tree: "🏆🌳🏆",
+      icon: "🏆",
       title: "Faith Foundations Champion!",
       message:
         "Your Faith Tree is fully grown! You completed all 180 lessons!"
@@ -335,6 +334,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 135) {
     return {
       tree: "🌲🌳🌲",
+      icon: "⭐",
       title: "Faith Champion!",
       message:
         "Your faith is shining strong! Keep growing toward 180 lessons!"
@@ -344,6 +344,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 90) {
     return {
       tree: "🌳🌳",
+      icon: "🏆",
       title: "Halfway Hero!",
       message:
         "You are halfway through your Faith Foundations adventure!"
@@ -353,6 +354,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 50) {
     return {
       tree: "🌳",
+      icon: "🌳",
       title: "Faith Builder!",
       message:
         "Your Faith Tree is growing strong!"
@@ -362,6 +364,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 25) {
     return {
       tree: "🌿",
+      icon: "🌿",
       title: "Growing Strong!",
       message:
         "Your faith is growing stronger every day!"
@@ -371,6 +374,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 10) {
     return {
       tree: "🌱",
+      icon: "🌱",
       title: "First Steps!",
       message:
         "You have taken your first big steps in your faith adventure!"
@@ -380,6 +384,7 @@ function getFaithTree(completedCount) {
   if (completedCount >= 1) {
     return {
       tree: "🌱",
+      icon: "🌱",
       title: "Faith Is Taking Root!",
       message:
         "You have started growing in God's Word. Keep going!"
@@ -388,6 +393,7 @@ function getFaithTree(completedCount) {
 
   return {
     tree: "🌰",
+    icon: "🌰",
     title: "Ready to Begin?",
     message:
       "Complete your first Bible lesson and begin growing your Faith Tree!"
@@ -656,6 +662,11 @@ export default function Lessons() {
       (completed.length / 180) * 100
     );
 
+  /*
+   * THIS IS NOW THE SINGLE SOURCE
+   * FOR ALL TREE MILESTONE DISPLAY.
+   */
+
   const faithTree =
     getFaithTree(completed.length);
 
@@ -690,10 +701,7 @@ export default function Lessons() {
   }
 
   /* =========================
-     PLAY
-     
-     If paused, RESUME.
-     If finished/not started, START.
+     PLAY / RESUME
   ========================= */
 
   function playLessonAloud() {
@@ -768,7 +776,7 @@ export default function Lessons() {
 
   /* =========================
      PAUSE
-========================= */
+  ========================= */
 
   function pauseLessonAloud() {
     if (
@@ -793,7 +801,7 @@ export default function Lessons() {
 
   /* =========================
      START OVER
-========================= */
+  ========================= */
 
   function startLessonOver() {
     if (
@@ -811,11 +819,6 @@ export default function Lessons() {
 
     setIsSpeaking(false);
     setIsPaused(false);
-
-    /*
-     * Small delay makes Start Over
-     * reliable on iPhone/Safari.
-     */
 
     setTimeout(() => {
       const speech =
@@ -889,7 +892,7 @@ export default function Lessons() {
     let message =
       `🎉 Congratulations! 🎉\n\n` +
       `Day ${currentDay} Complete!\n\n` +
-      `🌳 Your Faith Tree is growing!\n\n` +
+      `${getFaithTree(updated.length).icon} Your Faith Tree is growing!\n\n` +
       `${updated.length} of 180 lessons completed!`;
 
     if (updated.length === 10) {
@@ -905,7 +908,7 @@ export default function Lessons() {
         `🌿 GREAT JOB! 🌿\n\n` +
         `You've completed 25 Bible lessons!\n\n` +
         `🏅 Growing Strong Badge Earned!\n\n` +
-        `🌿 Your Faith Tree is growing stronger!`;
+        `🌿 Your Faith Tree has grown!`;
     }
 
     if (updated.length === 50) {
@@ -1073,7 +1076,7 @@ export default function Lessons() {
               fontSize: "58px"
             }}
           >
-            🌳
+            {faithTree.tree}
           </div>
 
           <h1
@@ -1167,7 +1170,7 @@ export default function Lessons() {
             }}
           >
             <span>
-              🌳 Faith Progress
+              {faithTree.icon} Faith Progress
             </span>
 
             <span>
@@ -1530,8 +1533,6 @@ export default function Lessons() {
               </button>
             </div>
 
-            {/* AUDIO STATUS */}
-
             <p
               style={{
                 textAlign: "center",
@@ -1686,7 +1687,7 @@ export default function Lessons() {
             >
               {isCompleted
                 ? "✅ Day Completed!"
-                : `🌱 Complete Day ${lesson.day}`}
+                : `${faithTree.icon} Complete Day ${lesson.day}`}
             </button>
           )}
 
@@ -1744,7 +1745,7 @@ export default function Lessons() {
               marginTop: "12px"
             }}
           >
-            📖 Day {currentDay} of 180
+            {faithTree.icon} Day {currentDay} of 180
           </p>
         </section>
 
@@ -1932,7 +1933,7 @@ export default function Lessons() {
             }}
           >
             <strong>
-              🌳 Faith Tree Progress
+              {faithTree.icon} Faith Tree Progress
             </strong>
 
             <p
@@ -1964,7 +1965,9 @@ export default function Lessons() {
               color: "#666"
             }}
           >
-            Every completed lesson helps your Faith Tree grow! 🌱
+            {completed.length >= 25
+              ? "Every completed lesson helps your Faith Tree grow stronger! 🌿"
+              : "Every completed lesson helps your Faith Tree grow! 🌱"}
           </p>
         </section>
 
@@ -2023,13 +2026,9 @@ const bottomButton = {
   cursor: "pointer"
 };
 
-/*
- * AUDIO BUTTONS
- *
- * flex: 1 makes all three buttons
- * share the available width so they
- * stay on ONE LINE.
- */
+/* =========================
+   AUDIO BUTTONS
+========================= */
 
 const audioButton = {
   flex: 1,
