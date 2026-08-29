@@ -2,42 +2,142 @@
 
 import { useEffect, useState } from "react";
 
+const STORAGE_KEY = "faithTreeCompleted";
+
+const FAITH_BADGES = [
+  ["🌱", "First Steps", 10],
+  ["🌿", "Growing Strong", 25],
+  ["🌳", "Faith Builder", 50],
+  ["🏆", "Halfway Hero", 90],
+  ["⭐", "Faith Champion", 135],
+  ["🏆", "Faith Foundations Champion", 180],
+];
+
 export default function Home() {
   const [completed, setCompleted] = useState([]);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("faithTreeCompleted");
-      if (saved) {
-        setCompleted(JSON.parse(saved));
+    function loadProgress() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+          const parsed = JSON.parse(saved);
+
+          if (Array.isArray(parsed)) {
+            const clean = [
+              ...new Set(
+                parsed
+                  .map(Number)
+                  .filter(
+                    (day) =>
+                      Number.isInteger(day) &&
+                      day >= 1 &&
+                      day <= 180
+                  )
+              ),
+            ].sort((a, b) => a - b);
+
+            setCompleted(clean);
+          } else {
+            setCompleted([]);
+          }
+        } else {
+          setCompleted([]);
+        }
+      } catch {
+        setCompleted([]);
       }
-    } catch {
-      setCompleted([]);
     }
+
+    loadProgress();
+
+    function syncProgress() {
+      loadProgress();
+    }
+
+    window.addEventListener(
+      "faithTreeProgressUpdated",
+      syncProgress
+    );
+
+    window.addEventListener(
+      "storage",
+      syncProgress
+    );
+
+    return () => {
+      window.removeEventListener(
+        "faithTreeProgressUpdated",
+        syncProgress
+      );
+
+      window.removeEventListener(
+        "storage",
+        syncProgress
+      );
+    };
   }, []);
 
-  const completedCount = completed.length;
-  const percentage = Math.round((completedCount / 180) * 100);
+  const count = completed.length;
+
+  const percentage = Math.round(
+    (count / 180) * 100
+  );
+
+  /*
+   * FIND NEXT LESSON
+   */
+
+  let nextLesson = 1;
+
+  for (let day = 1; day <= 180; day++) {
+    if (!completed.includes(day)) {
+      nextLesson = day;
+      break;
+    }
+  }
+
+  if (count >= 180) {
+    nextLesson = 180;
+  }
+
+  function startTodayLesson() {
+    window.location.href = `/Lessons?day=${nextLesson}`;
+  }
+
+  /*
+   * FAITH TREE
+   */
 
   let tree = "🌱";
+  let treeMessage =
+    "Your faith is taking root!";
 
-  if (completedCount >= 30) tree = "🌿";
-  if (completedCount >= 60) tree = "🌳";
-  if (completedCount >= 90) tree = "🌳🌳";
-  if (completedCount >= 120) tree = "🌳🌳🌳";
-  if (completedCount >= 150) tree = "🌲🌳🌲";
-  if (completedCount >= 180) tree = "🌲🌳🌲🌳🌲";
-
-  let message = "Start your Bible adventure!";
-  
-  if (completedCount > 0 && completedCount < 60) {
-    message = "Your faith is taking root! 🌱";
-  } else if (completedCount >= 60 && completedCount < 120) {
-    message = "Look how much your Faith Tree has grown! 🌳";
-  } else if (completedCount >= 120 && completedCount < 180) {
-    message = "Your Faith Tree is almost fully grown! 🌲";
-  } else if (completedCount === 180) {
-    message = "🏆 Your Faith Tree is fully grown!";
+  if (count >= 180) {
+    tree = "🌲🌳🌲🌳🌲";
+    treeMessage =
+      "🏆 Your Faith Tree is fully grown!";
+  } else if (count >= 150) {
+    tree = "🌲🌳🌲🌳";
+    treeMessage =
+      "Your Faith Tree is almost fully grown! ⭐";
+  } else if (count >= 120) {
+    tree = "🌲🌳🌲";
+    treeMessage =
+      "Your Faith Tree is growing strong!";
+  } else if (count >= 90) {
+    tree = "🌳🌳🌳";
+    treeMessage =
+      "You're halfway through your adventure!";
+  } else if (count >= 60) {
+    tree = "🌳";
+    treeMessage =
+      "Look how much your Faith Tree has grown!";
+  } else if (count >= 30) {
+    tree = "🌿";
+    treeMessage =
+      "Your faith is growing!";
   }
 
   return (
@@ -45,329 +145,404 @@ export default function Home() {
       style={{
         minHeight: "100vh",
         background: "#f5f1e8",
-        padding: "25px 15px 50px",
+        padding: "25px 16px 60px",
         fontFamily: "Arial, sans-serif",
-        color: "#24313a"
+        color: "#24313a",
       }}
     >
       <div
         style={{
           maxWidth: "700px",
-          margin: "0 auto"
+          margin: "0 auto",
         }}
       >
 
-        {/* HEADER */}
-        <section
+        {/* LOGO */}
+
+        <header
           style={{
-            background: "#315c48",
-            color: "white",
-            borderRadius: "24px",
-            padding: "30px 20px",
             textAlign: "center",
-            marginBottom: "20px"
+            padding: "10px 5px 20px",
           }}
         >
-          <div style={{ fontSize: "55px" }}>🌳</div>
+          <img
+            src="/faith-foundations-logo.png"
+            alt="Faith Foundations: The M&M Adventure"
+            style={{
+              width: "100%",
+              maxWidth: "500px",
+              height: "auto",
+              display: "block",
+              margin: "0 auto",
+              borderRadius: "20px",
+            }}
+          />
 
-          <h1 style={{ margin: "5px 0", fontSize: "32px" }}>
-            Faith Foundations
-          </h1>
-
-          <h2 style={{ margin: "5px 0", fontSize: "22px" }}>
-            The M&M Adventure
-          </h2>
-
-          <p style={{ fontSize: "17px", marginTop: "15px" }}>
-            Every child's faith matters. 💚
+          <p
+            style={{
+              fontSize: "18px",
+              lineHeight: "1.6",
+              marginTop: "15px",
+            }}
+          >
+            Growing in God's Word — one day at a time!
           </p>
-        </section>
+        </header>
 
-        {/* TODAY'S ADVENTURE */}
+        {/* STUDENT */}
+
         <section
           style={{
             background: "white",
-            borderRadius: "20px",
-            padding: "22px",
-            marginBottom: "18px",
+            borderRadius: "25px",
+            padding: "30px 25px",
+            marginTop: "10px",
+            boxShadow:
+              "0 5px 20px rgba(0,0,0,.10)",
             textAlign: "center",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.08)"
           }}
         >
-          <h2>📖 Today's Bible Adventure</h2>
+          <div
+            style={{
+              fontSize: "60px",
+            }}
+          >
+            📖
+          </div>
 
-          <p style={{ fontSize: "18px", lineHeight: "1.6" }}>
-            Keep growing your faith one Bible lesson at a time!
+          <h2
+            style={{
+              color: "#315c48",
+              marginBottom: "10px",
+            }}
+          >
+            Student
+          </h2>
+
+          <p
+            style={{
+              fontSize: "17px",
+              lineHeight: "1.6",
+            }}
+          >
+            Ready for today's Bible adventure?
+            <br />
+            Continue learning and help your Faith
+            Tree grow!
           </p>
 
           <button
-            onClick={() => {
-              window.location.href = "/Lessons";
-            }}
+            onClick={startTodayLesson}
             style={{
               width: "100%",
-              padding: "16px",
+              padding: "18px",
+              marginTop: "12px",
               border: "none",
-              borderRadius: "14px",
-              background: "#315c48",
+              borderRadius: "16px",
+              background: "#6b9e5b",
               color: "white",
-              fontSize: "18px",
+              fontSize: "20px",
               fontWeight: "bold",
               cursor: "pointer",
-              marginTop: "10px"
             }}
           >
-            ▶️ Continue Today's Lesson
+            {count >= 180
+              ? "🏆 Review Day 180"
+              : `🌱 Start Day ${nextLesson}`}
           </button>
+
+          <p
+            style={{
+              marginTop: "12px",
+              fontSize: "14px",
+              color: "#777",
+            }}
+          >
+            {count >= 180
+              ? "You've completed all 180 lessons!"
+              : `Your next lesson is Day ${nextLesson}.`}
+          </p>
         </section>
 
-        {/* FAITH TREE */}
+        {/* CURRENT PROGRESS */}
+
         <section
           style={{
-            background: "#fffaf0",
-            borderRadius: "20px",
-            padding: "25px 20px",
-            marginBottom: "18px",
-            textAlign: "center"
+            background: "white",
+            borderRadius: "25px",
+            padding: "25px",
+            marginTop: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
-          <h2>🌳 Your Faith Tree</h2>
+          <h2
+            style={{
+              color: "#315c48",
+              textAlign: "center",
+              marginTop: "0",
+            }}
+          >
+            📚 Your Current Progress
+          </h2>
 
           <div
             style={{
-              fontSize: "55px",
-              margin: "15px 0"
+              textAlign: "center",
+              fontSize: "34px",
+              fontWeight: "bold",
+              color: "#315c48",
+              margin: "10px 0",
             }}
           >
-            {tree}
+            {count} / 180
           </div>
 
-          <h3 style={{ fontSize: "20px" }}>
-            {message}
-          </h3>
-
-          <p style={{ fontSize: "18px" }}>
-            Completed: <strong>{completedCount}</strong> / 180 days
+          <p
+            style={{
+              textAlign: "center",
+              marginTop: "0",
+              color: "#666",
+            }}
+          >
+            Bible lessons completed
           </p>
 
-          {/* PROGRESS BAR */}
           <div
             style={{
               width: "100%",
-              height: "20px",
-              background: "#ddd",
+              height: "18px",
+              background: "#e4e4e4",
               borderRadius: "20px",
               overflow: "hidden",
-              marginTop: "15px"
+              marginTop: "15px",
             }}
           >
             <div
               style={{
                 width: `${percentage}%`,
                 height: "100%",
-                background: "#6b9f68",
-                transition: "width 0.4s"
+                background: "#6b9e5b",
+                borderRadius: "20px",
+                transition: "width .4s ease",
               }}
             />
           </div>
 
-          <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-            {percentage}% Complete
+          <p
+            style={{
+              textAlign: "center",
+              fontWeight: "bold",
+              marginBottom: "0",
+              marginTop: "10px",
+            }}
+          >
+            {percentage}% complete
           </p>
         </section>
 
-        {/* QUICK ACCESS */}
+        {/* FAITH BADGES */}
+
         <section
           style={{
             background: "white",
-            borderRadius: "20px",
-            padding: "20px",
-            marginBottom: "18px"
+            borderRadius: "25px",
+            padding: "25px 20px",
+            marginTop: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
-          <h2>⭐ Adventure Center</h2>
+          <h2
+            style={{
+              color: "#315c48",
+              textAlign: "center",
+              marginTop: "0",
+              marginBottom: "8px",
+            }}
+          >
+            🏅 Faith Badges
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              color: "#666",
+              marginBottom: "20px",
+            }}
+          >
+            Keep learning to earn every badge!
+          </p>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px",
-              marginTop: "15px"
+              gridTemplateColumns:
+                "repeat(2, minmax(0, 1fr))",
+              gap: "14px",
             }}
           >
-        <button
-  onClick={() => {
-    window.location.href = "/Lessons";
-  }}
-  style={buttonStyle("#315c48")}
->
-  📚
-  <br />
-  Bible Lessons
-</button>   
-            <button
-              onClick={() => {
-                window.location.href = "/Midterm";
-              }}
-              style={buttonStyle("#6b7fa3")}
-            >
-              📝
-              <br />
-              Midterm Review
-            </button>
+            {FAITH_BADGES.map(
+              ([icon, name, required], index) => {
+                const earned = count >= required;
 
-            <button
-              onClick={() => {
-                window.location.href = "/Final";
-              }}
-              style={buttonStyle("#8a6f45")}
-            >
-              🏆
-              <br />
-              Final Review
-            </button>
+                return (
+                  <div
+                    key={name}
+                    style={{
+                      borderRadius: "18px",
+                      padding: "18px 10px",
+                      textAlign: "center",
+                      background: earned
+                        ? "#eef6e9"
+                        : "#f3f3f3",
+                      border: earned
+                        ? "2px solid #6b9e5b"
+                        : "2px solid #ddd",
+                      opacity: earned ? 1 : 0.55,
+                      transition:
+                        "all .3s ease",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "48px",
+                        marginBottom: "6px",
+                        filter: earned
+                          ? "none"
+                          : "grayscale(1)",
+                      }}
+                    >
+                      {icon}
+                    </div>
 
-       <button
-  onClick={() => {
-    window.location.href = "/Lessons?parent=true";
-  }}
-  style={buttonStyle("#777")}
->
-  👀
-  <br />
-  Preview Lessons
-</button>
-    <button
-  onClick={() => {
-    window.location.href = "/parent";
-  }}
-  style={buttonStyle("#777")}
->
-  👩‍🏫
-  <br />
-  Parent Dashboard
-</button>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        color: earned
+                          ? "#315c48"
+                          : "#777",
+                        fontSize: "15px",
+                      }}
+                    >
+                      {name}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        marginTop: "5px",
+                        color: "#777",
+                      }}
+                    >
+                      {earned
+                        ? "✓ Earned!"
+                        : `${required} lessons`}
+                    </div>
+                  </div>
+                );
+              }
+            )}
           </div>
         </section>
-{/* BADGES */}
-<section
-  style={{
-    background: "white",
-    borderRadius: "20px",
-    padding: "22px",
-    marginBottom: "18px"
-  }}
->
-  <h2>🏅 Faith Badges</h2>
 
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-      gap: "12px",
-      marginTop: "15px"
-    }}
-  >
-    <div style={badgeStyle(completedCount >= 10)}>
-      🌱
-      <br />
-      <strong>First Steps</strong>
-      <br />
-      <small>10 Lessons</small>
-    </div>
+        {/* FAITH TREE */}
 
-    <div style={badgeStyle(completedCount >= 25)}>
-      🌿
-      <br />
-      <strong>Growing Strong</strong>
-      <br />
-      <small>25 Lessons</small>
-    </div>
-
-    <div style={badgeStyle(completedCount >= 50)}>
-      🌳
-      <br />
-      <strong>Faith Builder</strong>
-      <br />
-      <small>50 Lessons</small>
-    </div>
-
-    <div style={badgeStyle(completedCount >= 90)}>
-      🏆
-      <br />
-      <strong>Halfway Hero</strong>
-      <br />
-      <small>90 Lessons</small>
-    </div>
-
-    <div style={badgeStyle(completedCount >= 135)}>
-      ⭐
-      <br />
-      <strong>Faith Champion</strong>
-      <br />
-      <small>135 Lessons</small>
-    </div>
-
-    <div style={badgeStyle(completedCount >= 180)}>
-      🏆
-      <br />
-      <strong>Faith Foundations Champion</strong>
-      <br />
-      <small>180 Lessons</small>
-    </div>
-  </div>
-</section>
-        {/* ENCOURAGEMENT */}
         <section
           style={{
-            background: "#eef7e9",
-            borderRadius: "20px",
-            padding: "22px",
-            textAlign: "center"
+            background: "white",
+            borderRadius: "25px",
+            padding: "25px",
+            marginTop: "20px",
+            textAlign: "center",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
-          <h2>💚 Keep Growing!</h2>
+          <div
+            style={{
+              fontSize: "65px",
+              marginBottom: "10px",
+            }}
+          >
+            {tree}
+          </div>
 
-          <p style={{ fontSize: "18px", lineHeight: "1.6" }}>
-            Every lesson you complete helps your Faith Tree grow.
-          </p>
+          <h2
+            style={{
+              color: "#315c48",
+            }}
+          >
+            {treeMessage}
+          </h2>
 
           <p
             style={{
-              fontSize: "17px",
-              fontWeight: "bold"
+              fontSize: "16px",
             }}
           >
-            🌱 Learn • Pray • Grow • Shine 🌟
+            Every completed lesson helps your
+            Faith Tree grow!
           </p>
         </section>
+
+        {/* PARENT DASHBOARD */}
+
+        <section
+          style={{
+            marginTop: "25px",
+            textAlign: "center",
+          }}
+        >
+          <button
+            onClick={() => {
+              window.location.href = "/parent";
+            }}
+            style={{
+              padding: "13px 22px",
+              border: "none",
+              borderRadius: "12px",
+              background: "#315c48",
+              color: "white",
+              fontSize: "15px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            🔐 Parent Dashboard
+          </button>
+
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#777",
+              marginTop: "8px",
+            }}
+          >
+            Parent access only
+          </p>
+        </section>
+
+        {/* FOOTER */}
+
+        <footer
+          style={{
+            textAlign: "center",
+            marginTop: "30px",
+            color: "#777",
+            fontSize: "14px",
+          }}
+        >
+          <p>
+            Faith Foundations: The M&M Adventure
+          </p>
+
+          <p>
+            Growing in God's Word — one day at a time. 🌱
+          </p>
+        </footer>
 
       </div>
     </main>
   );
-}
-function badgeStyle(earned) {
-  return {
-    padding: "18px 10px",
-    borderRadius: "16px",
-    textAlign: "center",
-    background: earned ? "#fff4c2" : "#eeeeee",
-    opacity: earned ? 1 : 0.45,
-    fontSize: "18px",
-    lineHeight: "1.5",
-    border: earned ? "2px solid #d6b656" : "2px solid #ddd"
-  };
-}
-function buttonStyle(background) {
-  return {
-    padding: "18px 10px",
-    border: "none",
-    borderRadius: "14px",
-    background,
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    minHeight: "90px"
-  };
 }
