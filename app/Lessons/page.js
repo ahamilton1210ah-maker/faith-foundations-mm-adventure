@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "faithTreeCompleted";
 
+/* =========================
+   LESSON THEMES
+========================= */
+
 const themes = [
   ["God Created the World", "Genesis 1", "God is the Creator"],
   ["God Made Me Special", "Psalm 139:13-14", "God made each person wonderfully"],
@@ -58,6 +62,10 @@ const lessonTypes = [
   "Practice",
   "Live It"
 ];
+
+/* =========================
+   ALL 180 LESSONS
+========================= */
 
 const days = Array.from(
   { length: 180 },
@@ -200,12 +208,17 @@ const days = Array.from(
           : "Pray for someone who needs encouragement.",
 
       prayer:
-        `Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen.`
+        "Dear God, thank You for teaching me through Your Word. Help me remember what I learned today and live in a way that honors You. Give me wisdom, courage, kindness, and a heart that wants to follow You. In Jesus' name, Amen."
     };
   }
 );
 
+/* =========================
+   BADGES + TREE MILESTONES
+========================= */
+
 const badges = [
+  ["🌱", "Faith Seed", 1],
   ["🌱", "First Steps", 10],
   ["🌿", "Growing Strong", 25],
   ["🌳", "Faith Builder", 50],
@@ -213,6 +226,82 @@ const badges = [
   ["⭐", "Faith Champion", 135],
   ["🏆", "Faith Foundations Champion", 180]
 ];
+
+function getFaithStage(completedCount) {
+  if (completedCount >= 180) {
+    return {
+      tree: "🏆🌳🏆",
+      title: "Faith Foundations Champion!",
+      message: "Your Faith Tree is fully grown! You completed all 180 lessons!",
+      next: null
+    };
+  }
+
+  if (completedCount >= 135) {
+    return {
+      tree: "🌲🌳🌲",
+      title: "Faith Champion!",
+      message: "Your faith is shining strong! Keep growing toward 180 lessons!",
+      next: 180
+    };
+  }
+
+  if (completedCount >= 90) {
+    return {
+      tree: "🌳🌳",
+      title: "Halfway Hero!",
+      message: "You are halfway through your Faith Foundations adventure!",
+      next: 135
+    };
+  }
+
+  if (completedCount >= 50) {
+    return {
+      tree: "🌳",
+      title: "Faith Builder!",
+      message: "Your Faith Tree is growing strong!",
+      next: 90
+    };
+  }
+
+  if (completedCount >= 25) {
+    return {
+      tree: "🌿",
+      title: "Growing Strong!",
+      message: "Your faith is growing stronger every day!",
+      next: 50
+    };
+  }
+
+  if (completedCount >= 10) {
+    return {
+      tree: "🌱",
+      title: "First Steps!",
+      message: "You have taken your first big steps in your faith adventure!",
+      next: 25
+    };
+  }
+
+  if (completedCount >= 1) {
+    return {
+      tree: "🌱",
+      title: "Faith Seed Planted!",
+      message: "Your Faith Seed has been planted. Keep growing in God's Word!",
+      next: 10
+    };
+  }
+
+  return {
+    tree: "🌰",
+    title: "Ready to Plant Your Faith Seed?",
+    message: "Complete Day 1 to plant your Faith Seed!",
+    next: 1
+  };
+}
+
+/* =========================
+   STORAGE
+========================= */
 
 function getCompleted() {
   if (typeof window === "undefined") {
@@ -277,24 +366,15 @@ function saveCompleted(list) {
   );
 }
 
+/* =========================
+   LESSON PAGE
+========================= */
+
 export default function Lessons() {
   const [currentDay, setCurrentDay] = useState(1);
   const [completed, setCompleted] = useState([]);
   const [parentPreview, setParentPreview] = useState(false);
 
-  /*
-   * LOAD PROGRESS AND URL DAY
-   *
-   * Home sends:
-   * /Lessons?day=11
-   *
-   * Parent Preview sends:
-   * /Lessons?parent=true
-   *
-   * Parent Preview can open any day.
-   *
-   * Students can only open the next unlocked day.
-   */
   useEffect(() => {
     const completedLessons = getCompleted();
 
@@ -341,19 +421,16 @@ export default function Lessons() {
       requestedDay >= 1 &&
       requestedDay <= 180
     ) {
-      if (requestedDay <= nextUnlockedDay) {
-        setCurrentDay(requestedDay);
-      } else {
-        setCurrentDay(nextUnlockedDay);
-      }
+      setCurrentDay(
+        requestedDay <= nextUnlockedDay
+          ? requestedDay
+          : nextUnlockedDay
+      );
     } else {
       setCurrentDay(nextUnlockedDay);
     }
   }, []);
 
-  /*
-   * KEEP PROGRESS IN SYNC
-   */
   useEffect(() => {
     function update() {
       setCompleted(getCompleted());
@@ -391,15 +468,11 @@ export default function Lessons() {
     (completed.length / 180) * 100
   );
 
-  /*
-   * COMPLETE LESSON
-   */
-  function completeLesson() {
-    if (parentPreview) {
-      return;
-    }
+  const faithStage =
+    getFaithStage(completed.length);
 
-    if (isCompleted) {
+  function completeLesson() {
+    if (parentPreview || isCompleted) {
       return;
     }
 
@@ -418,6 +491,13 @@ export default function Lessons() {
       `Day ${currentDay} Complete!\n\n` +
       `🌳 Your Faith Tree is growing!\n\n` +
       `${updated.length} of 180 lessons completed!`;
+
+    if (updated.length === 1) {
+      message =
+        `🌱 YOUR FAITH SEED IS PLANTED! 🌱\n\n` +
+        `You completed your very first Bible lesson!\n\n` +
+        `🏅 Faith Seed Badge Earned!`;
+    }
 
     if (updated.length === 10) {
       message =
@@ -442,31 +522,28 @@ export default function Lessons() {
 
     if (updated.length === 90) {
       message =
-        `🎉 HALF WAY THERE! 🎉\n\n` +
+        `🏆 HALFWAY HERO! 🏆\n\n` +
         `You completed 90 Bible lessons!\n\n` +
-        `🏆 Halfway Hero Badge Earned!`;
+        `🎉 You are halfway through your adventure!`;
     }
 
     if (updated.length === 135) {
       message =
-        `🌟 AMAZING PROGRESS! 🌟\n\n` +
+        `⭐ FAITH CHAMPION! ⭐\n\n` +
         `You completed 135 Bible lessons!\n\n` +
-        `🏅 Faith Champion Badge Earned!`;
+        `🌟 Your faith is shining strong!`;
     }
 
     if (updated.length === 180) {
       message =
         `🎉 YOU DID IT! 🎉\n\n` +
         `🏆 All 180 Bible lessons are complete!\n\n` +
-        `🌳 Your Faith Tree has fully grown!\n\n` +
+        `🌳 Your Faith Tree is fully grown!\n\n` +
         `🏅 Faith Foundations Champion!`;
     }
 
     alert(message);
 
-    /*
-     * Automatically move to the next lesson
-     */
     if (currentDay < 180) {
       setCurrentDay(currentDay + 1);
 
@@ -577,31 +654,32 @@ export default function Lessons() {
           margin: "0 auto"
         }}
       >
-{/* RETURN HOME */}
+        {/* RETURN HOME */}
 
-<div
-  style={{
-    marginBottom: "10px",
-  }}
->
-  <button
-    onClick={() => {
-      window.location.href = "/";
-    }}
-    style={{
-      padding: "12px 18px",
-      border: "none",
-      borderRadius: "12px",
-      background: "#315c48",
-      color: "white",
-      fontSize: "15px",
-      fontWeight: "bold",
-      cursor: "pointer",
-    }}
-  >
-    🏠 Return Home
-  </button>
-</div>
+        <div
+          style={{
+            marginBottom: "10px"
+          }}
+        >
+          <button
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            style={{
+              padding: "12px 18px",
+              border: "none",
+              borderRadius: "12px",
+              background: "#315c48",
+              color: "white",
+              fontSize: "15px",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🏠 Return Home
+          </button>
+        </div>
+
         {/* HEADER */}
 
         <header
@@ -610,8 +688,12 @@ export default function Lessons() {
             padding: "20px 10px"
           }}
         >
-          <div style={{ fontSize: "60px" }}>
-            🌳
+          <div
+            style={{
+              fontSize: "60px"
+            }}
+          >
+            {faithStage.tree}
           </div>
 
           <h1
@@ -624,7 +706,11 @@ export default function Lessons() {
             Faith Foundations
           </h1>
 
-          <h2 style={{ margin: "5px 0" }}>
+          <h2
+            style={{
+              margin: "5px 0"
+            }}
+          >
             The M&M Adventure
           </h2>
 
@@ -698,6 +784,47 @@ export default function Lessons() {
           >
             {percentage}% Complete
           </p>
+
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "10px",
+              background: "#e9f4ed",
+              padding: "15px",
+              borderRadius: "15px"
+            }}
+          >
+            <div
+              style={{
+                fontSize: "40px"
+              }}
+            >
+              {faithStage.tree}
+            </div>
+
+            <strong>
+              {faithStage.title}
+            </strong>
+
+            <p
+              style={{
+                marginBottom: 0
+              }}
+            >
+              {faithStage.message}
+            </p>
+
+            {faithStage.next && (
+              <p
+                style={{
+                  marginBottom: 0,
+                  fontWeight: "bold"
+                }}
+              >
+                Next milestone: {faithStage.next} lessons
+              </p>
+            )}
+          </div>
         </section>
 
         {/* NAVIGATION */}
@@ -867,7 +994,6 @@ export default function Lessons() {
             padding: "25px"
           }}
         >
-
           {/* LESSON HEADER */}
 
           <div
@@ -878,7 +1004,11 @@ export default function Lessons() {
               padding: "20px"
             }}
           >
-            <div style={{ fontSize: "50px" }}>
+            <div
+              style={{
+                fontSize: "50px"
+              }}
+            >
               📖
             </div>
 
@@ -890,7 +1020,11 @@ export default function Lessons() {
               {lesson.title}
             </h1>
 
-            <p style={{ fontSize: "18px" }}>
+            <p
+              style={{
+                fontSize: "18px"
+              }}
+            >
               📖 {lesson.bibleReference}
             </p>
 
@@ -916,7 +1050,11 @@ export default function Lessons() {
               ⭐ Today's Theme
             </h2>
 
-            <p style={{ fontSize: "18px" }}>
+            <p
+              style={{
+                fontSize: "18px"
+              }}
+            >
               {lesson.theme}
             </p>
           </section>
@@ -984,7 +1122,7 @@ export default function Lessons() {
             </p>
           </section>
 
-          {/* MEMORY */}
+          {/* MEMORY VERSE */}
 
           <section
             style={{
@@ -998,7 +1136,11 @@ export default function Lessons() {
               💡 Memory Verse
             </h2>
 
-            <p style={{ fontSize: "18px" }}>
+            <p
+              style={{
+                fontSize: "18px"
+              }}
+            >
               {lesson.memoryVerse}
             </p>
           </section>
@@ -1017,7 +1159,11 @@ export default function Lessons() {
               💚 Kindness Mission
             </h2>
 
-            <p style={{ fontSize: "18px" }}>
+            <p
+              style={{
+                fontSize: "18px"
+              }}
+            >
               {lesson.kindnessMission}
             </p>
           </section>
@@ -1075,7 +1221,7 @@ export default function Lessons() {
             </button>
           )}
 
-          {/* BOTTOM NAV */}
+          {/* BOTTOM NAVIGATION */}
 
           <div
             style={{
@@ -1112,7 +1258,7 @@ export default function Lessons() {
           </div>
         </section>
 
-        {/* BADGES */}
+        {/* FAITH BADGES */}
 
         <section
           style={{
@@ -1135,22 +1281,21 @@ export default function Lessons() {
               textAlign: "center"
             }}
           >
-            Keep completing lessons to earn badges!
+            Keep completing lessons to earn new badges!
           </p>
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
-                "repeat(auto-fit,minmax(135px,1fr))",
+                "repeat(auto-fit, minmax(135px, 1fr))",
               gap: "12px"
             }}
           >
             {badges.map(
               ([icon, name, requirement]) => {
                 const earned =
-                  completed.length >=
-                  requirement;
+                  completed.length >= requirement;
 
                 return (
                   <div
@@ -1167,7 +1312,8 @@ export default function Lessons() {
                         : "2px solid #ddd",
                       opacity: earned
                         ? 1
-                        : 0.55
+                        : 0.6,
+                      transition: "all .3s ease"
                     }}
                   >
                     <div
@@ -1175,24 +1321,34 @@ export default function Lessons() {
                         fontSize: "40px"
                       }}
                     >
-                      {icon}
+                      {earned
+                        ? icon
+                        : "🔒"}
                     </div>
 
                     <strong>
                       {name}
                     </strong>
 
-                    <div>
-                      {requirement} Lessons
+                    <div
+                      style={{
+                        marginTop: "5px"
+                      }}
+                    >
+                      {requirement}{" "}
+                      {requirement === 1
+                        ? "Lesson"
+                        : "Lessons"}
                     </div>
 
                     <div
                       style={{
-                        marginTop: "6px"
+                        marginTop: "8px",
+                        fontWeight: "bold"
                       }}
                     >
                       {earned
-                        ? "✅ Earned"
+                        ? "✅ Earned!"
                         : "🔒 Locked"}
                     </div>
                   </div>
@@ -1206,55 +1362,68 @@ export default function Lessons() {
 
         <footer
           style={{
+            background: "white",
+            borderRadius: "24px",
+            padding: "25px",
             textAlign: "center",
-            marginTop: "30px"
+            marginTop: "20px"
           }}
         >
           <div
             style={{
-              fontSize: "65px"
+              fontSize: "70px"
             }}
           >
-            {completed.length === 0
-              ? "🌱"
-              : completed.length < 30
-              ? "🌿"
-              : completed.length < 60
-              ? "🌳"
-              : completed.length < 90
-              ? "🌳🌳"
-              : completed.length < 120
-              ? "🌲🌳🌲"
-              : completed.length < 150
-              ? "🌲🌳🌲🌳"
-              : "🌲🌳🌲🌳🌲"}
+            {faithStage.tree}
           </div>
 
-          <h3>
-            🌳 Your Faith Tree is growing!
-          </h3>
+          <h2
+            style={{
+              color: "#315c48"
+            }}
+          >
+            {faithStage.title}
+          </h2>
 
-          <p>
-            Completed: {completed.length} / 180
+          <p
+            style={{
+              fontSize: "18px"
+            }}
+          >
+            {faithStage.message}
           </p>
 
           <p>
-            {completed.length === 0
-              ? "Start your Bible adventure!"
-              : completed.length < 60
-              ? "Your faith is taking root! 🌱"
-              : completed.length < 120
-              ? "Look how much your Faith Tree has grown! 🌳"
-              : completed.length < 180
-              ? "Your Faith Tree is almost fully grown! ⭐"
-              : "🏆 Your Faith Tree is fully grown! You did it!"}
+            <strong>
+              Completed:
+            </strong>{" "}
+            {completed.length} / 180
           </p>
+
+          {faithStage.next && (
+            <div
+              style={{
+                background: "#e9f4ed",
+                borderRadius: "15px",
+                padding: "12px",
+                marginTop: "15px"
+              }}
+            >
+              🎯 Next Faith Milestone:{" "}
+              <strong>
+                {faithStage.next} Lessons
+              </strong>
+            </div>
+          )}
         </footer>
-
       </div>
     </main>
   );
 }
+
+/* =========================
+   BUTTON STYLES
+========================= */
 
 const buttonStyle = {
   padding: "12px 15px",
