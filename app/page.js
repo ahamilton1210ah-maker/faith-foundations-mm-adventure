@@ -4,6 +4,45 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "faithTreeCompleted";
 
+const badges = [
+  {
+    days: 10,
+    icon: "🌱",
+    name: "First Steps",
+    message: "You completed your first 10 Bible lessons!",
+  },
+  {
+    days: 25,
+    icon: "🌿",
+    name: "Growing Strong",
+    message: "Your faith is growing stronger!",
+  },
+  {
+    days: 50,
+    icon: "🌳",
+    name: "Faith Builder",
+    message: "You are building a strong foundation of faith!",
+  },
+  {
+    days: 90,
+    icon: "🏆",
+    name: "Halfway Hero",
+    message: "You're halfway through your adventure!",
+  },
+  {
+    days: 135,
+    icon: "⭐",
+    name: "Faith Champion",
+    message: "Your faith is shining bright!",
+  },
+  {
+    days: 180,
+    icon: "🏆",
+    name: "Faith Foundations Champion",
+    message: "You completed all 180 Bible lessons!",
+  },
+];
+
 export default function Home() {
   const [completed, setCompleted] = useState([]);
 
@@ -76,7 +115,10 @@ export default function Home() {
     (count / 180) * 100
   );
 
-  const remaining = Math.max(180 - count, 0);
+  const remaining = Math.max(
+    180 - count,
+    0
+  );
 
   /*
    * FIND NEXT LESSON
@@ -96,11 +138,15 @@ export default function Home() {
   }
 
   function startTodayLesson() {
-    window.location.href = `/Lessons?day=${nextLesson}`;
+    window.location.href =
+      `/Lessons?day=${nextLesson}`;
   }
 
   /*
    * FAITH TREE
+   *
+   * Tree stages coordinate with
+   * the badge milestones.
    */
 
   let tree = "🌱";
@@ -111,82 +157,27 @@ export default function Home() {
     tree = "🌲🌳🌲🌳🌲";
     treeMessage =
       "🏆 Your Faith Tree is fully grown!";
-  } else if (count >= 150) {
+  } else if (count >= 135) {
     tree = "🌲🌳🌲🌳";
     treeMessage =
-      "Your Faith Tree is almost fully grown! ⭐";
-  } else if (count >= 120) {
-    tree = "🌲🌳🌲";
-    treeMessage =
-      "Your Faith Tree is growing strong!";
+      "⭐ Your Faith Tree is shining strong!";
   } else if (count >= 90) {
     tree = "🌳🌳🌳";
     treeMessage =
-      "You're halfway through your adventure!";
-  } else if (count >= 60) {
-    tree = "🌳";
+      "🏆 You're halfway through your adventure!";
+  } else if (count >= 50) {
+    tree = "🌳🌳";
     treeMessage =
-      "Look how much your Faith Tree has grown!";
-  } else if (count >= 30) {
+      "🌳 Your faith is becoming a strong foundation!";
+  } else if (count >= 25) {
+    tree = "🌿🌿";
+    treeMessage =
+      "🌿 Your faith is growing strong!";
+  } else if (count >= 10) {
     tree = "🌿";
     treeMessage =
-      "Your faith is growing!";
+      "🌱 Your faith is beginning to grow!";
   }
-
-  /*
-   * FAITH BADGES
-   */
-
-  const badges = [
-    {
-      days: 1,
-      icon: "🌱",
-      name: "Faith Seed",
-      message: "You started your Faith Adventure!",
-    },
-    {
-      days: 10,
-      icon: "🌿",
-      name: "Growing Faith",
-      message: "Your faith is beginning to grow!",
-    },
-    {
-      days: 30,
-      icon: "🌳",
-      name: "Faith Builder",
-      message: "30 lessons completed!",
-    },
-    {
-      days: 60,
-      icon: "⭐",
-      name: "Faith Shining",
-      message: "Your faith is shining bright!",
-    },
-    {
-      days: 90,
-      icon: "🏆",
-      name: "Halfway Hero",
-      message: "You've reached the halfway point!",
-    },
-    {
-      days: 120,
-      icon: "💚",
-      name: "Strong in Faith",
-      message: "Your Faith Tree is growing strong!",
-    },
-    {
-      days: 150,
-      icon: "👑",
-      name: "Faith Champion",
-      message: "Only 30 lessons remain!",
-    },
-    {
-      days: 180,
-      icon: "🏅",
-      name: "Faith Foundations Champion",
-      message: "You completed all 180 lessons!",
-    },
-  ];
 
   return (
     <main
@@ -474,7 +465,8 @@ export default function Home() {
               marginBottom: "20px",
             }}
           >
-            Keep completing lessons to earn new badges!
+            Keep completing lessons to earn
+            new badges!
           </p>
 
           <div
@@ -486,7 +478,8 @@ export default function Home() {
             }}
           >
             {badges.map((badge) => {
-              const earned = count >= badge.days;
+              const earned =
+                count >= badge.days;
 
               return (
                 <div
@@ -520,8 +513,7 @@ export default function Home() {
                   <h3
                     style={{
                       fontSize: "15px",
-                      margin:
-                        "8px 0 5px",
+                      margin: "8px 0 5px",
                       color: "#315c48",
                     }}
                   >
@@ -539,6 +531,16 @@ export default function Home() {
                     {earned
                       ? badge.message
                       : `Complete ${badge.days} lessons`}
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      marginTop: "7px",
+                      color: "#888",
+                    }}
+                  >
+                    {badge.days} Lessons
                   </p>
                 </div>
               );
@@ -583,6 +585,16 @@ export default function Home() {
           >
             Every completed lesson helps your
             Faith Tree grow!
+          </p>
+
+          <p
+            style={{
+              fontWeight: "bold",
+              color: "#315c48",
+              marginTop: "12px",
+            }}
+          >
+            {count} / 180 Lessons Completed
           </p>
         </section>
 
