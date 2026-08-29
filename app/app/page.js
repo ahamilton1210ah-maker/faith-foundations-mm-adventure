@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "faithTreeCompleted";
 
 const FAITH_BADGES = [
+  ["🌱", "Faith Seed", 1],
   ["🌱", "First Steps", 10],
   ["🌿", "Growing Strong", 25],
   ["🌳", "Faith Builder", 50],
