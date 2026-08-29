@@ -76,6 +76,8 @@ export default function Home() {
     (count / 180) * 100
   );
 
+  const remaining = Math.max(180 - count, 0);
+
   /*
    * FIND NEXT LESSON
    */
@@ -130,6 +132,61 @@ export default function Home() {
     treeMessage =
       "Your faith is growing!";
   }
+
+  /*
+   * FAITH BADGES
+   */
+
+  const badges = [
+    {
+      days: 1,
+      icon: "🌱",
+      name: "Faith Seed",
+      message: "You started your Faith Adventure!",
+    },
+    {
+      days: 10,
+      icon: "🌿",
+      name: "Growing Faith",
+      message: "Your faith is beginning to grow!",
+    },
+    {
+      days: 30,
+      icon: "🌳",
+      name: "Faith Builder",
+      message: "30 lessons completed!",
+    },
+    {
+      days: 60,
+      icon: "⭐",
+      name: "Faith Shining",
+      message: "Your faith is shining bright!",
+    },
+    {
+      days: 90,
+      icon: "🏆",
+      name: "Halfway Hero",
+      message: "You've reached the halfway point!",
+    },
+    {
+      days: 120,
+      icon: "💚",
+      name: "Strong in Faith",
+      message: "Your Faith Tree is growing strong!",
+    },
+    {
+      days: 150,
+      icon: "👑",
+      name: "Faith Champion",
+      message: "Only 30 lessons remain!",
+    },
+    {
+      days: 180,
+      icon: "🏅",
+      name: "Faith Foundations Champion",
+      message: "You completed all 180 lessons!",
+    },
+  ];
 
   return (
     <main
@@ -255,37 +312,106 @@ export default function Home() {
           </p>
         </section>
 
-        {/* PROGRESS */}
+        {/* CURRENT PROGRESS */}
 
         <section
           style={{
             background: "white",
-            borderRadius: "20px",
-            padding: "20px",
+            borderRadius: "22px",
+            padding: "25px",
             marginTop: "20px",
             boxShadow:
               "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
+          <h2
+            style={{
+              color: "#315c48",
+              textAlign: "center",
+              marginTop: "0",
+            }}
+          >
+            📚 Your Current Progress
+          </h2>
+
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              fontWeight: "bold",
-              marginBottom: "8px",
+              justifyContent: "space-around",
+              textAlign: "center",
+              margin: "20px 0",
             }}
           >
-            <span>🌳 Faith Progress</span>
+            <div>
+              <div
+                style={{
+                  fontSize: "30px",
+                  fontWeight: "bold",
+                  color: "#315c48",
+                }}
+              >
+                {count}
+              </div>
 
-            <span>
-              {count} / 180
-            </span>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#777",
+                }}
+              >
+                Completed
+              </div>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "30px",
+                  fontWeight: "bold",
+                  color: "#315c48",
+                }}
+              >
+                {remaining}
+              </div>
+
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#777",
+                }}
+              >
+                Remaining
+              </div>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "30px",
+                  fontWeight: "bold",
+                  color: "#315c48",
+                }}
+              >
+                {percentage}%
+              </div>
+
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#777",
+                }}
+              >
+                Complete
+              </div>
+            </div>
           </div>
+
+          {/* PROGRESS BAR */}
 
           <div
             style={{
               width: "100%",
-              height: "16px",
+              height: "18px",
               background: "#e4e4e4",
               borderRadius: "20px",
               overflow: "hidden",
@@ -297,7 +423,7 @@ export default function Home() {
                 height: "100%",
                 background: "#6b9e5b",
                 borderRadius: "20px",
-                transition: "width .4s ease",
+                transition: "width .5s ease",
               }}
             />
           </div>
@@ -307,10 +433,117 @@ export default function Home() {
               textAlign: "center",
               fontWeight: "bold",
               marginBottom: "0",
+              marginTop: "12px",
             }}
           >
-            {percentage}% complete
+            {count === 0
+              ? "Your adventure is just beginning! 🌱"
+              : count === 180
+              ? "You did it! All 180 lessons completed! 🎉"
+              : `${count} of 180 lessons completed!`}
           </p>
+        </section>
+
+        {/* FAITH BADGES */}
+
+        <section
+          style={{
+            background: "white",
+            borderRadius: "25px",
+            padding: "25px",
+            marginTop: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
+          }}
+        >
+          <h2
+            style={{
+              color: "#315c48",
+              textAlign: "center",
+              marginTop: "0",
+            }}
+          >
+            🏅 Faith Badges
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              color: "#666",
+              fontSize: "15px",
+              marginBottom: "20px",
+            }}
+          >
+            Keep completing lessons to earn new badges!
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(2, 1fr)",
+              gap: "12px",
+            }}
+          >
+            {badges.map((badge) => {
+              const earned = count >= badge.days;
+
+              return (
+                <div
+                  key={badge.days}
+                  style={{
+                    padding: "18px 10px",
+                    borderRadius: "18px",
+                    textAlign: "center",
+                    background: earned
+                      ? "#f7f1d7"
+                      : "#f1f1f1",
+                    border: earned
+                      ? "2px solid #d9c77a"
+                      : "2px solid #e2e2e2",
+                    opacity: earned ? 1 : 0.5,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "42px",
+                      filter: earned
+                        ? "none"
+                        : "grayscale(1)",
+                    }}
+                  >
+                    {earned
+                      ? badge.icon
+                      : "🔒"}
+                  </div>
+
+                  <h3
+                    style={{
+                      fontSize: "15px",
+                      margin:
+                        "8px 0 5px",
+                      color: "#315c48",
+                    }}
+                  >
+                    {badge.name}
+                  </h3>
+
+                  <p
+                    style={{
+                      fontSize: "12px",
+                      margin: "0",
+                      color: "#666",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {earned
+                      ? badge.message
+                      : `Complete ${badge.days} lessons`}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         {/* FAITH TREE */}
