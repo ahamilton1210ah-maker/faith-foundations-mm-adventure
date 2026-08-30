@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "faithTreeCompleted";
 
+/* =========================
+   FAITH BADGES
+   SAME MILESTONES AS LESSONS
+========================= */
+
 const badges = [
   {
     days: 10,
@@ -43,16 +48,150 @@ const badges = [
   },
 ];
 
+/* =========================
+   FAITH TREE
+   MUST MATCH LESSONS PAGE
+========================= */
+
+function getFaithTree(count) {
+  if (count >= 180) {
+    return {
+      tree: "🏆🌳🏆",
+      title: "Faith Foundations Champion!",
+      message:
+        "Your Faith Tree is fully grown! You completed all 180 lessons!",
+      buttonIcon: "🏆",
+    };
+  }
+
+  if (count >= 135) {
+    return {
+      tree: "🌲🌳🌲",
+      title: "Faith Champion!",
+      message:
+        "Your faith is shining strong! Keep growing toward 180 lessons!",
+      buttonIcon: "🌲",
+    };
+  }
+
+  if (count >= 90) {
+    return {
+      tree: "🌳🌳",
+      title: "Halfway Hero!",
+      message:
+        "You are halfway through your Faith Foundations adventure!",
+      buttonIcon: "🌳",
+    };
+  }
+
+  if (count >= 50) {
+    return {
+      tree: "🌳",
+      title: "Faith Builder!",
+      message:
+        "Your Faith Tree is growing strong!",
+      buttonIcon: "🌳",
+    };
+  }
+
+  if (count >= 25) {
+    return {
+      tree: "🌿",
+      title: "Growing Strong!",
+      message:
+        "Your faith is growing stronger every day!",
+      buttonIcon: "🌿",
+    };
+  }
+
+  if (count >= 10) {
+    return {
+      tree: "🌱",
+      title: "First Steps!",
+      message:
+        "You have taken your first big steps in your faith adventure!",
+      buttonIcon: "🌱",
+    };
+  }
+
+  if (count >= 1) {
+    return {
+      tree: "🌱",
+      title: "Faith Is Taking Root!",
+      message:
+        "You have started growing in God's Word. Keep going!",
+      buttonIcon: "🌱",
+    };
+  }
+
+  return {
+    tree: "🌰",
+    title: "Ready to Begin?",
+    message:
+      "Complete your first Bible lesson and begin growing your Faith Tree!",
+    buttonIcon: "🌱",
+  };
+}
+
+/* =========================
+   CLEAN SAVED PROGRESS
+========================= */
+
+function getSavedCompleted() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+      return [];
+    }
+
+    const parsed = JSON.parse(saved);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return [
+      ...new Set(
+        parsed
+          .map(Number)
+          .filter(
+            (day) =>
+              Number.isInteger(day) &&
+              day >= 1 &&
+              day <= 180
+          )
+      ),
+    ].sort((a, b) => a - b);
+  } catch {
+    return [];
+  }
+}
+
+/* =========================
+   HOME / STUDENT PAGE
+========================= */
+
 export default function Home() {
   const [completed, setCompleted] = useState([]);
+
+  /* =========================
+     LOAD PROGRESS
+  ========================= */
 
   useEffect(() => {
     function loadProgress() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved =
+          localStorage.getItem(STORAGE_KEY);
 
         if (saved) {
-          const parsed = JSON.parse(saved);
+          const parsed =
+            JSON.parse(saved);
 
           if (Array.isArray(parsed)) {
             const clean = [
@@ -82,6 +221,10 @@ export default function Home() {
 
     loadProgress();
 
+    /* =========================
+       SYNC WHEN LESSON COMPLETES
+    ========================= */
+
     function syncProgress() {
       loadProgress();
     }
@@ -109,6 +252,10 @@ export default function Home() {
     };
   }, []);
 
+  /* =========================
+     PROGRESS
+  ========================= */
+
   const count = completed.length;
 
   const percentage = Math.round(
@@ -120,13 +267,17 @@ export default function Home() {
     0
   );
 
-  /*
-   * FIND NEXT LESSON
-   */
+  /* =========================
+     FIND NEXT LESSON
+  ========================= */
 
   let nextLesson = 1;
 
-  for (let day = 1; day <= 180; day++) {
+  for (
+    let day = 1;
+    day <= 180;
+    day++
+  ) {
     if (!completed.includes(day)) {
       nextLesson = day;
       break;
@@ -137,47 +288,34 @@ export default function Home() {
     nextLesson = 180;
   }
 
+  /* =========================
+     CURRENT FAITH TREE
+  ========================= */
+
+  const faithTree =
+    getFaithTree(count);
+
+  /* =========================
+     START TODAY'S LESSON
+  ========================= */
+
   function startTodayLesson() {
     window.location.href =
       `/Lessons?day=${nextLesson}`;
   }
 
-  /*
-   * FAITH TREE
-   *
-   * Tree stages coordinate with
-   * the badge milestones.
-   */
+  /* =========================
+     GO TO PARENT DASHBOARD
+  ========================= */
 
-  let tree = "🌱";
-  let treeMessage =
-    "Your faith is taking root!";
-
-  if (count >= 180) {
-    tree = "🌲🌳🌲🌳🌲";
-    treeMessage =
-      "🏆 Your Faith Tree is fully grown!";
-  } else if (count >= 135) {
-    tree = "🌲🌳🌲🌳";
-    treeMessage =
-      "⭐ Your Faith Tree is shining strong!";
-  } else if (count >= 90) {
-    tree = "🌳🌳🌳";
-    treeMessage =
-      "🏆 You're halfway through your adventure!";
-  } else if (count >= 50) {
-    tree = "🌳🌳";
-    treeMessage =
-      "🌳 Your faith is becoming a strong foundation!";
-  } else if (count >= 25) {
-    tree = "🌿🌿";
-    treeMessage =
-      "🌿 Your faith is growing strong!";
-  } else if (count >= 10) {
-    tree = "🌿";
-    treeMessage =
-      "🌱 Your faith is beginning to grow!";
+  function openParentDashboard() {
+    window.location.href =
+      "/parent";
   }
+
+  /* =========================
+     RENDER
+  ========================= */
 
   return (
     <main
@@ -185,7 +323,8 @@ export default function Home() {
         minHeight: "100vh",
         background: "#f5f1e8",
         padding: "25px 16px 60px",
-        fontFamily: "Arial, sans-serif",
+        fontFamily:
+          "Arial, sans-serif",
         color: "#24313a",
       }}
     >
@@ -196,12 +335,15 @@ export default function Home() {
         }}
       >
 
-        {/* LOGO */}
+        {/* =====================
+            LOGO
+        ===================== */}
 
         <header
           style={{
             textAlign: "center",
-            padding: "10px 5px 20px",
+            padding:
+              "10px 5px 20px",
           }}
         >
           <img
@@ -224,11 +366,14 @@ export default function Home() {
               marginTop: "15px",
             }}
           >
-            Growing in God's Word — one day at a time!
+            Growing in God's Word —
+            one day at a time!
           </p>
         </header>
 
-        {/* STUDENT */}
+        {/* =====================
+            STUDENT
+        ===================== */}
 
         <section
           style={{
@@ -270,6 +415,12 @@ export default function Home() {
             Tree grow!
           </p>
 
+          {/* =====================
+              START DAY BUTTON
+              TREE ICON NOW MATCHES
+              CURRENT MILESTONE
+          ===================== */}
+
           <button
             onClick={startTodayLesson}
             style={{
@@ -287,7 +438,7 @@ export default function Home() {
           >
             {count >= 180
               ? "🏆 Review Day 180"
-              : `🌱 Start Day ${nextLesson}`}
+              : `${faithTree.buttonIcon} Start Day ${nextLesson}`}
           </button>
 
           <p
@@ -303,7 +454,9 @@ export default function Home() {
           </p>
         </section>
 
-        {/* CURRENT PROGRESS */}
+        {/* =====================
+            CURRENT PROGRESS
+        ===================== */}
 
         <section
           style={{
@@ -328,11 +481,15 @@ export default function Home() {
           <div
             style={{
               display: "flex",
-              justifyContent: "space-around",
+              justifyContent:
+                "space-around",
               textAlign: "center",
               margin: "20px 0",
             }}
           >
+
+            {/* COMPLETED */}
+
             <div>
               <div
                 style={{
@@ -354,6 +511,8 @@ export default function Home() {
               </div>
             </div>
 
+            {/* REMAINING */}
+
             <div>
               <div
                 style={{
@@ -374,6 +533,8 @@ export default function Home() {
                 Remaining
               </div>
             </div>
+
+            {/* PERCENTAGE */}
 
             <div>
               <div
@@ -397,7 +558,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* PROGRESS BAR */}
+          {/* =====================
+              PROGRESS BAR
+          ===================== */}
 
           <div
             style={{
@@ -410,11 +573,13 @@ export default function Home() {
           >
             <div
               style={{
-                width: `${percentage}%`,
+                width:
+                  `${percentage}%`,
                 height: "100%",
                 background: "#6b9e5b",
                 borderRadius: "20px",
-                transition: "width .5s ease",
+                transition:
+                  "width .5s ease",
               }}
             />
           </div>
@@ -435,7 +600,9 @@ export default function Home() {
           </p>
         </section>
 
-        {/* FAITH BADGES */}
+        {/* =====================
+            FAITH BADGES
+        ===================== */}
 
         <section
           style={{
@@ -485,24 +652,33 @@ export default function Home() {
                 <div
                   key={badge.days}
                   style={{
-                    padding: "18px 10px",
-                    borderRadius: "18px",
+                    padding:
+                      "18px 10px",
+                    borderRadius:
+                      "18px",
                     textAlign: "center",
-                    background: earned
-                      ? "#f7f1d7"
-                      : "#f1f1f1",
-                    border: earned
-                      ? "2px solid #d9c77a"
-                      : "2px solid #e2e2e2",
-                    opacity: earned ? 1 : 0.5,
+                    background:
+                      earned
+                        ? "#f7f1d7"
+                        : "#f1f1f1",
+                    border:
+                      earned
+                        ? "2px solid #d9c77a"
+                        : "2px solid #e2e2e2",
+                    opacity:
+                      earned ? 1 : 0.5,
                   }}
                 >
+
+                  {/* BADGE ICON */}
+
                   <div
                     style={{
                       fontSize: "42px",
-                      filter: earned
-                        ? "none"
-                        : "grayscale(1)",
+                      filter:
+                        earned
+                          ? "none"
+                          : "grayscale(1)",
                     }}
                   >
                     {earned
@@ -510,15 +686,20 @@ export default function Home() {
                       : "🔒"}
                   </div>
 
+                  {/* BADGE NAME */}
+
                   <h3
                     style={{
                       fontSize: "15px",
-                      margin: "8px 0 5px",
+                      margin:
+                        "8px 0 5px",
                       color: "#315c48",
                     }}
                   >
                     {badge.name}
                   </h3>
+
+                  {/* MESSAGE */}
 
                   <p
                     style={{
@@ -532,6 +713,8 @@ export default function Home() {
                       ? badge.message
                       : `Complete ${badge.days} lessons`}
                   </p>
+
+                  {/* REQUIREMENT */}
 
                   <p
                     style={{
@@ -548,7 +731,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAITH TREE */}
+        {/* =====================
+            FAITH TREE
+            NOW MATCHES LESSONS
+            PAGE EXACTLY
+        ===================== */}
 
         <section
           style={{
@@ -561,44 +748,92 @@ export default function Home() {
               "0 4px 15px rgba(0,0,0,.08)",
           }}
         >
+
+          {/* TREE */}
+
           <div
             style={{
               fontSize: "65px",
               marginBottom: "10px",
             }}
           >
-            {tree}
+            {faithTree.tree}
           </div>
+
+          {/* TREE TITLE */}
 
           <h2
             style={{
               color: "#315c48",
             }}
           >
-            {treeMessage}
+            {faithTree.title}
           </h2>
+
+          {/* TREE MESSAGE */}
 
           <p
             style={{
               fontSize: "16px",
+              lineHeight: "1.6",
             }}
           >
-            Every completed lesson helps your
-            Faith Tree grow!
+            {faithTree.message}
           </p>
+
+          {/* TREE PROGRESS */}
+
+          <div
+            style={{
+              marginTop: "15px",
+              background: "#e9f4ed",
+              borderRadius: "15px",
+              padding: "15px",
+            }}
+          >
+            <strong>
+              🌳 Faith Tree Progress
+            </strong>
+
+            <p
+              style={{
+                margin:
+                  "8px 0 0",
+              }}
+            >
+              {count} /
+              180 lessons completed
+            </p>
+
+            <p
+              style={{
+                margin:
+                  "5px 0 0",
+                fontWeight: "bold",
+              }}
+            >
+              {percentage}%
+              Complete
+            </p>
+          </div>
+
+          {/* TREE ENCOURAGEMENT */}
 
           <p
             style={{
-              fontWeight: "bold",
-              color: "#315c48",
-              marginTop: "12px",
+              marginTop: "18px",
+              fontSize: "15px",
+              color: "#666",
             }}
           >
-            {count} / 180 Lessons Completed
+            Every completed lesson helps your
+            Faith Tree grow! 🌱
           </p>
         </section>
 
-        {/* PARENT DASHBOARD */}
+        {/* =====================
+            PARENT DASHBOARD
+        ===================== */}
 
         <section
           style={{
@@ -607,9 +842,9 @@ export default function Home() {
           }}
         >
           <button
-            onClick={() => {
-              window.location.href = "/parent";
-            }}
+            onClick={
+              openParentDashboard
+            }
             style={{
               padding: "13px 22px",
               border: "none",
@@ -635,7 +870,9 @@ export default function Home() {
           </p>
         </section>
 
-        {/* FOOTER */}
+        {/* =====================
+            FOOTER
+        ===================== */}
 
         <footer
           style={{
@@ -646,11 +883,13 @@ export default function Home() {
           }}
         >
           <p>
-            Faith Foundations: The M&M Adventure
+            Faith Foundations:
+            The M&M Adventure
           </p>
 
           <p>
-            Growing in God's Word — one day at a time. 🌱
+            Growing in God's Word —
+            one day at a time. 🌱
           </p>
         </footer>
 
