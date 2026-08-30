@@ -9,6 +9,8 @@ const MIDTERM_PASS_KEY = "faithMidtermPassed";
 const MIDTERM_PASS_SCORE_KEY = "faithMidtermPassingScore";
 const MIDTERM_MODE_KEY = "faithMidtermMode";
 
+const PASSING_SCORE = 80;
+
 /* =========================
    MIDTERM QUESTIONS
 ========================= */
@@ -21,29 +23,50 @@ const questions = [
   },
   {
     question: "What did Noah build?",
-    answers: ["A temple", "A tower", "An ark", "A palace"],
+    answers: [
+      "A temple",
+      "A tower",
+      "An ark",
+      "A palace",
+    ],
     correct: "An ark",
   },
   {
     question:
       "Who trusted God and followed Him to a new land?",
-    answers: ["Abraham", "Jonah", "Samuel", "Solomon"],
+    answers: [
+      "Abraham",
+      "Jonah",
+      "Samuel",
+      "Solomon",
+    ],
     correct: "Abraham",
   },
   {
     question:
       "Who was known for forgiving his brothers?",
-    answers: ["Joseph", "Joshua", "Daniel", "Elijah"],
+    answers: [
+      "Joseph",
+      "Joshua",
+      "Daniel",
+      "Elijah",
+    ],
     correct: "Joseph",
   },
   {
     question:
       "Who was called to lead God's people out of Egypt?",
-    answers: ["David", "Moses", "Peter", "Paul"],
+    answers: [
+      "David",
+      "Moses",
+      "Peter",
+      "Paul",
+    ],
     correct: "Moses",
   },
   {
-    question: "What did God tell Joshua to be?",
+    question:
+      "What did God tell Joshua to be?",
     answers: [
       "Rich",
       "Famous",
@@ -54,13 +77,23 @@ const questions = [
   },
   {
     question: "Who defeated Goliath?",
-    answers: ["David", "Saul", "Samuel", "Joshua"],
+    answers: [
+      "David",
+      "Saul",
+      "Samuel",
+      "Joshua",
+    ],
     correct: "David",
   },
   {
     question:
       "Who was thrown into the lions' den?",
-    answers: ["Daniel", "Joseph", "Moses", "Peter"],
+    answers: [
+      "Daniel",
+      "Joseph",
+      "Moses",
+      "Peter",
+    ],
     correct: "Daniel",
   },
   {
@@ -96,7 +129,7 @@ const studyGuideOne = [
   "Review Lessons 1–44.",
   "Creation — God created the world.",
   "Noah — Noah obeyed God and built the ark.",
-  "Abraham — Abraham trusted God and followed Him.",
+  "Abraham — Abraham trusted God and followed God.",
   "Joseph — Joseph forgave his brothers.",
   "Moses — God called Moses to lead His people out of Egypt.",
   "Joshua — God told Joshua to be strong and courageous.",
@@ -147,22 +180,28 @@ export default function Midterm() {
   const [savedPassingScore, setSavedPassingScore] =
     useState(null);
 
+  /* =========================
+     LOAD SAVED DATA
+  ========================= */
+
   useEffect(() => {
     loadProgress();
 
-    const savedAttempts =
-      localStorage.getItem(MIDTERM_ATTEMPTS_KEY);
+    try {
+      const savedAttempts =
+        localStorage.getItem(
+          MIDTERM_ATTEMPTS_KEY
+        );
 
-    if (savedAttempts) {
-      try {
+      if (savedAttempts) {
         const parsed = JSON.parse(savedAttempts);
 
         if (Array.isArray(parsed)) {
           setAttempts(parsed);
         }
-      } catch {
-        setAttempts([]);
       }
+    } catch {
+      setAttempts([]);
     }
 
     const savedPassed =
@@ -176,15 +215,20 @@ export default function Midterm() {
       );
 
     if (savedScore !== null) {
-      setSavedPassingScore(
-        Number(savedScore)
-      );
+      const numericScore = Number(savedScore);
+
+      if (!Number.isNaN(numericScore)) {
+        setSavedPassingScore(numericScore);
+      }
     }
 
     const savedMode =
       localStorage.getItem(MIDTERM_MODE_KEY);
 
-    if (savedMode === "system" || savedMode === "parent") {
+    if (
+      savedMode === "system" ||
+      savedMode === "parent"
+    ) {
       setMode(savedMode);
     }
   }, []);
@@ -230,8 +274,8 @@ export default function Midterm() {
   }
 
   /* =========================
-     SAVE DAY COMPLETION
-========================= */
+     MARK DAY COMPLETE
+  ========================= */
 
   function markDayComplete(day) {
     try {
@@ -281,8 +325,8 @@ export default function Midterm() {
   }
 
   /* =========================
-     PROGRESS STATUS
-========================= */
+     PROGRESSION
+  ========================= */
 
   const day87Complete =
     completed.includes(87);
@@ -298,7 +342,7 @@ export default function Midterm() {
 
   /* =========================
      SAVE ATTEMPT
-========================= */
+  ========================= */
 
   function saveAttempt(attempt) {
     const updatedAttempts = [
@@ -317,8 +361,8 @@ export default function Midterm() {
   }
 
   /* =========================
-     SAVE PASS
-========================= */
+     SAVE PASSING RESULT
+  ========================= */
 
   function savePassingResult(finalScore) {
     setPassed(true);
@@ -336,16 +380,21 @@ export default function Midterm() {
     );
 
     /*
-      Day 90 is the actual Midterm Exam day.
-      Only a passing exam completes Day 90.
+      Day 90 is the actual Midterm Exam.
+
+      Day 90 only becomes complete
+      after the student passes with 80%
+      or higher.
     */
 
-    markDayComplete(90);
+    if (!day90Complete) {
+      markDayComplete(90);
+    }
   }
 
   /* =========================
      SYSTEM EXAM
-========================= */
+  ========================= */
 
   function calculateScore() {
     if (
@@ -359,13 +408,13 @@ export default function Midterm() {
       return;
     }
 
-    let total = 0;
+    let totalCorrect = 0;
 
     const incorrect = [];
 
     questions.forEach((q, index) => {
       if (answers[index] === q.correct) {
-        total++;
+        totalCorrect++;
       } else {
         incorrect.push({
           number: index + 1,
@@ -378,11 +427,11 @@ export default function Midterm() {
     });
 
     const finalScore = Math.round(
-      (total / questions.length) * 100
+      (totalCorrect / questions.length) * 100
     );
 
     const didPass =
-      finalScore >= 80;
+      finalScore >= PASSING_SCORE;
 
     const attempt = {
       id: Date.now(),
@@ -404,7 +453,7 @@ export default function Midterm() {
 
   /* =========================
      RESET SYSTEM EXAM
-========================= */
+  ========================= */
 
   function resetExam() {
     setAnswers({});
@@ -413,7 +462,7 @@ export default function Midterm() {
 
   /* =========================
      CHANGE EXAM MODE
-========================= */
+  ========================= */
 
   function changeMode(newMode) {
     setMode(newMode);
@@ -430,13 +479,14 @@ export default function Midterm() {
 
   /* =========================
      PARENT-LED EXAM
-========================= */
+  ========================= */
 
   function saveParentScore() {
     const numericScore =
       Number(parentScore);
 
     if (
+      parentScore === "" ||
       Number.isNaN(numericScore) ||
       numericScore < 0 ||
       numericScore > 100
@@ -448,16 +498,19 @@ export default function Midterm() {
       return;
     }
 
-    const missedNumbers =
-      parentMissed
-        .split(",")
-        .map((item) => Number(item.trim()))
-        .filter(
-          (number) =>
-            Number.isInteger(number) &&
-            number >= 1 &&
-            number <= questions.length
-        );
+    const missedNumbers = [
+      ...new Set(
+        parentMissed
+          .split(",")
+          .map((item) => Number(item.trim()))
+          .filter(
+            (number) =>
+              Number.isInteger(number) &&
+              number >= 1 &&
+              number <= questions.length
+          )
+      ),
+    ];
 
     const incorrect =
       missedNumbers.map((number) => {
@@ -473,7 +526,7 @@ export default function Midterm() {
       });
 
     const didPass =
-      numericScore >= 80;
+      numericScore >= PASSING_SCORE;
 
     const attempt = {
       id: Date.now(),
@@ -495,7 +548,7 @@ export default function Midterm() {
 
   /* =========================
      PRINT STUDY GUIDE #1
-========================= */
+  ========================= */
 
   function printStudyGuideOne() {
     printStudyGuide(
@@ -507,7 +560,7 @@ export default function Midterm() {
 
   /* =========================
      PRINT STUDY GUIDE #2
-========================= */
+  ========================= */
 
   function printStudyGuideTwo() {
     printStudyGuide(
@@ -519,7 +572,7 @@ export default function Midterm() {
 
   /* =========================
      PRINT STUDY GUIDE
-========================= */
+  ========================= */
 
   function printStudyGuide(
     title,
@@ -546,9 +599,7 @@ export default function Midterm() {
 
       <head>
 
-        <title>
-          ${title}
-        </title>
+        <title>${title}</title>
 
         <style>
 
@@ -635,10 +686,7 @@ export default function Midterm() {
           <div class="notes"></div>
 
           <p>
-            <strong>
-              Remember:
-            </strong>
-
+            <strong>Remember:</strong>
             The goal is to learn God's Word,
             not just memorize answers!
           </p>
@@ -660,7 +708,7 @@ export default function Midterm() {
 
   /* =========================
      PRINT BLANK MIDTERM EXAM
-========================= */
+  ========================= */
 
   function printParentExam() {
     const examWindow = window.open(
@@ -806,7 +854,6 @@ export default function Midterm() {
                           ${String.fromCharCode(
                             65 + letterIndex
                           )}.
-
                           ${answer}
 
                         </div>
@@ -878,7 +925,7 @@ export default function Midterm() {
 
   /* =========================
      INITIAL LOCK
-========================= */
+  ========================= */
 
   if (!day87Complete) {
     return (
@@ -961,7 +1008,7 @@ export default function Midterm() {
 
   /* =========================
      MAIN PAGE
-========================= */
+  ========================= */
 
   return (
     <main
@@ -1262,7 +1309,7 @@ export default function Midterm() {
 
             <p>
               Passing score:
-              <strong> 80% or higher</strong>
+              <strong> {PASSING_SCORE}% or higher</strong>
             </p>
 
             {savedPassingScore !== null && (
@@ -1279,6 +1326,16 @@ export default function Midterm() {
               Your passing score has been saved.
             </p>
 
+            {day90Complete && (
+              <p
+                style={{
+                  fontWeight: "bold",
+                }}
+              >
+                ✅ Day 90 — Midterm Exam Completed
+              </p>
+            )}
+
           </section>
         )}
 
@@ -1289,106 +1346,108 @@ export default function Midterm() {
         {day89Complete ? (
           <>
 
-            <section
-              style={{
-                background: "#fff4df",
-                borderRadius: "20px",
-                padding: "25px",
-                marginBottom: "20px",
-              }}
-            >
-
-              <h2>
-                📝 Day 90 — Midterm Exam
-              </h2>
-
-              <p>
-                Choose how the exam will be given:
-              </p>
-
-              <div
+            {!passed && (
+              <section
                 style={{
-                  display: "grid",
-                  gap: "12px",
-                  marginTop: "15px",
+                  background: "#fff4df",
+                  borderRadius: "20px",
+                  padding: "25px",
+                  marginBottom: "20px",
                 }}
               >
 
-                <button
-                  onClick={() =>
-                    changeMode("system")
-                  }
+                <h2>
+                  📝 Day 90 — Midterm Exam
+                </h2>
+
+                <p>
+                  Choose how the exam will be given:
+                </p>
+
+                <div
                   style={{
-                    padding: "16px",
-                    borderRadius: "14px",
-                    border:
-                      mode === "system"
-                        ? "3px solid #315c48"
-                        : "1px solid #ccc",
-                    background:
-                      mode === "system"
-                        ? "#e9f4ed"
-                        : "white",
-                    fontWeight: "bold",
-                    cursor: "pointer",
+                    display: "grid",
+                    gap: "12px",
+                    marginTop: "15px",
                   }}
                 >
-                  💻 System-Led Exam
-                </button>
 
-                <button
-                  onClick={() =>
-                    changeMode("parent")
-                  }
+                  <button
+                    onClick={() =>
+                      changeMode("system")
+                    }
+                    style={{
+                      padding: "16px",
+                      borderRadius: "14px",
+                      border:
+                        mode === "system"
+                          ? "3px solid #315c48"
+                          : "1px solid #ccc",
+                      background:
+                        mode === "system"
+                          ? "#e9f4ed"
+                          : "white",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                    }}
+                  >
+                    💻 System-Led Exam
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      changeMode("parent")
+                    }
+                    style={{
+                      padding: "16px",
+                      borderRadius: "14px",
+                      border:
+                        mode === "parent"
+                          ? "3px solid #315c48"
+                          : "1px solid #ccc",
+                      background:
+                        mode === "parent"
+                          ? "#e9f4ed"
+                          : "white",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                    }}
+                  >
+                    👩‍🏫 Parent-Led Exam
+                  </button>
+
+                </div>
+
+                <div
                   style={{
-                    padding: "16px",
-                    borderRadius: "14px",
-                    border:
-                      mode === "parent"
-                        ? "3px solid #315c48"
-                        : "1px solid #ccc",
-                    background:
-                      mode === "parent"
-                        ? "#e9f4ed"
-                        : "white",
-                    fontWeight: "bold",
-                    cursor: "pointer",
+                    marginTop: "18px",
+                    padding: "15px",
+                    borderRadius: "12px",
+                    background: "#fff",
+                    textAlign: "center",
                   }}
                 >
-                  👩‍🏫 Parent-Led Exam
-                </button>
 
-              </div>
+                  <strong>
+                    Passing Score: 80% or higher
+                  </strong>
 
-              <div
-                style={{
-                  marginTop: "18px",
-                  padding: "15px",
-                  borderRadius: "12px",
-                  background: "#fff",
-                  textAlign: "center",
-                }}
-              >
+                  <br />
 
-                <strong>
-                  Passing Score: 80% or higher
-                </strong>
+                  <span>
+                    79% or lower = Not Passed
+                  </span>
 
-                <br />
+                </div>
 
-                <span>
-                  79% or lower = Not Passed
-                </span>
-
-              </div>
-
-            </section>
+              </section>
+            )}
 
             {/* =========================
                 PARENT EXAM
             ========================= */}
 
-            {mode === "parent" && (
+            {mode === "parent" && !passed && (
               <section
                 style={{
                   background: "white",
@@ -1512,7 +1571,7 @@ export default function Midterm() {
                       padding: "20px",
                       borderRadius: "15px",
                       background:
-                        Number(parentScore) >= 80
+                        Number(parentScore) >= PASSING_SCORE
                           ? "#e9f4ed"
                           : "#fff0ed",
                       textAlign: "center",
@@ -1524,13 +1583,13 @@ export default function Midterm() {
                         fontSize: "45px",
                       }}
                     >
-                      {Number(parentScore) >= 80
+                      {Number(parentScore) >= PASSING_SCORE
                         ? "🎉🏆"
                         : "📖💪"}
                     </div>
 
                     <h2>
-                      {Number(parentScore) >= 80
+                      {Number(parentScore) >= PASSING_SCORE
                         ? "Midterm Passed!"
                         : "Midterm Not Passed"}
                     </h2>
@@ -1544,7 +1603,7 @@ export default function Midterm() {
                     </p>
 
                     <p>
-                      {Number(parentScore) >= 80
+                      {Number(parentScore) >= PASSING_SCORE
                         ? "Great job! You passed the Midterm Exam!"
                         : "Review the study guides and try again."}
                     </p>
@@ -1559,7 +1618,7 @@ export default function Midterm() {
                 SYSTEM EXAM
             ========================= */}
 
-            {mode === "system" && (
+            {mode === "system" && !passed && (
               <ExamContent
                 answers={answers}
                 setAnswers={setAnswers}
@@ -1878,7 +1937,7 @@ function ExamContent({
             padding: "25px",
             borderRadius: "15px",
             background:
-              score >= 80
+              score >= PASSING_SCORE
                 ? "#e9f4ed"
                 : "#fff0ed",
             textAlign: "center",
@@ -1886,7 +1945,7 @@ function ExamContent({
         >
 
           <div style={{ fontSize: "50px" }}>
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "🎉🏆"
               : "📖💪"}
           </div>
@@ -1896,18 +1955,18 @@ function ExamContent({
           </h2>
 
           <h2>
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "🎉 You Passed!"
               : "📖 Not Passed"}
           </h2>
 
           <p>
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "Great job! You passed the Midterm Exam!"
               : "You need 80% or higher to pass. Review your study guides and try again."}
           </p>
 
-          {score >= 80 ? (
+          {score >= PASSING_SCORE ? (
             <p
               style={{
                 fontWeight: "bold",
