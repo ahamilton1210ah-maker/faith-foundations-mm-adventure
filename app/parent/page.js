@@ -21,15 +21,13 @@ export default function Parent() {
   ========================================================= */
 
   useEffect(() => {
-    const parentAccess =
-      sessionStorage.getItem("parentAccess");
+    const parentAccess = sessionStorage.getItem("parentAccess");
 
     if (parentAccess === "true") {
       setUnlocked(true);
     }
 
-    const savedNotes =
-      localStorage.getItem(NOTES_KEY);
+    const savedNotes = localStorage.getItem(NOTES_KEY);
 
     if (savedNotes !== null) {
       setNotes(savedNotes);
@@ -45,8 +43,7 @@ export default function Parent() {
 
     function loadProgress() {
       try {
-        const saved =
-          localStorage.getItem(STORAGE_KEY);
+        const saved = localStorage.getItem(STORAGE_KEY);
 
         if (!saved) {
           setCompleted([]);
@@ -74,7 +71,8 @@ export default function Parent() {
         ].sort((a, b) => a - b);
 
         setCompleted(clean);
-      } catch {
+      } catch (error) {
+        console.error("Could not load student progress:", error);
         setCompleted([]);
       }
     }
@@ -86,10 +84,7 @@ export default function Parent() {
       loadProgress
     );
 
-    window.addEventListener(
-      "storage",
-      loadProgress
-    );
+    window.addEventListener("storage", loadProgress);
 
     return () => {
       window.removeEventListener(
@@ -97,10 +92,7 @@ export default function Parent() {
         loadProgress
       );
 
-      window.removeEventListener(
-        "storage",
-        loadProgress
-      );
+      window.removeEventListener("storage", loadProgress);
     };
   }, [unlocked]);
 
@@ -112,19 +104,13 @@ export default function Parent() {
     e.preventDefault();
 
     if (password === PARENT_PASSWORD) {
-      sessionStorage.setItem(
-        "parentAccess",
-        "true"
-      );
+      sessionStorage.setItem("parentAccess", "true");
 
       setUnlocked(true);
       setPassword("");
       setError("");
     } else {
-      setError(
-        "❌ Incorrect password. Please try again."
-      );
-
+      setError("❌ Incorrect password. Please try again.");
       setPassword("");
     }
   }
@@ -134,9 +120,7 @@ export default function Parent() {
   ========================================================= */
 
   function logout() {
-    sessionStorage.removeItem(
-      "parentAccess"
-    );
+    sessionStorage.removeItem("parentAccess");
 
     setUnlocked(false);
     setPassword("");
@@ -149,11 +133,7 @@ export default function Parent() {
 
   function saveNotes(value) {
     setNotes(value);
-
-    localStorage.setItem(
-      NOTES_KEY,
-      value
-    );
+    localStorage.setItem(NOTES_KEY, value);
   }
 
   /* =========================================================
@@ -165,11 +145,7 @@ export default function Parent() {
   }
 
   function getNextLesson() {
-    for (
-      let day = 1;
-      day <= TOTAL_LESSONS;
-      day++
-    ) {
+    for (let day = 1; day <= TOTAL_LESSONS; day++) {
       if (!completed.includes(day)) {
         return day;
       }
@@ -186,9 +162,7 @@ export default function Parent() {
     const nextLesson = getNextLesson();
 
     if (!nextLesson) {
-      alert(
-        "🎉 All 180 lessons are complete!"
-      );
+      alert("🎉 All 180 lessons are complete!");
       return;
     }
 
@@ -197,42 +171,15 @@ export default function Parent() {
   }
 
   function previewLessons() {
-    window.location.href =
-      "/Lessons?parent=true";
+    window.location.href = "/Lessons?parent=true";
   }
 
-  /*
-     IMPORTANT:
-     ?parent=true tells the Midterm/Final page
-     that the person viewing is the parent.
-
-     The student still uses:
-       /Midterm
-       /Final
-
-     The parent uses:
-       /Midterm?parent=true
-       /Final?parent=true
-  */
-
   function openMidterm() {
-    window.location.href =
-      "/Midterm?parent=true";
+    window.location.href = "/Midterm?parent=true";
   }
 
   function openFinal() {
-    window.location.href =
-      "/Final?parent=true";
-  }
-
-  function openMidtermReview() {
-    window.location.href =
-      "/Midterm?parent=true";
-  }
-
-  function openFinalReview() {
-    window.location.href =
-      "/Final?parent=true";
+    window.location.href = "/Final?parent=true";
   }
 
   /* =========================================================
@@ -243,9 +190,7 @@ export default function Parent() {
 
   const percentage = Math.min(
     100,
-    Math.round(
-      (count / TOTAL_LESSONS) * 100
-    )
+    Math.round((count / TOTAL_LESSONS) * 100)
   );
 
   const nextLesson = getNextLesson();
@@ -255,34 +200,26 @@ export default function Parent() {
   ========================================================= */
 
   let tree = "🌱";
-
-  let message =
-    "Your faith is taking root!";
+  let message = "Your faith is taking root!";
 
   if (count >= 180) {
     tree = "🌳🏆";
-    message =
-      "Your Faith Tree is fully grown!";
+    message = "Your Faith Tree is fully grown!";
   } else if (count >= 150) {
     tree = "🌲🌳🌲";
-    message =
-      "Your Faith Tree is almost fully grown!";
+    message = "Your Faith Tree is almost fully grown!";
   } else if (count >= 120) {
     tree = "🌳🌳🌳";
-    message =
-      "Your Faith Tree is growing strong!";
+    message = "Your Faith Tree is growing strong!";
   } else if (count >= 90) {
     tree = "🌳🌳";
-    message =
-      "Your Faith Tree is growing beautifully!";
+    message = "Your Faith Tree is growing beautifully!";
   } else if (count >= 60) {
     tree = "🌳";
-    message =
-      "Look how much your Faith Tree has grown!";
+    message = "Look how much your Faith Tree has grown!";
   } else if (count >= 30) {
     tree = "🌿";
-    message =
-      "Your faith is growing stronger!";
+    message = "Your faith is growing stronger!";
   }
 
   /* =========================================================
@@ -306,11 +243,7 @@ export default function Parent() {
     ["🌳", "Faith Builder", 50],
     ["⭐", "Halfway Hero", 90],
     ["🏅", "Faith Champion", 135],
-    [
-      "🏆",
-      "Faith Foundations Champion",
-      180,
-    ],
+    ["🏆", "Faith Foundations Champion", 180],
   ];
 
   /* =========================================================
@@ -331,8 +264,7 @@ export default function Parent() {
       return;
     }
 
-    const reportTree = tree;
-    const reportMessage = message;
+    const reportNextLesson = getNextLesson();
 
     const reportStatus =
       count === 0
@@ -341,19 +273,14 @@ export default function Parent() {
         ? "Completed"
         : "In Progress";
 
-    const reportNextLesson =
-      getNextLesson();
-
     const escapedNotes =
-      notes
+      notes && notes.trim()
         ? notes
         : "No parent/teacher notes entered.";
 
     reportWindow.document.write(`
       <!DOCTYPE html>
-
       <html>
-
       <head>
 
         <meta charset="UTF-8">
@@ -614,51 +541,27 @@ export default function Parent() {
           <div class="info">
 
             <div class="box">
-
-              <strong>
-                Student:
-              </strong>
-
+              <strong>Student:</strong>
               <br><br>
-
               M&M
-
             </div>
 
             <div class="box">
-
-              <strong>
-                Grade:
-              </strong>
-
+              <strong>Grade:</strong>
               <br><br>
-
               3rd Grade
-
             </div>
 
             <div class="box">
-
-              <strong>
-                School Year:
-              </strong>
-
+              <strong>School Year:</strong>
               <br><br>
-
               2026–2027
-
             </div>
 
             <div class="box">
-
-              <strong>
-                Parent/Teacher:
-              </strong>
-
+              <strong>Parent/Teacher:</strong>
               <br><br>
-
               __________________________
-
             </div>
 
           </div>
@@ -668,11 +571,11 @@ export default function Parent() {
           </h2>
 
           <div class="tree">
-            ${reportTree}
+            ${tree}
           </div>
 
           <div class="tree-message">
-            ${reportMessage}
+            ${message}
           </div>
 
           <div class="progress-number">
@@ -680,68 +583,39 @@ export default function Parent() {
           </div>
 
           <div class="progress">
-
-            <div
-              class="progress-fill"
-            ></div>
-
+            <div class="progress-fill"></div>
           </div>
 
           <p class="center">
-
             <strong>
               ${percentage}% Complete
             </strong>
-
           </p>
 
           <table>
 
             <tr>
-
-              <th>
-                Course Status
-              </th>
-
-              <td>
-                ${reportStatus}
-              </td>
-
+              <th>Course Status</th>
+              <td>${reportStatus}</td>
             </tr>
 
             <tr>
-
-              <th>
-                Lessons Completed
-              </th>
-
-              <td>
-                ${count} of 180
-              </td>
-
+              <th>Lessons Completed</th>
+              <td>${count} of 180</td>
             </tr>
 
             <tr>
-
-              <th>
-                Lessons Remaining
-              </th>
-
+              <th>Lessons Remaining</th>
               <td>
                 ${Math.max(
                   0,
                   TOTAL_LESSONS - count
                 )}
               </td>
-
             </tr>
 
             <tr>
-
-              <th>
-                Next Lesson
-              </th>
-
+              <th>Next Lesson</th>
               <td>
                 ${
                   reportNextLesson
@@ -749,7 +623,6 @@ export default function Parent() {
                     : "Course Complete 🎉"
                 }
               </td>
-
             </tr>
 
           </table>
@@ -761,28 +634,14 @@ export default function Parent() {
           <table>
 
             <tr>
-
-              <th>
-                Badge
-              </th>
-
-              <th>
-                Requirement
-              </th>
-
-              <th>
-                Status
-              </th>
-
+              <th>Badge</th>
+              <th>Requirement</th>
+              <th>Status</th>
             </tr>
 
             ${badges
               .map(
-                ([
-                  icon,
-                  name,
-                  requirement,
-                ]) => `
+                ([icon, name, requirement]) => `
                   <tr>
 
                     <td>
@@ -790,22 +649,19 @@ export default function Parent() {
                     </td>
 
                     <td>
-                      ${requirement}
-                      Lessons
+                      ${requirement} Lessons
                     </td>
 
                     <td
                       class="${
-                        count >=
-                        requirement
+                        count >= requirement
                           ? "earned"
                           : "locked"
                       }"
                     >
 
                       ${
-                        count >=
-                        requirement
+                        count >= requirement
                           ? "✅ Earned"
                           : "🔒 Not Yet Earned"
                       }
@@ -826,15 +682,8 @@ export default function Parent() {
           <table>
 
             <tr>
-
-              <th>
-                Assessment
-              </th>
-
-              <th>
-                Status
-              </th>
-
+              <th>Assessment</th>
+              <th>Status</th>
             </tr>
 
             <tr>
@@ -845,13 +694,11 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(88)
                     ? "✅ Completed"
                     : "🔒 Not Completed"
                 }
-
               </td>
 
             </tr>
@@ -864,13 +711,11 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(89)
                     ? "✅ Completed"
                     : "🔒 Not Completed"
                 }
-
               </td>
 
             </tr>
@@ -883,7 +728,6 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(90)
                     ? "🏆 Completed / Passed"
@@ -892,7 +736,6 @@ export default function Parent() {
                     ? "🔓 Ready"
                     : "🔒 Complete Days 88 & 89"
                 }
-
               </td>
 
             </tr>
@@ -905,13 +748,11 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(177)
                     ? "✅ Completed"
                     : "🔒 Not Completed"
                 }
-
               </td>
 
             </tr>
@@ -924,13 +765,11 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(178)
                     ? "✅ Completed"
                     : "🔒 Not Completed"
                 }
-
               </td>
 
             </tr>
@@ -943,7 +782,6 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(179)
                     ? "🏆 Completed / Passed"
@@ -952,7 +790,6 @@ export default function Parent() {
                     ? "🔓 Ready"
                     : "🔒 Complete Days 177 & 178"
                 }
-
               </td>
 
             </tr>
@@ -966,13 +803,11 @@ export default function Parent() {
               </td>
 
               <td>
-
                 ${
                   isComplete(180)
                     ? "🏆 Course Complete"
                     : "🔒 Not Yet Complete"
                 }
-
               </td>
 
             </tr>
@@ -1037,9 +872,7 @@ export default function Parent() {
           minHeight: "100vh",
           background: "#f5f1e8",
           padding: "30px 20px",
-          fontFamily:
-            "Arial, sans-serif",
-
+          fontFamily: "Arial, sans-serif",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -1050,15 +883,10 @@ export default function Parent() {
           style={{
             width: "100%",
             maxWidth: "450px",
-
             background: "white",
-
             borderRadius: "25px",
-
             padding: "35px 25px",
-
             textAlign: "center",
-
             boxShadow:
               "0 5px 25px rgba(0,0,0,.12)",
           }}
@@ -1096,38 +924,25 @@ export default function Parent() {
             to continue.
           </p>
 
-          <form
-            onSubmit={handleLogin}
-          >
+          <form onSubmit={handleLogin}>
 
             <input
               type="password"
               value={password}
               onChange={(e) =>
-                setPassword(
-                  e.target.value
-                )
+                setPassword(e.target.value)
               }
               placeholder="Parent password"
               autoComplete="off"
               style={{
                 width: "100%",
-                boxSizing:
-                  "border-box",
-
+                boxSizing: "border-box",
                 padding: "15px",
-
                 marginTop: "15px",
-
                 borderRadius: "12px",
-
-                border:
-                  "2px solid #ddd",
-
+                border: "2px solid #ddd",
                 fontSize: "17px",
-
                 textAlign: "center",
-
                 outline: "none",
               }}
             />
@@ -1147,23 +962,14 @@ export default function Parent() {
               type="submit"
               style={{
                 width: "100%",
-
                 marginTop: "15px",
-
                 padding: "16px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#315c48",
-
                 color: "white",
-
                 fontSize: "18px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
@@ -1174,21 +980,14 @@ export default function Parent() {
 
           <button
             onClick={() => {
-              window.location.href =
-                "/";
+              window.location.href = "/";
             }}
             style={{
               marginTop: "20px",
-
               border: "none",
-
-              background:
-                "transparent",
-
+              background: "transparent",
               color: "#315c48",
-
               fontWeight: "bold",
-
               cursor: "pointer",
             }}
           >
@@ -1209,15 +1008,9 @@ export default function Parent() {
     <main
       style={{
         minHeight: "100vh",
-
-        padding:
-          "30px 20px 60px",
-
+        padding: "30px 20px 60px",
         background: "#f8f5ed",
-
-        fontFamily:
-          "Arial, sans-serif",
-
+        fontFamily: "Arial, sans-serif",
         color: "#24313a",
       }}
     >
@@ -1225,19 +1018,15 @@ export default function Parent() {
       <div
         style={{
           maxWidth: "760px",
-
           margin: "0 auto",
         }}
       >
 
-        {/* ===================================================
-            HEADER
-        =================================================== */}
+        {/* HEADER */}
 
         <header
           style={{
             textAlign: "center",
-
             marginBottom: "25px",
           }}
         >
@@ -1253,7 +1042,6 @@ export default function Parent() {
           <h1
             style={{
               color: "#315c48",
-
               marginBottom: "5px",
             }}
           >
@@ -1276,21 +1064,15 @@ export default function Parent() {
 
         </header>
 
-        {/* ===================================================
-            PARENT TOOLS
-        =================================================== */}
+        {/* PARENT TOOLS */}
 
         <section
           className="no-print"
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "20px",
-
             marginBottom: "20px",
-
             boxShadow:
               "0 4px 15px rgba(0,0,0,.08)",
           }}
@@ -1307,30 +1089,20 @@ export default function Parent() {
           <div
             style={{
               display: "grid",
-
               gap: "12px",
             }}
           >
 
             <button
-              onClick={
-                previewLessons
-              }
+              onClick={previewLessons}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#315c48",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
@@ -1338,28 +1110,19 @@ export default function Parent() {
             </button>
 
             <button
-              onClick={
-                goToNextLesson
-              }
+              onClick={goToNextLesson}
               disabled={!nextLesson}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background:
                   nextLesson
                     ? "#6b9e5b"
                     : "#999",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor:
                   nextLesson
                     ? "pointer"
@@ -1371,54 +1134,32 @@ export default function Parent() {
                 : "🎉 All 180 Lessons Complete"}
             </button>
 
-            {/* =================================================
-                MIDTERM PARENT PREVIEW
-            ================================================= */}
-
             <button
               onClick={openMidterm}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#8b6f47",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
               👀 Preview Midterm Review & Exam
             </button>
 
-            {/* =================================================
-                FINAL PARENT PREVIEW
-            ================================================= */}
-
             <button
               onClick={openFinal}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#8b6f47",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
@@ -1429,19 +1170,12 @@ export default function Parent() {
               onClick={printReport}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#315c48",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
@@ -1452,19 +1186,12 @@ export default function Parent() {
               onClick={logout}
               style={{
                 padding: "15px",
-
                 border: "none",
-
                 borderRadius: "14px",
-
                 background: "#777",
-
                 color: "white",
-
                 fontSize: "16px",
-
                 fontWeight: "bold",
-
                 cursor: "pointer",
               }}
             >
@@ -1475,22 +1202,15 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            FAITH TREE
-        =================================================== */}
+        {/* FAITH TREE */}
 
         <section
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "30px",
-
             textAlign: "center",
-
             marginBottom: "22px",
-
             boxShadow:
               "0 4px 15px rgba(0,0,0,.1)",
           }}
@@ -1499,7 +1219,6 @@ export default function Parent() {
           <div
             style={{
               fontSize: "75px",
-
               lineHeight: 1.2,
             }}
           >
@@ -1517,9 +1236,7 @@ export default function Parent() {
           <p
             style={{
               fontSize: "24px",
-
               fontWeight: "bold",
-
               marginBottom: "15px",
             }}
           >
@@ -1529,13 +1246,9 @@ export default function Parent() {
           <div
             style={{
               width: "100%",
-
               height: "28px",
-
               background: "#ddd",
-
               borderRadius: "20px",
-
               overflow: "hidden",
             }}
           >
@@ -1543,13 +1256,9 @@ export default function Parent() {
             <div
               style={{
                 width: `${percentage}%`,
-
                 height: "100%",
-
                 background: "#315c48",
-
-                transition:
-                  "width .4s ease",
+                transition: "width .4s ease",
               }}
             />
 
@@ -1558,7 +1267,6 @@ export default function Parent() {
           <p
             style={{
               fontSize: "18px",
-
               fontWeight: "bold",
             }}
           >
@@ -1567,18 +1275,13 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            CURRENT PROGRESS
-        =================================================== */}
+        {/* CURRENT PROGRESS */}
 
         <section
           style={{
             background: "#fffaf0",
-
             borderRadius: "20px",
-
             padding: "25px",
-
             marginBottom: "22px",
           }}
         >
@@ -1602,9 +1305,7 @@ export default function Parent() {
 
           <p>
             ⭐ Lessons completed:{" "}
-            <strong>
-              {count}
-            </strong>
+            <strong>{count}</strong>
           </p>
 
           <p>
@@ -1612,40 +1313,30 @@ export default function Parent() {
             <strong>
               {Math.max(
                 0,
-                TOTAL_LESSONS -
-                  count
+                TOTAL_LESSONS - count
               )}
             </strong>
           </p>
 
           <p>
             🌳 Faith Tree progress:{" "}
-            <strong>
-              {percentage}%
-            </strong>
+            <strong>{percentage}%</strong>
           </p>
 
           <p>
             📚 Course status:{" "}
-            <strong>
-              {courseStatus}
-            </strong>
+            <strong>{courseStatus}</strong>
           </p>
 
         </section>
 
-        {/* ===================================================
-            EXAMS & REVIEWS
-        =================================================== */}
+        {/* EXAMS & REVIEWS */}
 
         <section
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "25px",
-
             marginBottom: "22px",
           }}
         >
@@ -1677,18 +1368,13 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(88)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -1711,7 +1397,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidtermReview}
+              onClick={openMidterm}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1735,18 +1421,13 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(89)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -1769,7 +1450,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidtermReview}
+              onClick={openMidterm}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1793,11 +1474,8 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(90)
                   ? "#e9f4ed"
@@ -1805,9 +1483,7 @@ export default function Parent() {
                     isComplete(89)
                   ? "#fff4df"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -1829,7 +1505,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidtermReview}
+              onClick={openMidterm}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1853,18 +1529,13 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "20px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(177)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -1887,7 +1558,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinalReview}
+              onClick={openFinal}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1911,18 +1582,13 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(178)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -1945,7 +1611,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinalReview}
+              onClick={openFinal}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -1969,11 +1635,8 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(179)
                   ? "#e9f4ed"
@@ -1981,9 +1644,7 @@ export default function Parent() {
                     isComplete(178)
                   ? "#fff4df"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -2005,7 +1666,7 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinalReview}
+              onClick={openFinal}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -2029,18 +1690,13 @@ export default function Parent() {
           <div
             style={{
               padding: "15px",
-
               marginTop: "12px",
-
               borderRadius: "12px",
-
               background:
                 isComplete(180)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-
-              border:
-                "1px solid #ddd",
+              border: "1px solid #ddd",
             }}
           >
 
@@ -2062,18 +1718,13 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            FAITH BADGES
-        =================================================== */}
+        {/* FAITH BADGES */}
 
         <section
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "25px",
-
             marginBottom: "22px",
           }}
         >
@@ -2089,20 +1740,14 @@ export default function Parent() {
           <div
             style={{
               display: "grid",
-
               gridTemplateColumns:
                 "repeat(auto-fit, minmax(180px, 1fr))",
-
               gap: "12px",
             }}
           >
 
             {badges.map(
-              ([
-                icon,
-                name,
-                requirement,
-              ]) => {
+              ([icon, name, requirement]) => {
                 const earned =
                   count >= requirement;
 
@@ -2111,23 +1756,16 @@ export default function Parent() {
                     key={name}
                     style={{
                       padding: "18px",
-
-                      borderRadius:
-                        "15px",
-
-                      textAlign:
-                        "center",
-
+                      borderRadius: "15px",
+                      textAlign: "center",
                       background:
                         earned
                           ? "#e9f4ed"
                           : "#f7f7f7",
-
                       border:
                         earned
                           ? "2px solid #315c48"
                           : "2px solid #ddd",
-
                       opacity:
                         earned ? 1 : 0.7,
                     }}
@@ -2147,22 +1785,16 @@ export default function Parent() {
 
                     <p
                       style={{
-                        fontSize:
-                          "13px",
-
-                        marginBottom:
-                          "5px",
+                        fontSize: "13px",
+                        marginBottom: "5px",
                       }}
                     >
-                      {requirement}
-                      lessons
+                      {requirement} lessons
                     </p>
 
                     <span
                       style={{
-                        fontWeight:
-                          "bold",
-
+                        fontWeight: "bold",
                         color:
                           earned
                             ? "#315c48"
@@ -2183,18 +1815,13 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            COMPLETED LESSONS
-        =================================================== */}
+        {/* COMPLETED LESSONS */}
 
         <section
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "25px",
-
             marginBottom: "22px",
           }}
         >
@@ -2210,18 +1837,13 @@ export default function Parent() {
           {completed.length === 0 ? (
             <div
               style={{
-                background:
-                  "#f7f7f7",
-
+                background: "#f7f7f7",
                 padding: "20px",
-
-                borderRadius:
-                  "12px",
-
-                textAlign:
-                  "center",
+                borderRadius: "12px",
+                textAlign: "center",
               }}
             >
+
               <p>
                 No lessons completed yet.
               </p>
@@ -2235,6 +1857,7 @@ export default function Parent() {
                 completes lessons,
                 they will appear here.
               </p>
+
             </div>
           ) : (
             <>
@@ -2251,38 +1874,25 @@ export default function Parent() {
               <div
                 style={{
                   display: "flex",
-
                   flexWrap: "wrap",
-
                   gap: "8px",
                 }}
               >
 
-                {completed.map(
-                  (day) => (
-                    <span
-                      key={day}
-                      style={{
-                        background:
-                          "#e9f4ed",
-
-                        borderRadius:
-                          "10px",
-
-                        padding:
-                          "8px 12px",
-
-                        fontWeight:
-                          "bold",
-
-                        fontSize:
-                          "14px",
-                      }}
-                    >
-                      Day {day} ✅
-                    </span>
-                  )
-                )}
+                {completed.map((day) => (
+                  <span
+                    key={day}
+                    style={{
+                      background: "#e9f4ed",
+                      borderRadius: "10px",
+                      padding: "8px 12px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Day {day} ✅
+                  </span>
+                ))}
 
               </div>
             </>
@@ -2290,19 +1900,14 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            PARENT NOTES
-        =================================================== */}
+        {/* PARENT NOTES */}
 
         <section
           className="no-print"
           style={{
             background: "white",
-
             borderRadius: "20px",
-
             padding: "25px",
-
             marginBottom: "22px",
           }}
         >
@@ -2329,36 +1934,21 @@ export default function Parent() {
           <textarea
             value={notes}
             onChange={(e) =>
-              saveNotes(
-                e.target.value
-              )
+              saveNotes(e.target.value)
             }
             placeholder="Enter parent/teacher notes here..."
             rows={7}
             style={{
               width: "100%",
-
-              boxSizing:
-                "border-box",
-
+              boxSizing: "border-box",
               padding: "15px",
-
               borderRadius: "12px",
-
-              border:
-                "2px solid #ccc",
-
+              border: "2px solid #ccc",
               fontSize: "16px",
-
-              fontFamily:
-                "Arial, sans-serif",
-
+              fontFamily: "Arial, sans-serif",
               resize: "vertical",
-
               background: "white",
-
               color: "#24313a",
-
               outline: "none",
             }}
           />
@@ -2366,7 +1956,6 @@ export default function Parent() {
           <p
             style={{
               fontSize: "13px",
-
               color: "#666",
             }}
           >
@@ -2375,14 +1964,11 @@ export default function Parent() {
 
         </section>
 
-        {/* ===================================================
-            FOOTER
-        =================================================== */}
+        {/* FOOTER */}
 
         <footer
           style={{
             textAlign: "center",
-
             padding: "20px",
           }}
         >
@@ -2398,7 +1984,6 @@ export default function Parent() {
           <p
             style={{
               fontWeight: "bold",
-
               color: "#315c48",
             }}
           >
