@@ -14,6 +14,17 @@ const FINAL_MODE_KEY = "faithFinalMode";
 const FINAL_ATTEMPTS_KEY = "faithFinalAttempts";
 
 /* =========================
+   COURSE FINAL DAYS
+========================= */
+
+const FINAL_REVIEW_DAY_1 = 177;
+const FINAL_REVIEW_DAY_2 = 178;
+const FINAL_EXAM_DAY = 179;
+const CELEBRATION_DAY = 180;
+
+const PASSING_SCORE = 80;
+
+/* =========================
    FINAL EXAM QUESTIONS
 ========================= */
 
@@ -180,6 +191,12 @@ export default function Final() {
 
   const [parentSaved, setParentSaved] = useState(false);
 
+  const [completedDays, setCompletedDays] = useState([]);
+
+  /* =========================
+     LOAD EVERYTHING
+  ========================= */
+
   useEffect(() => {
     loadProgress();
 
@@ -187,7 +204,11 @@ export default function Final() {
       localStorage.getItem(FINAL_SCORE_KEY);
 
     if (savedScore !== null) {
-      setScore(Number(savedScore));
+      const numericScore = Number(savedScore);
+
+      if (!Number.isNaN(numericScore)) {
+        setScore(numericScore);
+      }
     }
 
     const savedPassed =
@@ -198,7 +219,10 @@ export default function Final() {
     const savedMode =
       localStorage.getItem(FINAL_MODE_KEY);
 
-    if (savedMode) {
+    if (
+      savedMode === "system" ||
+      savedMode === "parent"
+    ) {
       setMode(savedMode);
     }
 
@@ -228,6 +252,7 @@ export default function Final() {
         localStorage.getItem(STORAGE_KEY);
 
       if (!saved) {
+        setCompletedDays([]);
         setFinalUnlocked(false);
         return;
       }
@@ -235,6 +260,7 @@ export default function Final() {
       const parsed = JSON.parse(saved);
 
       if (!Array.isArray(parsed)) {
+        setCompletedDays([]);
         setFinalUnlocked(false);
         return;
       }
@@ -250,32 +276,44 @@ export default function Final() {
                 day <= 180
             )
         ),
-      ];
+      ].sort((a, b) => a - b);
+
+      setCompletedDays(completed);
 
       /*
-        FINAL EXAM UNLOCKS AFTER BOTH
-        DAY 177 AND DAY 178 ARE COMPLETE.
+        DAY 179 FINAL EXAM UNLOCKS ONLY
+        AFTER BOTH DAY 177 AND DAY 178
+        ARE COMPLETE.
       */
 
       const day177Complete =
-        completed.includes(177);
+        completed.includes(FINAL_REVIEW_DAY_1);
 
       const day178Complete =
-        completed.includes(178);
+        completed.includes(FINAL_REVIEW_DAY_2);
 
       setFinalUnlocked(
         day177Complete && day178Complete
       );
     } catch {
+      setCompletedDays([]);
       setFinalUnlocked(false);
     }
   }
 
   /* =========================
-     MARK DAY 179 COMPLETE
+     CHECK COMPLETION
   ========================= */
 
-  function markDay179Complete() {
+  function isDayComplete(day) {
+    return completedDays.includes(day);
+  }
+
+  /* =========================
+     UPDATE COMPLETED DAYS
+  ========================= */
+
+  function addCompletedDay(day) {
     try {
       const saved =
         localStorage.getItem(STORAGE_KEY);
@@ -283,21 +321,47 @@ export default function Final() {
       let current = [];
 
       if (saved) {
-        const parsed = JSON.parse(saved);
+        try {
+          const parsed = JSON.parse(saved);
 
-        if (Array.isArray(parsed)) {
-          current = parsed;
+          if (Array.isArray(parsed)) {
+            current = parsed;
+          }
+        } catch {
+          current = [];
         }
       }
 
-      if (!current.includes(179)) {
-        current.push(179);
+      const numericDays = [
+        ...new Set(
+          current
+            .map(Number)
+            .filter(
+              (item) =>
+                Number.isInteger(item) &&
+                item >= 1 &&
+                item <= 180
+            )
+        ),
+      ];
+
+      if (!numericDays.includes(day)) {
+        numericDays.push(day);
       }
+
+      numericDays.sort((a, b) => a - b);
 
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify(current)
+        JSON.stringify(numericDays)
       );
+
+      setCompletedDays(numericDays);
+
+      /*
+        Tell the rest of the app that
+        course progress changed.
+      */
 
       window.dispatchEvent(
         new Event("faithTreeProgressUpdated")
@@ -306,8 +370,17 @@ export default function Final() {
   }
 
   /* =========================
+     MARK DAY 179 COMPLETE
+     ONLY AFTER PASSING
+========================= */
+
+  function markDay179Complete() {
+    addCompletedDay(FINAL_EXAM_DAY);
+  }
+
+  /* =========================
      SAVE ATTEMPT
-  ========================= */
+========================= */
 
   function saveAttempt(attempt) {
     const updatedAttempts = [
@@ -325,7 +398,7 @@ export default function Final() {
 
   /* =========================
      CHANGE EXAM MODE
-  ========================= */
+========================= */
 
   function changeMode(newMode) {
     setMode(newMode);
@@ -335,14 +408,21 @@ export default function Final() {
       newMode
     );
 
+    /*
+      Changing exam mode starts the
+      current exam screen over, but
+      DOES NOT erase attempt history.
+    */
+
     setAnswers({});
-    setScore(null);
+    setParentScore("");
+    setParentMissed("");
     setParentSaved(false);
   }
 
   /* =========================
      SYSTEM-LED EXAM
-  ========================= */
+========================= */
 
   function calculateScore() {
     if (
@@ -378,7 +458,7 @@ export default function Final() {
     );
 
     const didPass =
-      finalScore >= 80;
+      finalScore >= PASSING_SCORE;
 
     const attempt = {
       id: Date.now(),
@@ -398,6 +478,12 @@ export default function Final() {
       String(finalScore)
     );
 
+    /*
+      IMPORTANT:
+      Passing = Day 179 complete.
+      Failing = Day 179 stays incomplete.
+    */
+
     if (didPass) {
       setPassed(true);
 
@@ -406,26 +492,42 @@ export default function Final() {
         "true"
       );
 
+      markDay179Complete();
+    } else {
       /*
-        Passing the Final Exam completes
-        DAY 179 only.
-
-        DAY 180 remains the separate
-        Celebration / Completion Day.
+        A failed attempt must NOT mark
+        Day 179 complete.
       */
 
-      markDay179Complete();
+      setPassed(false);
+
+      localStorage.setItem(
+        FINAL_PASS_KEY,
+        "false"
+      );
     }
   }
 
   /* =========================
      RESET / RETAKE
-  ========================= */
+========================= */
 
   function resetExam() {
     setAnswers({});
     setScore(null);
     setParentSaved(false);
+    setParentScore("");
+    setParentMissed("");
+
+    /*
+      Retaking the exam clears the current
+      displayed score, but does NOT delete
+      previous attempts.
+
+      If Day 179 was already completed
+      by a previous passing attempt, it
+      remains completed.
+    */
 
     localStorage.removeItem(
       FINAL_SCORE_KEY
@@ -434,13 +536,14 @@ export default function Final() {
 
   /* =========================
      PARENT-LED EXAM
-  ========================= */
+========================= */
 
   function saveParentScore() {
     const numericScore =
       Number(parentScore);
 
     if (
+      parentScore === "" ||
       Number.isNaN(numericScore) ||
       numericScore < 0 ||
       numericScore > 100
@@ -476,7 +579,7 @@ export default function Final() {
       });
 
     const didPass =
-      numericScore >= 80;
+      numericScore >= PASSING_SCORE;
 
     const attempt = {
       id: Date.now(),
@@ -498,6 +601,10 @@ export default function Final() {
       String(numericScore)
     );
 
+    /*
+      Passing Parent-Led Exam = Day 179 complete.
+    */
+
     if (didPass) {
       setPassed(true);
 
@@ -507,12 +614,24 @@ export default function Final() {
       );
 
       markDay179Complete();
+    } else {
+      /*
+        Failed Parent-Led Exam does NOT
+        complete Day 179.
+      */
+
+      setPassed(false);
+
+      localStorage.setItem(
+        FINAL_PASS_KEY,
+        "false"
+      );
     }
   }
 
   /* =========================
      PRINT FINAL EXAM
-  ========================= */
+========================= */
 
   function printFinalExam() {
     const examWindow = window.open(
@@ -726,7 +845,7 @@ export default function Final() {
 
   /* =========================
      PRINT STUDY GUIDE #1
-  ========================= */
+========================= */
 
   function printStudyGuide1() {
     printStudyGuide(
@@ -738,7 +857,7 @@ export default function Final() {
 
   /* =========================
      PRINT STUDY GUIDE #2
-  ========================= */
+========================= */
 
   function printStudyGuide2() {
     printStudyGuide(
@@ -750,7 +869,7 @@ export default function Final() {
 
   /* =========================
      GENERIC STUDY GUIDE PRINT
-  ========================= */
+========================= */
 
   function printStudyGuide(
     title,
@@ -892,7 +1011,7 @@ export default function Final() {
 
   /* =========================
      STUDENT LOCK SCREEN
-  ========================= */
+========================= */
 
   if (!isParent && !finalUnlocked) {
     return (
@@ -1053,7 +1172,7 @@ export default function Final() {
 
   /* =========================
      MAIN PAGE
-  ========================= */
+========================= */
 
   return (
     <main
@@ -1117,22 +1236,121 @@ export default function Final() {
             </h2>
 
             <p>
-              You can preview the Final Study Guides
-              and Final Exam at any time.
+              You can preview the Final Study
+              Guides and Final Exam at any time.
             </p>
 
             <p>
               🔒 The student must complete
-              <strong> Days 177 and 178 </strong>
+              <strong>
+                {" "}
+                Days 177 and 178{" "}
+              </strong>
               before the Final Exam unlocks.
             </p>
 
             <p>
               🎯 Passing score:
-              <strong> 80% or higher</strong>
+              <strong>
+                {" "}
+                80% or higher
+              </strong>
+            </p>
+
+            <p
+              style={{
+                marginBottom: 0,
+              }}
+            >
+              📋 Final progression:
+              <strong>
+                {" "}
+                Day 177 → Day 178 → Day 179 →
+                Day 180
+              </strong>
             </p>
           </section>
         )}
+
+        {/* =========================
+            PROGRESS STATUS
+        ========================= */}
+
+        <section
+          style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "20px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.08)",
+          }}
+        >
+          <h2>
+            🌳 Final Course Progress
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gap: "10px",
+            }}
+          >
+            <ProgressRow
+              day={177}
+              label="Final Study Guide #1"
+              complete={isDayComplete(177)}
+            />
+
+            <ProgressRow
+              day={178}
+              label="Final Study Guide #2"
+              complete={isDayComplete(178)}
+            />
+
+            <ProgressRow
+              day={179}
+              label="Final Exam"
+              complete={isDayComplete(179)}
+            />
+
+            <ProgressRow
+              day={180}
+              label="Celebration / Completion Day"
+              complete={isDayComplete(180)}
+            />
+          </div>
+
+          {!isDayComplete(179) && (
+            <p
+              style={{
+                marginTop: "15px",
+                marginBottom: 0,
+                fontSize: "14px",
+                color: "#666",
+              }}
+            >
+              Day 179 is completed only after
+              earning a final exam score of
+              80% or higher.
+            </p>
+          )}
+
+          {isDayComplete(179) &&
+            !isDayComplete(180) && (
+              <p
+                style={{
+                  marginTop: "15px",
+                  marginBottom: 0,
+                  fontWeight: "bold",
+                }}
+              >
+                🏆 Final Exam complete!
+                Day 180 is your separate
+                Celebration / Completion Day.
+              </p>
+            )}
+        </section>
 
         {/* =========================
             DAY 177
@@ -1296,11 +1514,11 @@ export default function Final() {
             )}
 
             <p>
-              Day 179 is complete!
+              🌳 Day 179 is complete!
             </p>
 
             <p>
-              🌳 Day 180 is your
+              🏆 Day 180 is your
               Celebration / Completion Day!
             </p>
           </section>
@@ -1322,250 +1540,273 @@ export default function Final() {
             📝 Day 179 — Final Exam
           </h2>
 
-          <p>
-            Choose how the Final Exam will be given:
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gap: "12px",
-              marginTop: "15px",
-            }}
-          >
-            <button
-              onClick={() =>
-                changeMode("system")
-              }
+          {!finalUnlocked && !isParent ? (
+            <div
               style={{
-                padding: "16px",
-                borderRadius: "14px",
-                border:
-                  mode === "system"
-                    ? "3px solid #315c48"
-                    : "1px solid #ccc",
-                background:
-                  mode === "system"
-                    ? "#e9f4ed"
-                    : "white",
-                fontWeight: "bold",
-                cursor: "pointer",
+                padding: "20px",
+                background: "#fff0ed",
+                borderRadius: "15px",
+                textAlign: "center",
               }}
             >
-              💻 System-Led Exam
-            </button>
+              🔒 Complete Days 177 and 178
+              before taking the Final Exam.
+            </div>
+          ) : (
+            <>
+              <p>
+                Choose how the Final Exam will be
+                given:
+              </p>
 
-            <button
-              onClick={() =>
-                changeMode("parent")
-              }
-              style={{
-                padding: "16px",
-                borderRadius: "14px",
-                border:
-                  mode === "parent"
-                    ? "3px solid #315c48"
-                    : "1px solid #ccc",
-                background:
-                  mode === "parent"
-                    ? "#e9f4ed"
-                    : "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👩‍🏫 Parent-Led Exam
-            </button>
-          </div>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "12px",
+                  marginTop: "15px",
+                }}
+              >
+                <button
+                  onClick={() =>
+                    changeMode("system")
+                  }
+                  style={{
+                    padding: "16px",
+                    borderRadius: "14px",
+                    border:
+                      mode === "system"
+                        ? "3px solid #315c48"
+                        : "1px solid #ccc",
+                    background:
+                      mode === "system"
+                        ? "#e9f4ed"
+                        : "white",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  💻 System-Led Exam
+                </button>
 
-          <p
-            style={{
-              marginTop: "18px",
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
-            🎯 80% or higher = PASS
-            <br />
-            📖 79% or lower = NOT PASSED
-          </p>
+                <button
+                  onClick={() =>
+                    changeMode("parent")
+                  }
+                  style={{
+                    padding: "16px",
+                    borderRadius: "14px",
+                    border:
+                      mode === "parent"
+                        ? "3px solid #315c48"
+                        : "1px solid #ccc",
+                    background:
+                      mode === "parent"
+                        ? "#e9f4ed"
+                        : "white",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                >
+                  👩‍🏫 Parent-Led Exam
+                </button>
+              </div>
+
+              <p
+                style={{
+                  marginTop: "18px",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                🎯 80% or higher = PASS
+                <br />
+                📖 79% or lower = NOT PASSED
+              </p>
+            </>
+          )}
         </section>
 
         {/* =========================
             PARENT-LED EXAM
         ========================= */}
 
-        {mode === "parent" && (
-          <section
-            style={{
-              background: "white",
-              borderRadius: "20px",
-              padding: "25px",
-              marginBottom: "20px",
-              boxShadow:
-                "0 4px 15px rgba(0,0,0,.1)",
-            }}
-          >
-            <h2>
-              👩‍🏫 Parent-Led Final Exam
-            </h2>
-
-            <p>
-              Print the blank Final Exam and
-              give it to the student.
-            </p>
-
-            <button
-              onClick={printFinalExam}
+        {mode === "parent" &&
+          (finalUnlocked || isParent) && (
+            <section
               style={{
-                width: "100%",
-                padding: "16px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#315c48",
-                color: "white",
-                fontSize: "17px",
-                fontWeight: "bold",
-                cursor: "pointer",
+                background: "white",
+                borderRadius: "20px",
+                padding: "25px",
+                marginBottom: "20px",
+                boxShadow:
+                  "0 4px 15px rgba(0,0,0,.1)",
               }}
             >
-              🖨️ Print Blank Final Exam
-            </button>
+              <h2>
+                👩‍🏫 Parent-Led Final Exam
+              </h2>
 
-            <h3
-              style={{
-                marginTop: "30px",
-              }}
-            >
-              Enter Student's Score
-            </h3>
+              <p>
+                Print the blank Final Exam and
+                give it to the student.
+              </p>
 
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={parentScore}
-              onChange={(e) =>
-                setParentScore(e.target.value)
-              }
-              placeholder="Enter score %"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "15px",
-                borderRadius: "12px",
-                border: "2px solid #ccc",
-                fontSize: "18px",
-              }}
-            />
-
-            <h3>
-              Questions Missed
-            </h3>
-
-            <input
-              type="text"
-              value={parentMissed}
-              onChange={(e) =>
-                setParentMissed(e.target.value)
-              }
-              placeholder="Example: 2, 5, 7"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "15px",
-                borderRadius: "12px",
-                border: "2px solid #ccc",
-                fontSize: "18px",
-              }}
-            />
-
-            <p
-              style={{
-                fontSize: "14px",
-                color: "#666",
-              }}
-            >
-              Enter the question numbers the
-              student missed, separated by commas.
-            </p>
-
-            <button
-              onClick={saveParentScore}
-              style={{
-                width: "100%",
-                marginTop: "12px",
-                padding: "15px",
-                border: "none",
-                borderRadius: "12px",
-                background: "#6b9e5b",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              💾 Save Final Exam Score
-            </button>
-
-            {parentSaved && (
-              <div
+              <button
+                onClick={printFinalExam}
                 style={{
-                  marginTop: "20px",
-                  padding: "20px",
-                  borderRadius: "15px",
-                  background:
-                    Number(parentScore) >= 80
-                      ? "#e9f4ed"
-                      : "#fff0ed",
-                  textAlign: "center",
+                  width: "100%",
+                  padding: "16px",
+                  border: "none",
+                  borderRadius: "14px",
+                  background: "#315c48",
+                  color: "white",
+                  fontSize: "17px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
                 }}
               >
+                🖨️ Print Blank Final Exam
+              </button>
+
+              <h3
+                style={{
+                  marginTop: "30px",
+                }}
+              >
+                Enter Student's Score
+              </h3>
+
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={parentScore}
+                onChange={(e) =>
+                  setParentScore(e.target.value)
+                }
+                placeholder="Enter score %"
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "15px",
+                  borderRadius: "12px",
+                  border: "2px solid #ccc",
+                  fontSize: "18px",
+                }}
+              />
+
+              <h3>
+                Questions Missed
+              </h3>
+
+              <input
+                type="text"
+                value={parentMissed}
+                onChange={(e) =>
+                  setParentMissed(e.target.value)
+                }
+                placeholder="Example: 2, 5, 7"
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "15px",
+                  borderRadius: "12px",
+                  border: "2px solid #ccc",
+                  fontSize: "18px",
+                }}
+              />
+
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#666",
+                }}
+              >
+                Enter the question numbers the
+                student missed, separated by commas.
+              </p>
+
+              <button
+                onClick={saveParentScore}
+                style={{
+                  width: "100%",
+                  marginTop: "12px",
+                  padding: "15px",
+                  border: "none",
+                  borderRadius: "12px",
+                  background: "#6b9e5b",
+                  color: "white",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                💾 Save Final Exam Score
+              </button>
+
+              {parentSaved && (
                 <div
                   style={{
-                    fontSize: "45px",
+                    marginTop: "20px",
+                    padding: "20px",
+                    borderRadius: "15px",
+                    background:
+                      Number(parentScore) >=
+                      PASSING_SCORE
+                        ? "#e9f4ed"
+                        : "#fff0ed",
+                    textAlign: "center",
                   }}
                 >
-                  {Number(parentScore) >= 80
-                    ? "🎉🏆🌳"
-                    : "📖💪"}
+                  <div
+                    style={{
+                      fontSize: "45px",
+                    }}
+                  >
+                    {Number(parentScore) >=
+                    PASSING_SCORE
+                      ? "🎉🏆🌳"
+                      : "📖💪"}
+                  </div>
+
+                  <h2>
+                    {Number(parentScore) >=
+                    PASSING_SCORE
+                      ? "Final Exam Passed!"
+                      : "Keep Studying"}
+                  </h2>
+
+                  <p>
+                    Score:{" "}
+                    <strong>
+                      {parentScore}%
+                    </strong>
+                  </p>
+
+                  <p>
+                    {Number(parentScore) >=
+                    PASSING_SCORE
+                      ? "Great job! Day 179 is complete!"
+                      : "Review your study guides and try again."}
+                  </p>
                 </div>
-
-                <h2>
-                  {Number(parentScore) >= 80
-                    ? "Final Exam Passed!"
-                    : "Keep Studying"}
-                </h2>
-
-                <p>
-                  Score:{" "}
-                  <strong>
-                    {parentScore}%
-                  </strong>
-                </p>
-
-                <p>
-                  {Number(parentScore) >= 80
-                    ? "Great job! Day 179 is complete!"
-                    : "Review your study guides and try again."}
-                </p>
-              </div>
-            )}
-          </section>
-        )}
+              )}
+            </section>
+          )}
 
         {/* =========================
             SYSTEM-LED EXAM
         ========================= */}
 
-        {mode === "system" && (
-          <ExamContent
-            answers={answers}
-            setAnswers={setAnswers}
-            score={score}
-            calculateScore={calculateScore}
-            resetExam={resetExam}
-          />
-        )}
+        {mode === "system" &&
+          (finalUnlocked || isParent) && (
+            <ExamContent
+              answers={answers}
+              setAnswers={setAnswers}
+              score={score}
+              calculateScore={calculateScore}
+              resetExam={resetExam}
+            />
+          )}
 
         {/* =========================
             ATTEMPT HISTORY
@@ -1722,6 +1963,59 @@ export default function Final() {
 }
 
 /* =========================
+   PROGRESS ROW
+========================= */
+
+function ProgressRow({
+  day,
+  label,
+  complete,
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
+        padding: "12px 15px",
+        borderRadius: "12px",
+        background: complete
+          ? "#e9f4ed"
+          : "#f7f7f7",
+      }}
+    >
+      <div>
+        <strong>
+          Day {day}
+        </strong>
+
+        <div
+          style={{
+            fontSize: "14px",
+            color: "#666",
+            marginTop: "3px",
+          }}
+        >
+          {label}
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontWeight: "bold",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {complete
+          ? "✅ Complete"
+          : "🔒 Incomplete"}
+      </div>
+    </div>
+  );
+}
+
+/* =========================
    SYSTEM EXAM CONTENT
 ========================= */
 
@@ -1824,7 +2118,7 @@ function ExamContent({
             padding: "25px",
             borderRadius: "15px",
             background:
-              score >= 80
+              score >= PASSING_SCORE
                 ? "#e9f4ed"
                 : "#fff0ed",
             textAlign: "center",
@@ -1835,7 +2129,7 @@ function ExamContent({
               fontSize: "55px",
             }}
           >
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "🎉🏆🌳"
               : "📖💪"}
           </div>
@@ -1845,18 +2139,18 @@ function ExamContent({
           </h2>
 
           <h2>
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "🎉 You Passed!"
               : "📖 Keep Studying"}
           </h2>
 
           <p>
-            {score >= 80
+            {score >= PASSING_SCORE
               ? "Congratulations! You passed your Final Exam!"
               : "You need 80% or higher to pass. Review your study guides and try again."}
           </p>
 
-          {score >= 80 && (
+          {score >= PASSING_SCORE && (
             <>
               <p
                 style={{
