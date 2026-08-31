@@ -200,6 +200,16 @@ export default function Final() {
   useEffect(() => {
     loadProgress();
 
+    /*
+      Parent access is controlled by the
+      existing parent session used by the app.
+    */
+
+    const parentAccess =
+      sessionStorage.getItem("parentAccess") === "true";
+
+    setIsParent(parentAccess);
+
     const savedScore =
       localStorage.getItem(FINAL_SCORE_KEY);
 
@@ -240,6 +250,27 @@ export default function Final() {
         setAttempts([]);
       }
     }
+
+    /*
+      Listen for progress changes from the rest
+      of the app.
+    */
+
+    const handleProgressUpdate = () => {
+      loadProgress();
+    };
+
+    window.addEventListener(
+      "faithTreeProgressUpdated",
+      handleProgressUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        "faithTreeProgressUpdated",
+        handleProgressUpdate
+      );
+    };
   }, []);
 
   /* =========================
@@ -279,12 +310,6 @@ export default function Final() {
       ].sort((a, b) => a - b);
 
       setCompletedDays(completed);
-
-      /*
-        DAY 179 FINAL EXAM UNLOCKS ONLY
-        AFTER BOTH DAY 177 AND DAY 178
-        ARE COMPLETE.
-      */
 
       const day177Complete =
         completed.includes(FINAL_REVIEW_DAY_1);
@@ -358,10 +383,15 @@ export default function Final() {
 
       setCompletedDays(numericDays);
 
-      /*
-        Tell the rest of the app that
-        course progress changed.
-      */
+      const day177Complete =
+        numericDays.includes(FINAL_REVIEW_DAY_1);
+
+      const day178Complete =
+        numericDays.includes(FINAL_REVIEW_DAY_2);
+
+      setFinalUnlocked(
+        day177Complete && day178Complete
+      );
 
       window.dispatchEvent(
         new Event("faithTreeProgressUpdated")
@@ -370,9 +400,21 @@ export default function Final() {
   }
 
   /* =========================
+     MARK STUDY GUIDE COMPLETE
+  ========================= */
+
+  function completeStudyGuide(day) {
+    if (isDayComplete(day)) {
+      return;
+    }
+
+    addCompletedDay(day);
+  }
+
+  /* =========================
      MARK DAY 179 COMPLETE
      ONLY AFTER PASSING
-========================= */
+  ========================= */
 
   function markDay179Complete() {
     addCompletedDay(FINAL_EXAM_DAY);
@@ -380,7 +422,7 @@ export default function Final() {
 
   /* =========================
      SAVE ATTEMPT
-========================= */
+  ========================= */
 
   function saveAttempt(attempt) {
     const updatedAttempts = [
@@ -398,7 +440,7 @@ export default function Final() {
 
   /* =========================
      CHANGE EXAM MODE
-========================= */
+  ========================= */
 
   function changeMode(newMode) {
     setMode(newMode);
@@ -408,21 +450,20 @@ export default function Final() {
       newMode
     );
 
-    /*
-      Changing exam mode starts the
-      current exam screen over, but
-      DOES NOT erase attempt history.
-    */
-
     setAnswers({});
     setParentScore("");
     setParentMissed("");
     setParentSaved(false);
+
+    /*
+      If the student already passed,
+      do not erase the saved passing status.
+    */
   }
 
   /* =========================
      SYSTEM-LED EXAM
-========================= */
+  ========================= */
 
   function calculateScore() {
     if (
@@ -479,10 +520,12 @@ export default function Final() {
     );
 
     /*
-      IMPORTANT:
-      Passing = Day 179 complete.
-      Failing = Day 179 stays incomplete.
+      Once the student has passed,
+      the passing status stays passed.
     */
+
+    const alreadyPassed =
+      localStorage.getItem(FINAL_PASS_KEY) === "true";
 
     if (didPass) {
       setPassed(true);
@@ -493,12 +536,7 @@ export default function Final() {
       );
 
       markDay179Complete();
-    } else {
-      /*
-        A failed attempt must NOT mark
-        Day 179 complete.
-      */
-
+    } else if (!alreadyPassed) {
       setPassed(false);
 
       localStorage.setItem(
@@ -510,7 +548,7 @@ export default function Final() {
 
   /* =========================
      RESET / RETAKE
-========================= */
+  ========================= */
 
   function resetExam() {
     setAnswers({});
@@ -520,13 +558,12 @@ export default function Final() {
     setParentMissed("");
 
     /*
-      Retaking the exam clears the current
-      displayed score, but does NOT delete
-      previous attempts.
+      Retaking clears only the current
+      displayed score.
 
-      If Day 179 was already completed
-      by a previous passing attempt, it
-      remains completed.
+      Previous attempts remain saved.
+
+      A previous passing result remains saved.
     */
 
     localStorage.removeItem(
@@ -536,7 +573,7 @@ export default function Final() {
 
   /* =========================
      PARENT-LED EXAM
-========================= */
+  ========================= */
 
   function saveParentScore() {
     const numericScore =
@@ -601,9 +638,8 @@ export default function Final() {
       String(numericScore)
     );
 
-    /*
-      Passing Parent-Led Exam = Day 179 complete.
-    */
+    const alreadyPassed =
+      localStorage.getItem(FINAL_PASS_KEY) === "true";
 
     if (didPass) {
       setPassed(true);
@@ -614,12 +650,7 @@ export default function Final() {
       );
 
       markDay179Complete();
-    } else {
-      /*
-        Failed Parent-Led Exam does NOT
-        complete Day 179.
-      */
-
+    } else if (!alreadyPassed) {
       setPassed(false);
 
       localStorage.setItem(
@@ -631,7 +662,7 @@ export default function Final() {
 
   /* =========================
      PRINT FINAL EXAM
-========================= */
+  ========================= */
 
   function printFinalExam() {
     const examWindow = window.open(
@@ -845,7 +876,7 @@ export default function Final() {
 
   /* =========================
      PRINT STUDY GUIDE #1
-========================= */
+  ========================= */
 
   function printStudyGuide1() {
     printStudyGuide(
@@ -857,7 +888,7 @@ export default function Final() {
 
   /* =========================
      PRINT STUDY GUIDE #2
-========================= */
+  ========================= */
 
   function printStudyGuide2() {
     printStudyGuide(
@@ -869,7 +900,7 @@ export default function Final() {
 
   /* =========================
      GENERIC STUDY GUIDE PRINT
-========================= */
+  ========================= */
 
   function printStudyGuide(
     title,
@@ -1011,7 +1042,7 @@ export default function Final() {
 
   /* =========================
      STUDENT LOCK SCREEN
-========================= */
+  ========================= */
 
   if (!isParent && !finalUnlocked) {
     return (
@@ -1141,30 +1172,6 @@ export default function Final() {
               ← Back to Home
             </button>
           </div>
-
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "15px",
-            }}
-          >
-            <button
-              onClick={() =>
-                setIsParent(true)
-              }
-              style={{
-                padding: "12px 20px",
-                borderRadius: "12px",
-                border: "none",
-                background: "#777",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👩‍🏫 Parent Preview
-            </button>
-          </div>
         </div>
       </main>
     );
@@ -1172,7 +1179,7 @@ export default function Final() {
 
   /* =========================
      MAIN PAGE
-========================= */
+  ========================= */
 
   return (
     <main
@@ -1236,8 +1243,13 @@ export default function Final() {
             </h2>
 
             <p>
-              You can preview the Final Study
-              Guides and Final Exam at any time.
+              You are viewing the Final Review
+              and Exam as a parent.
+            </p>
+
+            <p>
+              You can preview the study guides
+              and exam at any time.
             </p>
 
             <p>
@@ -1406,10 +1418,43 @@ export default function Final() {
               color: "white",
               fontWeight: "bold",
               cursor: "pointer",
+              marginBottom: "12px",
             }}
           >
             🖨️ Print Final Study Guide #1
           </button>
+
+          {!isDayComplete(177) ? (
+            <button
+              onClick={() =>
+                completeStudyGuide(177)
+              }
+              style={{
+                width: "100%",
+                padding: "15px",
+                border: "2px solid #6b9e5b",
+                borderRadius: "12px",
+                background: "#e9f4ed",
+                color: "#315c48",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              ✅ Mark Day 177 Complete
+            </button>
+          ) : (
+            <div
+              style={{
+                padding: "15px",
+                borderRadius: "12px",
+                background: "#e9f4ed",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              ✅ Day 177 Complete
+            </div>
+          )}
         </section>
 
         {/* =========================
@@ -1466,10 +1511,43 @@ export default function Final() {
               color: "white",
               fontWeight: "bold",
               cursor: "pointer",
+              marginBottom: "12px",
             }}
           >
             🖨️ Print Final Study Guide #2
           </button>
+
+          {!isDayComplete(178) ? (
+            <button
+              onClick={() =>
+                completeStudyGuide(178)
+              }
+              style={{
+                width: "100%",
+                padding: "15px",
+                border: "2px solid #6b9e5b",
+                borderRadius: "12px",
+                background: "#e9f4ed",
+                color: "#315c48",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              ✅ Mark Day 178 Complete
+            </button>
+          ) : (
+            <div
+              style={{
+                padding: "15px",
+                borderRadius: "12px",
+                background: "#e9f4ed",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              ✅ Day 178 Complete
+            </div>
+          )}
         </section>
 
         {/* =========================
@@ -1499,7 +1577,8 @@ export default function Final() {
             </h2>
 
             <p>
-              Your passing score has been saved.
+              You have successfully passed the
+              Final Exam.
             </p>
 
             {score !== null && (
@@ -1509,7 +1588,7 @@ export default function Final() {
                   fontWeight: "bold",
                 }}
               >
-                Final Score: {score}%
+                Most Recent Score: {score}%
               </p>
             )}
 
@@ -1520,6 +1599,16 @@ export default function Final() {
             <p>
               🏆 Day 180 is your
               Celebration / Completion Day!
+            </p>
+
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#666",
+              }}
+            >
+              Your passing status will remain
+              saved even if you retake the exam.
             </p>
           </section>
         )}
@@ -1932,31 +2021,31 @@ export default function Final() {
           </button>
         </div>
 
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "15px",
-          }}
-        >
-          <button
-            onClick={() =>
-              setIsParent(!isParent)
-            }
+        {isParent && (
+          <div
             style={{
-              padding: "12px 20px",
-              borderRadius: "12px",
-              border: "none",
-              background: "#777",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
+              textAlign: "center",
+              marginTop: "15px",
             }}
           >
-            {isParent
-              ? "👧 Student View"
-              : "👩‍🏫 Parent Preview"}
-          </button>
-        </div>
+            <button
+              onClick={() =>
+                setIsParent(false)
+              }
+              style={{
+                padding: "12px 20px",
+                borderRadius: "12px",
+                border: "none",
+                background: "#777",
+                color: "white",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              👧 Student View
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );
@@ -2165,6 +2254,19 @@ function ExamContent({
                 Celebration / Completion Day!
               </p>
             </>
+          )}
+
+          {passed && score < PASSING_SCORE && (
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: "bold",
+              }}
+            >
+              ✅ You have already passed the
+              Final Exam. This retake does not
+              remove your passing status.
+            </p>
           )}
 
           <button
