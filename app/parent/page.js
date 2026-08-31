@@ -201,14 +201,38 @@ export default function Parent() {
       "/Lessons?parent=true";
   }
 
+  /*
+     IMPORTANT:
+     ?parent=true tells the Midterm/Final page
+     that the person viewing is the parent.
+
+     The student still uses:
+       /Midterm
+       /Final
+
+     The parent uses:
+       /Midterm?parent=true
+       /Final?parent=true
+  */
+
   function openMidterm() {
     window.location.href =
-      "/Midterm";
+      "/Midterm?parent=true";
   }
 
   function openFinal() {
     window.location.href =
-      "/Final";
+      "/Final?parent=true";
+  }
+
+  function openMidtermReview() {
+    window.location.href =
+      "/Midterm?parent=true";
+  }
+
+  function openFinalReview() {
+    window.location.href =
+      "/Final?parent=true";
   }
 
   /* =========================================================
@@ -1347,6 +1371,10 @@ export default function Parent() {
                 : "🎉 All 180 Lessons Complete"}
             </button>
 
+            {/* =================================================
+                MIDTERM PARENT PREVIEW
+            ================================================= */}
+
             <button
               onClick={openMidterm}
               style={{
@@ -1367,8 +1395,12 @@ export default function Parent() {
                 cursor: "pointer",
               }}
             >
-              📝 Preview Midterm Review & Exam
+              👀 Preview Midterm Review & Exam
             </button>
+
+            {/* =================================================
+                FINAL PARENT PREVIEW
+            ================================================= */}
 
             <button
               onClick={openFinal}
@@ -1390,7 +1422,7 @@ export default function Parent() {
                 cursor: "pointer",
               }}
             >
-              🏆 Preview Final Review & Exam
+              👀 Preview Final Review & Exam
             </button>
 
             <button
@@ -1626,6 +1658,20 @@ export default function Parent() {
             📝 Exams & Reviews
           </h2>
 
+          <p
+            style={{
+              background: "#fff4df",
+              padding: "12px",
+              borderRadius: "10px",
+              lineHeight: 1.5,
+            }}
+          >
+            👩‍🏫 <strong>Parent Preview:</strong>{" "}
+            Parents can review the Midterm and Final
+            materials at any time. Student completion
+            requirements are still shown below.
+          </p>
+
           {/* MIDTERM 1 */}
 
           <div
@@ -1663,6 +1709,24 @@ export default function Parent() {
                 ? "✅ Completed"
                 : "🔒 Not completed"}
             </p>
+
+            <button
+              onClick={openMidtermReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review
+            </button>
 
           </div>
 
@@ -1704,6 +1768,24 @@ export default function Parent() {
                 : "🔒 Not completed"}
             </p>
 
+            <button
+              onClick={openMidtermReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review
+            </button>
+
           </div>
 
           {/* MIDTERM EXAM */}
@@ -1742,9 +1824,27 @@ export default function Parent() {
                 ? "🏆 Completed / Passed"
                 : isComplete(88) &&
                   isComplete(89)
-                ? "🔓 Ready — Days 88 & 89 complete"
+                ? "🔓 Ready for Student"
                 : "🔒 Complete Days 88 & 89 first"}
             </p>
+
+            <button
+              onClick={openMidtermReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review Midterm
+            </button>
 
           </div>
 
@@ -1786,6 +1886,24 @@ export default function Parent() {
                 : "🔒 Not completed"}
             </p>
 
+            <button
+              onClick={openFinalReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review
+            </button>
+
           </div>
 
           {/* FINAL 2 */}
@@ -1826,6 +1944,24 @@ export default function Parent() {
                 : "🔒 Not completed"}
             </p>
 
+            <button
+              onClick={openFinalReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review
+            </button>
+
           </div>
 
           {/* FINAL EXAM */}
@@ -1864,9 +2000,27 @@ export default function Parent() {
                 ? "🏆 Completed / Passed"
                 : isComplete(177) &&
                   isComplete(178)
-                ? "🔓 Ready — Days 177 & 178 complete"
+                ? "🔓 Ready for Student"
                 : "🔒 Complete Days 177 & 178 first"}
             </p>
+
+            <button
+              onClick={openFinalReview}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "none",
+                borderRadius: "10px",
+                background: "#8b6f47",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "bold",
+                cursor: "pointer",
+                marginTop: "8px",
+              }}
+            >
+              👀 Parent Review Final
+            </button>
 
           </div>
 
