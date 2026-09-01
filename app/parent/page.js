@@ -7,6 +7,9 @@ const PARENT_PASSWORD = "M&M2026";
 const STORAGE_KEY = "faithTreeCompleted";
 const NOTES_KEY = "faithParentNotes";
 
+const MIDTERM_SCORE_KEY = "faithMidtermScore";
+const FINAL_SCORE_KEY = "faithFinalScore";
+
 const TOTAL_LESSONS = 180;
 
 export default function Parent() {
@@ -15,9 +18,11 @@ export default function Parent() {
   const [completed, setCompleted] = useState([]);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [midtermScore, setMidtermScore] = useState(null);
+  const [finalScore, setFinalScore] = useState(null);
 
   /* =========================================================
-     LOAD PARENT ACCESS + NOTES
+     LOAD PARENT ACCESS + NOTES + EXAM SCORES
   ========================================================= */
 
   useEffect(() => {
@@ -32,7 +37,50 @@ export default function Parent() {
     if (savedNotes !== null) {
       setNotes(savedNotes);
     }
+
+    loadExamScores();
   }, []);
+
+  /* =========================================================
+     LOAD EXAM SCORES
+  ========================================================= */
+
+  function getStoredScore(keys) {
+    for (const key of keys) {
+      const saved = localStorage.getItem(key);
+
+      if (saved !== null && saved !== "") {
+        const number = Number(saved);
+
+        if (
+          Number.isFinite(number) &&
+          number >= 0 &&
+          number <= 100
+        ) {
+          return number;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function loadExamScores() {
+    const midterm = getStoredScore([
+      MIDTERM_SCORE_KEY,
+      "midtermScore",
+      "faithMidtermExamScore",
+    ]);
+
+    const final = getStoredScore([
+      FINAL_SCORE_KEY,
+      "finalScore",
+      "faithFinalExamScore",
+    ]);
+
+    setMidtermScore(midterm);
+    setFinalScore(final);
+  }
 
   /* =========================================================
      LOAD STUDENT PROGRESS
@@ -72,27 +120,33 @@ export default function Parent() {
 
         setCompleted(clean);
       } catch (error) {
-        console.error("Could not load student progress:", error);
+        console.error(
+          "Could not load student progress:",
+          error
+        );
+
         setCompleted([]);
       }
     }
 
     loadProgress();
+    loadExamScores();
 
     window.addEventListener(
       "faithTreeProgressUpdated",
       loadProgress
     );
 
-    window.addEventListener("storage", loadProgress);
+    window.addEventListener("storage", () => {
+      loadProgress();
+      loadExamScores();
+    });
 
     return () => {
       window.removeEventListener(
         "faithTreeProgressUpdated",
         loadProgress
       );
-
-      window.removeEventListener("storage", loadProgress);
     };
   }, [unlocked]);
 
@@ -110,7 +164,10 @@ export default function Parent() {
       setPassword("");
       setError("");
     } else {
-      setError("❌ Incorrect password. Please try again.");
+      setError(
+        "❌ Incorrect password. Please try again."
+      );
+
       setPassword("");
     }
   }
@@ -145,7 +202,11 @@ export default function Parent() {
   }
 
   function getNextLesson() {
-    for (let day = 1; day <= TOTAL_LESSONS; day++) {
+    for (
+      let day = 1;
+      day <= TOTAL_LESSONS;
+      day++
+    ) {
       if (!completed.includes(day)) {
         return day;
       }
@@ -162,7 +223,10 @@ export default function Parent() {
     const nextLesson = getNextLesson();
 
     if (!nextLesson) {
-      alert("🎉 All 180 lessons are complete!");
+      alert(
+        "🎉 All 180 lessons are complete!"
+      );
+
       return;
     }
 
@@ -171,16 +235,67 @@ export default function Parent() {
   }
 
   function previewLessons() {
-    window.location.href = "/Lessons?parent=true";
+    window.location.href =
+      "/Lessons?parent=true";
   }
 
-  function openMidterm() {
-    window.location.href = "/Midterm?parent=true";
+  /* =========================================================
+     SPECIFIC MIDTERM NAVIGATION
+  ========================================================= */
+
+  function openMidtermGuide1() {
+    window.location.href =
+      "/Midterm?parent=true&day=88";
   }
 
-  function openFinal() {
-    window.location.href = "/Final?parent=true";
+  function openMidtermGuide2() {
+    window.location.href =
+      "/Midterm?parent=true&day=89";
   }
+
+  function openMidtermExam() {
+    window.location.href =
+      "/Midterm?parent=true&day=90";
+  }
+
+  /* =========================================================
+     SPECIFIC FINAL NAVIGATION
+  ========================================================= */
+
+  function openFinalGuide1() {
+    window.location.href =
+      "/Final?parent=true&day=177";
+  }
+
+  function openFinalGuide2() {
+    window.location.href =
+      "/Final?parent=true&day=178";
+  }
+
+  function openFinalExam() {
+    window.location.href =
+      "/Final?parent=true&day=179";
+  }
+
+  /* =========================================================
+     EXAM RESULTS
+  ========================================================= */
+
+  const midtermPassed =
+    midtermScore !== null &&
+    midtermScore >= 80;
+
+  const midtermNotPassed =
+    midtermScore !== null &&
+    midtermScore <= 79;
+
+  const finalPassed =
+    finalScore !== null &&
+    finalScore >= 80;
+
+  const finalNotPassed =
+    finalScore !== null &&
+    finalScore <= 79;
 
   /* =========================================================
      PROGRESS VALUES
@@ -190,7 +305,9 @@ export default function Parent() {
 
   const percentage = Math.min(
     100,
-    Math.round((count / TOTAL_LESSONS) * 100)
+    Math.round(
+      (count / TOTAL_LESSONS) * 100
+    )
   );
 
   const nextLesson = getNextLesson();
@@ -200,26 +317,33 @@ export default function Parent() {
   ========================================================= */
 
   let tree = "🌱";
-  let message = "Your faith is taking root!";
+  let message =
+    "Your faith is taking root!";
 
   if (count >= 180) {
     tree = "🌳🏆";
-    message = "Your Faith Tree is fully grown!";
+    message =
+      "Your Faith Tree is fully grown!";
   } else if (count >= 150) {
     tree = "🌲🌳🌲";
-    message = "Your Faith Tree is almost fully grown!";
+    message =
+      "Your Faith Tree is almost fully grown!";
   } else if (count >= 120) {
     tree = "🌳🌳🌳";
-    message = "Your Faith Tree is growing strong!";
+    message =
+      "Your Faith Tree is growing strong!";
   } else if (count >= 90) {
     tree = "🌳🌳";
-    message = "Your Faith Tree is growing beautifully!";
+    message =
+      "Your Faith Tree is growing beautifully!";
   } else if (count >= 60) {
     tree = "🌳";
-    message = "Look how much your Faith Tree has grown!";
+    message =
+      "Look how much your Faith Tree has grown!";
   } else if (count >= 30) {
     tree = "🌿";
-    message = "Your faith is growing stronger!";
+    message =
+      "Your faith is growing stronger!";
   }
 
   /* =========================================================
@@ -243,11 +367,15 @@ export default function Parent() {
     ["🌳", "Faith Builder", 50],
     ["⭐", "Halfway Hero", 90],
     ["🏅", "Faith Champion", 135],
-    ["🏆", "Faith Foundations Champion", 180],
+    [
+      "🏆",
+      "Faith Foundations Champion",
+      180,
+    ],
   ];
 
   /* =========================================================
-     PRINT REPORT
+     PRINT PROGRESS REPORT
   ========================================================= */
 
   function printReport() {
@@ -261,10 +389,12 @@ export default function Parent() {
       alert(
         "Please allow pop-ups for this website so the report can open."
       );
+
       return;
     }
 
-    const reportNextLesson = getNextLesson();
+    const reportNextLesson =
+      getNextLesson();
 
     const reportStatus =
       count === 0
@@ -278,9 +408,35 @@ export default function Parent() {
         ? notes
         : "No parent/teacher notes entered.";
 
+    const midtermResult =
+      midtermPassed
+        ? `🏆 PASSED — ${midtermScore}%`
+        : midtermNotPassed
+        ? `📖 NOT PASSED — ${midtermScore}%`
+        : isComplete(90)
+        ? "⚠️ Completed — Score not recorded"
+        : isComplete(88) &&
+          isComplete(89)
+        ? "🔓 Ready"
+        : "🔒 Complete Days 88 & 89 first";
+
+    const finalResult =
+      finalPassed
+        ? `🏆 PASSED — ${finalScore}%`
+        : finalNotPassed
+        ? `📖 NOT PASSED — ${finalScore}%`
+        : isComplete(179)
+        ? "⚠️ Completed — Score not recorded"
+        : isComplete(177) &&
+          isComplete(178)
+        ? "🔓 Ready"
+        : "🔒 Complete Days 177 & 178 first";
+
     reportWindow.document.write(`
       <!DOCTYPE html>
+
       <html>
+
       <head>
 
         <meta charset="UTF-8">
@@ -330,6 +486,12 @@ export default function Parent() {
             padding-bottom: 7px;
 
             margin-top: 30px;
+          }
+
+          h3 {
+            color: #315c48;
+
+            margin-bottom: 5px;
           }
 
           .subtitle {
@@ -446,10 +608,37 @@ export default function Parent() {
             color: #888;
           }
 
+          .pass {
+            color: #315c48;
+
+            font-weight: bold;
+          }
+
+          .fail {
+            color: #b3261e;
+
+            font-weight: bold;
+          }
+
           .ready {
             color: #8b6f47;
 
             font-weight: bold;
+          }
+
+          .rules {
+            background: #fff4df;
+
+            border:
+              1px solid #e1cda7;
+
+            border-radius: 8px;
+
+            padding: 15px;
+
+            margin-top: 15px;
+
+            line-height: 1.6;
           }
 
           .notes {
@@ -628,6 +817,176 @@ export default function Parent() {
           </table>
 
           <h2>
+            📝 Exams & Reviews
+          </h2>
+
+          <div class="rules">
+
+            <strong>
+              📖 Exam Passing Standard
+            </strong>
+
+            <br>
+
+            🏆 <strong>80% or higher = PASS</strong>
+
+            <br>
+
+            📖 <strong>79% or lower = NOT PASSED</strong>
+
+            <br><br>
+
+            Exams may be completed
+            <strong>system-led or parent-led.</strong>
+
+          </div>
+
+          <h3>
+            📚 Midterm
+          </h3>
+
+          <table>
+
+            <tr>
+              <th>Day</th>
+              <th>Material</th>
+              <th>Status</th>
+            </tr>
+
+            <tr>
+              <td>88</td>
+
+              <td>
+                Midterm Study Guide #1
+                <br>
+                Review Lessons 1–44
+              </td>
+
+              <td>
+                ${
+                  isComplete(88)
+                    ? "✅ Completed"
+                    : "🔒 Not Completed"
+                }
+              </td>
+            </tr>
+
+            <tr>
+              <td>89</td>
+
+              <td>
+                Midterm Study Guide #2
+                <br>
+                Review Lessons 45–87
+              </td>
+
+              <td>
+                ${
+                  isComplete(89)
+                    ? "✅ Completed"
+                    : "🔒 Not Completed"
+                }
+              </td>
+            </tr>
+
+            <tr>
+              <td>90</td>
+
+              <td>
+                <strong>
+                  Midterm Exam
+                </strong>
+              </td>
+
+              <td>
+                ${midtermResult}
+              </td>
+            </tr>
+
+          </table>
+
+          <h3>
+            🏆 Final
+          </h3>
+
+          <table>
+
+            <tr>
+              <th>Day</th>
+              <th>Material</th>
+              <th>Status</th>
+            </tr>
+
+            <tr>
+              <td>177</td>
+
+              <td>
+                Final Study Guide #1
+                <br>
+                Review Lessons 91–134
+              </td>
+
+              <td>
+                ${
+                  isComplete(177)
+                    ? "✅ Completed"
+                    : "🔒 Not Completed"
+                }
+              </td>
+            </tr>
+
+            <tr>
+              <td>178</td>
+
+              <td>
+                Final Study Guide #2
+                <br>
+                Review Lessons 135–176
+              </td>
+
+              <td>
+                ${
+                  isComplete(178)
+                    ? "✅ Completed"
+                    : "🔒 Not Completed"
+                }
+              </td>
+            </tr>
+
+            <tr>
+              <td>179</td>
+
+              <td>
+                <strong>
+                  Final Exam
+                </strong>
+              </td>
+
+              <td>
+                ${finalResult}
+              </td>
+            </tr>
+
+            <tr>
+              <td>180</td>
+
+              <td>
+                Celebration /
+                Completion Day
+              </td>
+
+              <td>
+                ${
+                  isComplete(180)
+                    ? "🏆 Course Complete"
+                    : "🔒 Not Yet Complete"
+                }
+              </td>
+            </tr>
+
+          </table>
+
+          <h2>
             🏅 Faith Badges
           </h2>
 
@@ -672,145 +1031,6 @@ export default function Parent() {
                 `
               )
               .join("")}
-
-          </table>
-
-          <h2>
-            📝 Exams & Reviews
-          </h2>
-
-          <table>
-
-            <tr>
-              <th>Assessment</th>
-              <th>Status</th>
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 88 —
-                Midterm Study Guide #1
-              </td>
-
-              <td>
-                ${
-                  isComplete(88)
-                    ? "✅ Completed"
-                    : "🔒 Not Completed"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 89 —
-                Midterm Study Guide #2
-              </td>
-
-              <td>
-                ${
-                  isComplete(89)
-                    ? "✅ Completed"
-                    : "🔒 Not Completed"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 90 —
-                Midterm Exam
-              </td>
-
-              <td>
-                ${
-                  isComplete(90)
-                    ? "🏆 Completed / Passed"
-                    : isComplete(88) &&
-                      isComplete(89)
-                    ? "🔓 Ready"
-                    : "🔒 Complete Days 88 & 89"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 177 —
-                Final Study Guide #1
-              </td>
-
-              <td>
-                ${
-                  isComplete(177)
-                    ? "✅ Completed"
-                    : "🔒 Not Completed"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 178 —
-                Final Study Guide #2
-              </td>
-
-              <td>
-                ${
-                  isComplete(178)
-                    ? "✅ Completed"
-                    : "🔒 Not Completed"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 179 —
-                Final Exam
-              </td>
-
-              <td>
-                ${
-                  isComplete(179)
-                    ? "🏆 Completed / Passed"
-                    : isComplete(177) &&
-                      isComplete(178)
-                    ? "🔓 Ready"
-                    : "🔒 Complete Days 177 & 178"
-                }
-              </td>
-
-            </tr>
-
-            <tr>
-
-              <td>
-                Day 180 —
-                Celebration /
-                Completion Day
-              </td>
-
-              <td>
-                ${
-                  isComplete(180)
-                    ? "🏆 Course Complete"
-                    : "🔒 Not Yet Complete"
-                }
-              </td>
-
-            </tr>
 
           </table>
 
@@ -872,7 +1092,8 @@ export default function Parent() {
           minHeight: "100vh",
           background: "#f5f1e8",
           padding: "30px 20px",
-          fontFamily: "Arial, sans-serif",
+          fontFamily:
+            "Arial, sans-serif",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -930,17 +1151,21 @@ export default function Parent() {
               type="password"
               value={password}
               onChange={(e) =>
-                setPassword(e.target.value)
+                setPassword(
+                  e.target.value
+                )
               }
               placeholder="Parent password"
               autoComplete="off"
               style={{
                 width: "100%",
-                boxSizing: "border-box",
+                boxSizing:
+                  "border-box",
                 padding: "15px",
                 marginTop: "15px",
                 borderRadius: "12px",
-                border: "2px solid #ddd",
+                border:
+                  "2px solid #ddd",
                 fontSize: "17px",
                 textAlign: "center",
                 outline: "none",
@@ -985,7 +1210,8 @@ export default function Parent() {
             style={{
               marginTop: "20px",
               border: "none",
-              background: "transparent",
+              background:
+                "transparent",
               color: "#315c48",
               fontWeight: "bold",
               cursor: "pointer",
@@ -1008,9 +1234,11 @@ export default function Parent() {
     <main
       style={{
         minHeight: "100vh",
-        padding: "30px 20px 60px",
+        padding:
+          "30px 20px 60px",
         background: "#f8f5ed",
-        fontFamily: "Arial, sans-serif",
+        fontFamily:
+          "Arial, sans-serif",
         color: "#24313a",
       }}
     >
@@ -1134,37 +1362,8 @@ export default function Parent() {
                 : "🎉 All 180 Lessons Complete"}
             </button>
 
-            <button
-              onClick={openMidterm}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#8b6f47",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Midterm Review & Exam
-            </button>
-
-            <button
-              onClick={openFinal}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#8b6f47",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Final Review & Exam
-            </button>
+            {/* MIDTERM AND FINAL BUTTONS
+                REMOVED FROM HERE ON PURPOSE */}
 
             <button
               onClick={printReport}
@@ -1258,7 +1457,8 @@ export default function Parent() {
                 width: `${percentage}%`,
                 height: "100%",
                 background: "#315c48",
-                transition: "width .4s ease",
+                transition:
+                  "width .4s ease",
               }}
             />
 
@@ -1305,7 +1505,9 @@ export default function Parent() {
 
           <p>
             ⭐ Lessons completed:{" "}
-            <strong>{count}</strong>
+            <strong>
+              {count}
+            </strong>
           </p>
 
           <p>
@@ -1320,17 +1522,23 @@ export default function Parent() {
 
           <p>
             🌳 Faith Tree progress:{" "}
-            <strong>{percentage}%</strong>
+            <strong>
+              {percentage}%
+            </strong>
           </p>
 
           <p>
             📚 Course status:{" "}
-            <strong>{courseStatus}</strong>
+            <strong>
+              {courseStatus}
+            </strong>
           </p>
 
         </section>
 
-        {/* EXAMS & REVIEWS */}
+        {/* =====================================================
+            EXAMS & REVIEWS
+        ===================================================== */}
 
         <section
           style={{
@@ -1349,32 +1557,72 @@ export default function Parent() {
             📝 Exams & Reviews
           </h2>
 
-          <p
+          <div
             style={{
               background: "#fff4df",
-              padding: "12px",
-              borderRadius: "10px",
-              lineHeight: 1.5,
+              padding: "15px",
+              borderRadius: "12px",
+              lineHeight: 1.6,
+              marginBottom: "18px",
             }}
           >
-            👩‍🏫 <strong>Parent Preview:</strong>{" "}
-            Parents can review the Midterm and Final
-            materials at any time. Student completion
-            requirements are still shown below.
-          </p>
 
-          {/* MIDTERM 1 */}
+            👩‍🏫 <strong>Parent Preview:</strong>
+
+            <br />
+
+            Parents can preview each study guide
+            and exam individually.
+
+            <br /><br />
+
+            <strong>
+              📖 Exam Passing Standard:
+            </strong>
+
+            <br />
+
+            🏆 <strong>80% or higher = PASS</strong>
+
+            <br />
+
+            📖 <strong>79% or lower = NOT PASSED</strong>
+
+            <br /><br />
+
+            Exams may be completed
+            <strong>
+              system-led or parent-led.
+            </strong>
+
+          </div>
+
+          {/* =================================================
+              MIDTERM SECTION
+          ================================================= */}
+
+          <h3
+            style={{
+              color: "#315c48",
+              marginTop: "10px",
+            }}
+          >
+            📚 Midterm
+          </h3>
+
+          {/* DAY 88 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 isComplete(88)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1397,10 +1645,12 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidterm}
+              onClick={
+                openMidtermGuide1
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
                 background: "#8b6f47",
@@ -1411,23 +1661,24 @@ export default function Parent() {
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review
+              👀 Parent Review & Print
             </button>
 
           </div>
 
-          {/* MIDTERM 2 */}
+          {/* DAY 89 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 isComplete(89)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1450,10 +1701,12 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidterm}
+              onClick={
+                openMidtermGuide2
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
                 background: "#8b6f47",
@@ -1464,26 +1717,31 @@ export default function Parent() {
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review
+              👀 Parent Review & Print
             </button>
 
           </div>
 
-          {/* MIDTERM EXAM */}
+          {/* DAY 90 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
-                isComplete(90)
+                midtermPassed
                   ? "#e9f4ed"
+                  : midtermNotPassed
+                  ? "#fdeaea"
+                  : isComplete(90)
+                  ? "#fff4df"
                   : isComplete(88) &&
                     isComplete(89)
                   ? "#fff4df"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1491,13 +1749,66 @@ export default function Parent() {
               📝 Day 90 — Midterm Exam
             </strong>
 
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "12px",
+                borderRadius: "10px",
+                background: "white",
+                lineHeight: 1.6,
+              }}
+            >
+
+              <strong>
+                📊 Passing Requirement
+              </strong>
+
+              <br />
+
+              🏆 80% or higher = <strong>PASS</strong>
+
+              <br />
+
+              📖 79% or lower ={" "}
+              <strong>NOT PASSED</strong>
+
+              <br />
+
+              👩‍🏫 System-led or Parent-led
+
+            </div>
+
+            {midtermScore !== null && (
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  color:
+                    midtermPassed
+                      ? "#315c48"
+                      : "#b3261e",
+                }}
+              >
+                Score: {midtermScore}%
+                <br />
+
+                {midtermPassed
+                  ? "🏆 PASS"
+                  : "📖 NOT PASSED"}
+              </p>
+            )}
+
             <p
               style={{
                 fontWeight: "bold",
               }}
             >
-              {isComplete(90)
-                ? "🏆 Completed / Passed"
+              {midtermPassed
+                ? "🏆 Passed"
+                : midtermNotPassed
+                ? "📖 Not Passed"
+                : isComplete(90)
+                ? "⚠️ Completed — Score not recorded"
                 : isComplete(88) &&
                   isComplete(89)
                 ? "🔓 Ready for Student"
@@ -1505,37 +1816,67 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openMidterm}
+              onClick={
+                openMidtermExam
+              }
+              disabled={
+                !(
+                  isComplete(88) &&
+                  isComplete(89)
+                )
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
-                background: "#8b6f47",
+                background:
+                  isComplete(88) &&
+                  isComplete(89)
+                    ? "#8b6f47"
+                    : "#aaa",
                 color: "white",
                 fontSize: "15px",
                 fontWeight: "bold",
-                cursor: "pointer",
+                cursor:
+                  isComplete(88) &&
+                  isComplete(89)
+                    ? "pointer"
+                    : "default",
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review Midterm
+              👀 Parent Review & Print Exam
             </button>
 
           </div>
 
-          {/* FINAL 1 */}
+          {/* =================================================
+              FINAL SECTION
+          ================================================= */}
+
+          <h3
+            style={{
+              color: "#315c48",
+              marginTop: "28px",
+            }}
+          >
+            🏆 Final Exam
+          </h3>
+
+          {/* DAY 177 */}
 
           <div
             style={{
-              padding: "15px",
-              marginTop: "20px",
-              borderRadius: "12px",
+              padding: "18px",
+              marginTop: "12px",
+              borderRadius: "14px",
               background:
                 isComplete(177)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1558,10 +1899,12 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinal}
+              onClick={
+                openFinalGuide1
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
                 background: "#8b6f47",
@@ -1572,23 +1915,24 @@ export default function Parent() {
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review
+              👀 Parent Review & Print
             </button>
 
           </div>
 
-          {/* FINAL 2 */}
+          {/* DAY 178 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 isComplete(178)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1611,10 +1955,12 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinal}
+              onClick={
+                openFinalGuide2
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
                 background: "#8b6f47",
@@ -1625,26 +1971,31 @@ export default function Parent() {
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review
+              👀 Parent Review & Print
             </button>
 
           </div>
 
-          {/* FINAL EXAM */}
+          {/* DAY 179 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
-                isComplete(179)
+                finalPassed
                   ? "#e9f4ed"
+                  : finalNotPassed
+                  ? "#fdeaea"
+                  : isComplete(179)
+                  ? "#fff4df"
                   : isComplete(177) &&
                     isComplete(178)
                   ? "#fff4df"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1652,13 +2003,66 @@ export default function Parent() {
               🏆 Day 179 — Final Exam
             </strong>
 
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "12px",
+                borderRadius: "10px",
+                background: "white",
+                lineHeight: 1.6,
+              }}
+            >
+
+              <strong>
+                📊 Passing Requirement
+              </strong>
+
+              <br />
+
+              🏆 80% or higher = <strong>PASS</strong>
+
+              <br />
+
+              📖 79% or lower ={" "}
+              <strong>NOT PASSED</strong>
+
+              <br />
+
+              👩‍🏫 System-led or Parent-led
+
+            </div>
+
+            {finalScore !== null && (
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  color:
+                    finalPassed
+                      ? "#315c48"
+                      : "#b3261e",
+                }}
+              >
+                Score: {finalScore}%
+                <br />
+
+                {finalPassed
+                  ? "🏆 PASS"
+                  : "📖 NOT PASSED"}
+              </p>
+            )}
+
             <p
               style={{
                 fontWeight: "bold",
               }}
             >
-              {isComplete(179)
-                ? "🏆 Completed / Passed"
+              {finalPassed
+                ? "🏆 Passed"
+                : finalNotPassed
+                ? "📖 Not Passed"
+                : isComplete(179)
+                ? "⚠️ Completed — Score not recorded"
                 : isComplete(177) &&
                   isComplete(178)
                 ? "🔓 Ready for Student"
@@ -1666,37 +2070,54 @@ export default function Parent() {
             </p>
 
             <button
-              onClick={openFinal}
+              onClick={
+                openFinalExam
+              }
+              disabled={
+                !(
+                  isComplete(177) &&
+                  isComplete(178)
+                )
+              }
               style={{
                 width: "100%",
-                padding: "12px",
+                padding: "13px",
                 border: "none",
                 borderRadius: "10px",
-                background: "#8b6f47",
+                background:
+                  isComplete(177) &&
+                  isComplete(178)
+                    ? "#8b6f47"
+                    : "#aaa",
                 color: "white",
                 fontSize: "15px",
                 fontWeight: "bold",
-                cursor: "pointer",
+                cursor:
+                  isComplete(177) &&
+                  isComplete(178)
+                    ? "pointer"
+                    : "default",
                 marginTop: "8px",
               }}
             >
-              👀 Parent Review Final
+              👀 Parent Review & Print Exam
             </button>
 
           </div>
 
-          {/* CELEBRATION */}
+          {/* DAY 180 */}
 
           <div
             style={{
-              padding: "15px",
+              padding: "18px",
               marginTop: "12px",
-              borderRadius: "12px",
+              borderRadius: "14px",
               background:
                 isComplete(180)
                   ? "#e9f4ed"
                   : "#f7f7f7",
-              border: "1px solid #ddd",
+              border:
+                "1px solid #ddd",
             }}
           >
 
@@ -1879,20 +2300,27 @@ export default function Parent() {
                 }}
               >
 
-                {completed.map((day) => (
-                  <span
-                    key={day}
-                    style={{
-                      background: "#e9f4ed",
-                      borderRadius: "10px",
-                      padding: "8px 12px",
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Day {day} ✅
-                  </span>
-                ))}
+                {completed.map(
+                  (day) => (
+                    <span
+                      key={day}
+                      style={{
+                        background:
+                          "#e9f4ed",
+                        borderRadius:
+                          "10px",
+                        padding:
+                          "8px 12px",
+                        fontWeight:
+                          "bold",
+                        fontSize:
+                          "14px",
+                      }}
+                    >
+                      Day {day} ✅
+                    </span>
+                  )
+                )}
 
               </div>
             </>
@@ -1934,18 +2362,24 @@ export default function Parent() {
           <textarea
             value={notes}
             onChange={(e) =>
-              saveNotes(e.target.value)
+              saveNotes(
+                e.target.value
+              )
             }
             placeholder="Enter parent/teacher notes here..."
             rows={7}
             style={{
               width: "100%",
-              boxSizing: "border-box",
+              boxSizing:
+                "border-box",
               padding: "15px",
-              borderRadius: "12px",
-              border: "2px solid #ccc",
+              borderRadius:
+                "12px",
+              border:
+                "2px solid #ccc",
               fontSize: "16px",
-              fontFamily: "Arial, sans-serif",
+              fontFamily:
+                "Arial, sans-serif",
               resize: "vertical",
               background: "white",
               color: "#24313a",
