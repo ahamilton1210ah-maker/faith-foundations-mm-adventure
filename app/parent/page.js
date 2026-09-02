@@ -2,163 +2,258 @@
 
 import { useEffect, useState } from "react";
 
+/* =========================================================
+   SETTINGS
+========================================================= */
+
 const PARENT_PASSWORD = "M&M2026";
 
 const STORAGE_KEY = "faithTreeCompleted";
 const NOTES_KEY = "faithParentNotes";
 
-const MIDTERM_SCORE_KEY = "faithMidtermScore";
-const FINAL_SCORE_KEY = "faithFinalScore";
+const MIDTERM_ATTEMPTS_KEY = "faithMidtermAttempts";
+const MIDTERM_PASS_KEY = "faithMidtermPassed";
+const MIDTERM_PASS_SCORE_KEY = "faithMidtermPassingScore";
+
+const FINAL_ATTEMPTS_KEY = "faithFinalAttempts";
+const FINAL_PASS_KEY = "faithFinalPassed";
+const FINAL_PASS_SCORE_KEY = "faithFinalPassingScore";
 
 const TOTAL_LESSONS = 180;
+const PASSING_SCORE = 80;
+
+/* =========================================================
+   PARENT DASHBOARD
+========================================================= */
 
 export default function Parent() {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+
   const [completed, setCompleted] = useState([]);
+
   const [notes, setNotes] = useState("");
+
   const [error, setError] = useState("");
 
   const [midtermScore, setMidtermScore] = useState(null);
   const [finalScore, setFinalScore] = useState(null);
 
-  /* =========================
-     LOAD PARENT ACCESS + NOTES
-  ========================= */
+  const [midtermAttempts, setMidtermAttempts] = useState([]);
+  const [finalAttempts, setFinalAttempts] = useState([]);
+
+  /* =======================================================
+     INITIAL LOAD
+  ======================================================= */
 
   useEffect(() => {
-    const parentAccess =
-      sessionStorage.getItem("parentAccess");
+    try {
+      const parentAccess =
+        sessionStorage.getItem("parentAccess");
 
-    if (parentAccess === "true") {
-      setUnlocked(true);
+      if (parentAccess === "true") {
+        setUnlocked(true);
+      }
+    } catch {
+      setUnlocked(false);
     }
 
-    const savedNotes =
-      localStorage.getItem(NOTES_KEY);
-
-    if (savedNotes !== null) {
-      setNotes(savedNotes);
-    }
-
-    loadExamScores();
+    loadNotes();
+    loadExamData();
+    loadProgress();
   }, []);
 
-  /* =========================
-     LOAD EXAM SCORES
-  ========================= */
+  /* =======================================================
+     LOAD NOTES
+  ======================================================= */
 
-  function getStoredScore(keys) {
-    for (const key of keys) {
-      const saved = localStorage.getItem(key);
+  function loadNotes() {
+    try {
+      const savedNotes =
+        localStorage.getItem(NOTES_KEY);
 
-      if (saved !== null && saved !== "") {
-        const number = Number(saved);
+      if (savedNotes !== null) {
+        setNotes(savedNotes);
+      }
+    } catch {
+      setNotes("");
+    }
+  }
+
+  /* =======================================================
+     LOAD PROGRESS
+  ======================================================= */
+
+  function loadProgress() {
+    try {
+      const saved =
+        localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) {
+        setCompleted([]);
+        return;
+      }
+
+      const parsed = JSON.parse(saved);
+
+      if (!Array.isArray(parsed)) {
+        setCompleted([]);
+        return;
+      }
+
+      const clean = [
+        ...new Set(
+          parsed
+            .map(Number)
+            .filter(
+              (day) =>
+                Number.isInteger(day) &&
+                day >= 1 &&
+                day <= TOTAL_LESSONS
+            )
+        ),
+      ].sort((a, b) => a - b);
+
+      setCompleted(clean);
+    } catch {
+      setCompleted([]);
+    }
+  }
+
+  /* =======================================================
+     LOAD EXAM DATA
+  ======================================================= */
+
+  function loadExamData() {
+    /* ---------------- MIDTERM SCORE ---------------- */
+
+    try {
+      const saved =
+        localStorage.getItem(
+          MIDTERM_PASS_SCORE_KEY
+        );
+
+      if (
+        saved !== null &&
+        saved !== ""
+      ) {
+        const numeric = Number(saved);
 
         if (
-          Number.isFinite(number) &&
-          number >= 0 &&
-          number <= 100
+          Number.isFinite(numeric) &&
+          numeric >= 0 &&
+          numeric <= 100
         ) {
-          return number;
+          setMidtermScore(numeric);
         }
       }
+    } catch {
+      setMidtermScore(null);
     }
 
-    return null;
+    /* ---------------- FINAL SCORE ---------------- */
+
+    try {
+      const saved =
+        localStorage.getItem(
+          FINAL_PASS_SCORE_KEY
+        );
+
+      if (
+        saved !== null &&
+        saved !== ""
+      ) {
+        const numeric = Number(saved);
+
+        if (
+          Number.isFinite(numeric) &&
+          numeric >= 0 &&
+          numeric <= 100
+        ) {
+          setFinalScore(numeric);
+        }
+      }
+    } catch {
+      setFinalScore(null);
+    }
+
+    /* ---------------- MIDTERM ATTEMPTS ---------------- */
+
+    try {
+      const saved =
+        localStorage.getItem(
+          MIDTERM_ATTEMPTS_KEY
+        );
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          setMidtermAttempts(parsed);
+        }
+      }
+    } catch {
+      setMidtermAttempts([]);
+    }
+
+    /* ---------------- FINAL ATTEMPTS ---------------- */
+
+    try {
+      const saved =
+        localStorage.getItem(
+          FINAL_ATTEMPTS_KEY
+        );
+
+      if (saved) {
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          setFinalAttempts(parsed);
+        }
+      }
+    } catch {
+      setFinalAttempts([]);
+    }
   }
 
-  function loadExamScores() {
-    const savedMidterm = getStoredScore([
-      MIDTERM_SCORE_KEY,
-      "midtermScore",
-    ]);
-
-    const savedFinal = getStoredScore([
-      FINAL_SCORE_KEY,
-      "finalScore",
-    ]);
-
-    setMidtermScore(savedMidterm);
-    setFinalScore(savedFinal);
-  }
-
-  /* =========================
-     LOAD PROGRESS
-  ========================= */
+  /* =======================================================
+     LIVE PROGRESS UPDATES
+  ======================================================= */
 
   useEffect(() => {
     if (!unlocked) return;
 
-    function loadProgress() {
-      try {
-        const saved =
-          localStorage.getItem(STORAGE_KEY);
-
-        if (!saved) {
-          setCompleted([]);
-          return;
-        }
-
-        const parsed = JSON.parse(saved);
-
-        if (Array.isArray(parsed)) {
-          const clean = [
-            ...new Set(
-              parsed
-                .map(Number)
-                .filter(
-                  (day) =>
-                    Number.isInteger(day) &&
-                    day >= 1 &&
-                    day <= TOTAL_LESSONS
-                )
-            ),
-          ].sort((a, b) => a - b);
-
-          setCompleted(clean);
-        } else {
-          setCompleted([]);
-        }
-      } catch {
-        setCompleted([]);
-      }
-    }
-
-    loadProgress();
-    loadExamScores();
-
-    function syncProgress() {
+    function refreshProgress() {
       loadProgress();
-      loadExamScores();
+      loadExamData();
     }
 
     window.addEventListener(
       "faithTreeProgressUpdated",
-      syncProgress
+      refreshProgress
     );
 
     window.addEventListener(
       "storage",
-      syncProgress
+      refreshProgress
     );
 
     return () => {
       window.removeEventListener(
         "faithTreeProgressUpdated",
-        syncProgress
+        refreshProgress
       );
 
       window.removeEventListener(
         "storage",
-        syncProgress
+        refreshProgress
       );
     };
   }, [unlocked]);
 
-  /* =========================
+  /* =======================================================
      LOGIN
-  ========================= */
+  ======================================================= */
 
   function handleLogin(e) {
     e.preventDefault();
@@ -170,20 +265,21 @@ export default function Parent() {
       );
 
       setUnlocked(true);
-      setError("");
       setPassword("");
+      setError("");
+
+      loadProgress();
+      loadExamData();
     } else {
       setError(
-        "❌ Incorrect password. Please try again."
+        "Incorrect parent password. Please try again."
       );
-
-      setPassword("");
     }
   }
 
-  /* =========================
+  /* =======================================================
      LOGOUT
-  ========================= */
+  ======================================================= */
 
   function logout() {
     sessionStorage.removeItem(
@@ -192,94 +288,33 @@ export default function Parent() {
 
     setUnlocked(false);
     setPassword("");
+    setError("");
   }
 
-  /* =========================
+  /* =======================================================
      NOTES
-  ========================= */
+  ======================================================= */
 
   function saveNotes(value) {
     setNotes(value);
-    localStorage.setItem(
-      NOTES_KEY,
-      value
-    );
+
+    try {
+      localStorage.setItem(
+        NOTES_KEY,
+        value
+      );
+    } catch {
+      // Ignore storage errors
+    }
   }
 
-  /* =========================
-     PREVIEW STUDENT LESSONS
-  ========================= */
+  /* =======================================================
+     PROGRESS HELPERS
+  ======================================================= */
 
-  function previewLessons() {
-    window.location.href =
-      "/Lessons?parent=true";
+  function isComplete(day) {
+    return completed.includes(day);
   }
-
-  /* =========================
-     OPEN SPECIFIC LESSON
-  ========================= */
-
-  function openLesson(day) {
-    window.location.href =
-      `/Lessons?parent=true&day=${day}`;
-  }
-
-  /* =========================
-     MIDTERM PREVIEW
-
-     IMPORTANT:
-     These buttons ALWAYS work
-     for the parent.
-
-     The parent does NOT have
-     to complete Days 88/89/90.
-  ========================= */
-
-  function openMidtermGuide1() {
-    window.location.href =
-      "/Midterm?parent=true&day=88";
-  }
-
-  function openMidtermGuide2() {
-    window.location.href =
-      "/Midterm?parent=true&day=89";
-  }
-
-  function openMidtermExam() {
-    window.location.href =
-      "/Midterm?parent=true&day=90";
-  }
-
-  /* =========================
-     FINAL PREVIEW
-
-     Parent can preview these
-     without completing them.
-  ========================= */
-
-  function openFinalGuide1() {
-    window.location.href =
-      "/Final?parent=true&day=177";
-  }
-
-  function openFinalGuide2() {
-    window.location.href =
-      "/Final?parent=true&day=178";
-  }
-
-  function openFinalExam() {
-    window.location.href =
-      "/Final?parent=true&day=179";
-  }
-
-  function openCelebration() {
-    window.location.href =
-      "/Final?parent=true&day=180";
-  }
-
-  /* =========================
-     NEXT LESSON
-  ========================= */
 
   function getNextLesson() {
     for (
@@ -295,14 +330,79 @@ export default function Parent() {
     return null;
   }
 
-  function openNextLesson() {
-    const nextLesson =
-      getNextLesson();
+  const completedCount =
+    completed.length;
 
+  const progressPercent =
+    Math.round(
+      (completedCount /
+        TOTAL_LESSONS) *
+        100
+    );
+
+  const nextLesson =
+    getNextLesson();
+
+  /* =======================================================
+     BADGES
+     
+     IMPORTANT:
+     These match the Lessons/Home Faith Tree
+     milestones.
+  ======================================================= */
+
+  const badges = [
+    ["🌱", "First Steps", 10],
+    ["🌿", "Growing Strong", 25],
+    ["🌳", "Faith Builder", 50],
+    ["⭐", "Halfway Hero", 90],
+    ["🏅", "Faith Champion", 135],
+    [
+      "🏆",
+      "Faith Foundations Champion",
+      180,
+    ],
+  ];
+
+  /* =======================================================
+     EXAM STATUS
+  ======================================================= */
+
+  const midtermPassed =
+    midtermScore !== null &&
+    midtermScore >= PASSING_SCORE;
+
+  const midtermNotPassed =
+    midtermScore !== null &&
+    midtermScore < PASSING_SCORE;
+
+  const finalPassed =
+    finalScore !== null &&
+    finalScore >= PASSING_SCORE;
+
+  const finalNotPassed =
+    finalScore !== null &&
+    finalScore < PASSING_SCORE;
+
+  /* =======================================================
+     STUDENT LESSON PREVIEW
+     
+     IMPORTANT:
+     ?parent=true tells Lessons this is a preview.
+     It should NOT mark the lesson complete.
+  ======================================================= */
+
+  function previewLessons() {
+    window.location.href =
+      "/Lessons?parent=true";
+  }
+
+  function openNextLesson() {
     if (!nextLesson) {
       alert(
         "🎉 All 180 lessons are complete!"
       );
+
       return;
     }
 
@@ -310,9 +410,56 @@ export default function Parent() {
       `/Lessons?parent=true&day=${nextLesson}`;
   }
 
-  /* =========================
-     PRINTABLE REPORT
-  ========================= */
+  /* =======================================================
+     MIDTERM PREVIEW
+     
+     These buttons are ALWAYS available to the
+     logged-in parent.
+     
+     The parent does NOT have to complete Days
+     1–87, 88, or 89 first.
+  ======================================================= */
+
+  function openMidtermGuideOne() {
+    window.location.href =
+      "/Midterm?parent=true&day=88";
+  }
+
+  function openMidtermGuideTwo() {
+    window.location.href =
+      "/Midterm?parent=true&day=89";
+  }
+
+  function openMidtermExam() {
+    window.location.href =
+      "/Midterm?parent=true&day=90";
+  }
+
+  /* =======================================================
+     FINAL PREVIEW
+     
+     These buttons are ALWAYS available to the
+     logged-in parent.
+  ======================================================= */
+
+  function openFinalGuideOne() {
+    window.location.href =
+      "/Final?parent=true&day=177";
+  }
+
+  function openFinalGuideTwo() {
+    window.location.href =
+      "/Final?parent=true&day=178";
+  }
+
+  function openFinalExam() {
+    window.location.href =
+      "/Final?parent=true&day=179";
+  }
+
+  /* =======================================================
+     PRINT PROGRESS REPORT
+  ======================================================= */
 
   function printReport() {
     const reportWindow =
@@ -324,75 +471,35 @@ export default function Parent() {
 
     if (!reportWindow) {
       alert(
-        "Please allow pop-ups for this website so the report can open."
+        "Please allow pop-ups so the progress report can open."
       );
+
       return;
     }
 
-    const count = completed.length;
+    const completedList =
+      completed.length > 0
+        ? completed.join(", ")
+        : "No lessons completed yet.";
 
-    const percentage = Math.min(
-      100,
-      Math.round(
-        (count / TOTAL_LESSONS) * 100
-      )
-    );
-
-    let tree = "🌱";
-    let treeMessage =
-      "Your faith is taking root!";
-
-    if (count >= 180) {
-      tree = "🌳🏆";
-      treeMessage =
-        "Your Faith Tree is fully grown!";
-    } else if (count >= 135) {
-      tree = "🌳⭐";
-      treeMessage =
-        "Your Faith Tree is shining bright!";
-    } else if (count >= 90) {
-      tree = "🌳🌳";
-      treeMessage =
-        "Your Faith Tree is growing beautifully!";
-    } else if (count >= 50) {
-      tree = "🌳";
-      treeMessage =
-        "Your Faith Tree is growing strong!";
-    } else if (count >= 25) {
-      tree = "🌿";
-      treeMessage =
-        "Your faith is growing stronger!";
-    } else if (count >= 10) {
-      tree = "🌱";
-      treeMessage =
-        "You have taken your first big steps!";
-    }
-
-    const status =
-      count === 0
-        ? "Not Started"
-        : count >= TOTAL_LESSONS
-        ? "Completed"
-        : "In Progress";
-
-    const badges = [
-      ["First Steps", 10],
-      ["Growing Strong", 25],
-      ["Faith Builder", 50],
-      ["Halfway Hero", 90],
-      ["Faith Champion", 135],
-      [
-        "Faith Foundations Champion",
-        180,
-      ],
-    ];
-
-    const nextLesson =
-      getNextLesson();
+    const earnedBadges =
+      badges
+        .filter(
+          (badge) =>
+            completedCount >= badge[2]
+        )
+        .map(
+          (badge) =>
+            `${badge[0]} ${badge[1]}`
+        )
+        .join("<br>") ||
+      "No badges earned yet.";
 
     reportWindow.document.write(`
       <!DOCTYPE html>
+
       <html>
+
       <head>
 
         <title>
@@ -401,157 +508,39 @@ export default function Parent() {
 
         <style>
 
-          * {
-            box-sizing: border-box;
-          }
-
           body {
             font-family: Arial, sans-serif;
             color: #24313a;
-            background: white;
-            margin: 0;
             padding: 35px;
           }
 
-          .report {
-            max-width: 850px;
+          .page {
+            max-width: 800px;
             margin: auto;
           }
 
-          h1 {
-            text-align: center;
-            color: #315c48;
-            margin-bottom: 5px;
-          }
-
+          h1,
           h2 {
             color: #315c48;
-            border-bottom: 2px solid #315c48;
-            padding-bottom: 7px;
-            margin-top: 30px;
-          }
-
-          .subtitle {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 30px;
-          }
-
-          .info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-          }
-
-          .box {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            min-height: 70px;
           }
 
           .center {
             text-align: center;
           }
 
-          .tree {
-            text-align: center;
-            font-size: 70px;
-            margin-top: 15px;
-          }
-
-          .tree-message {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-          }
-
-          .progress-number {
-            text-align: center;
-            font-size: 25px;
-            font-weight: bold;
-            color: #315c48;
-            margin: 15px;
-          }
-
-          .progress {
-            width: 100%;
-            height: 25px;
-            background: #ddd;
-            border-radius: 20px;
-            overflow: hidden;
-          }
-
-          .progress-fill {
-            height: 100%;
-            width: ${percentage}%;
-            background: #315c48;
-          }
-
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-          }
-
-          th,
-          td {
+          .box {
             border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
           }
 
-          th {
-            background: #e9f4ed;
-          }
-
-          .earned {
-            font-weight: bold;
-            color: #315c48;
-          }
-
-          .locked {
-            color: #888;
-          }
-
-          .notes {
-            border: 1px solid #999;
-            border-radius: 8px;
-            min-height: 160px;
-            padding: 15px;
-            white-space: pre-wrap;
-          }
-
-          .signature {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            margin-top: 55px;
-          }
-
-          .signature-line {
+          .line {
             border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-          }
-
-          .footer {
-            text-align: center;
-            margin-top: 45px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            color: #666;
-            font-size: 13px;
+            padding: 8px 0;
           }
 
           @media print {
-
-            body {
-              padding: 0;
-            }
-
-            .report {
-              max-width: none;
-            }
 
             @page {
               margin: 0.5in;
@@ -565,260 +554,156 @@ export default function Parent() {
 
       <body>
 
-        <div class="report">
+        <div class="page">
 
-          <h1>
+          <h1 class="center">
             🌳 Faith Foundations
           </h1>
 
-          <div class="subtitle">
-            <strong>
-              The M&M Adventure
-            </strong>
-            <br>
-            Bible Curriculum Progress Report
-          </div>
+          <h2 class="center">
+            The M&M Adventure
+          </h2>
 
-          <div class="info">
+          <h2 class="center">
+            Parent Progress Report
+          </h2>
 
-            <div class="box">
-              <strong>Student:</strong>
-              <br><br>
-              M&M
+          <div class="box">
+
+            <div class="line">
+              Student:
             </div>
 
-            <div class="box">
-              <strong>Grade:</strong>
-              <br><br>
-              3rd Grade
+            <div class="line">
+              Date:
+              ${new Date().toLocaleDateString()}
             </div>
 
-            <div class="box">
-              <strong>School Year:</strong>
-              <br><br>
-              2026–2027
+            <div class="line">
+              Lessons Completed:
+              ${completedCount} / ${TOTAL_LESSONS}
             </div>
 
-            <div class="box">
-              <strong>Parent/Teacher:</strong>
-              <br><br>
-              ______________________________
+            <div class="line">
+              Overall Progress:
+              ${progressPercent}%
             </div>
 
           </div>
 
-          <h2>
-            📚 Course Progress
-          </h2>
+          <div class="box">
 
-          <div class="tree">
-            ${tree}
+            <h2>
+              🏆 Badges Earned
+            </h2>
+
+            <p>
+              ${earnedBadges}
+            </p>
+
           </div>
 
-          <div class="tree-message">
-            ${treeMessage}
+          <div class="box">
+
+            <h2>
+              📚 Completed Lessons
+            </h2>
+
+            <p>
+              ${completedList}
+            </p>
+
           </div>
 
-          <div class="progress-number">
-            ${count} / 180 Lessons Completed
-          </div>
+          <div class="box">
 
-          <div class="progress">
-            <div class="progress-fill"></div>
-          </div>
+            <h2>
+              📝 Midterm
+            </h2>
 
-          <p class="center">
-            <strong>
-              ${percentage}% Complete
-            </strong>
-          </p>
-
-          <table>
-
-            <tr>
-              <th>Course Status</th>
-              <td>${status}</td>
-            </tr>
-
-            <tr>
-              <th>Lessons Completed</th>
-              <td>${count} of 180</td>
-            </tr>
-
-            <tr>
-              <th>Lessons Remaining</th>
-              <td>
-                ${Math.max(
-                  0,
-                  180 - count
-                )}
-              </td>
-            </tr>
-
-            <tr>
-              <th>Next Lesson</th>
-              <td>
-                ${
-                  nextLesson
-                    ? `Day ${nextLesson}`
-                    : "Course Complete"
-                }
-              </td>
-            </tr>
-
-          </table>
-
-          <h2>
-            🏅 Faith Badges
-          </h2>
-
-          <table>
-
-            <tr>
-              <th>Badge</th>
-              <th>Requirement</th>
-              <th>Status</th>
-            </tr>
-
-            ${badges
-              .map(
-                ([name, requirement]) => `
-                  <tr>
-
-                    <td>
-                      ${name}
-                    </td>
-
-                    <td>
-                      ${requirement} Lessons
-                    </td>
-
-                    <td
-                      class="${
-                        count >= requirement
-                          ? "earned"
-                          : "locked"
-                      }"
-                    >
-                      ${
-                        count >= requirement
-                          ? "✅ Earned"
-                          : "🔒 Not Yet Earned"
-                      }
-                    </td>
-
-                  </tr>
-                `
-              )
-              .join("")}
-
-          </table>
-
-          <h2>
-            📝 Exams & Reviews
-          </h2>
-
-          <table>
-
-            <tr>
-              <th>Assessment</th>
-              <th>Status</th>
-            </tr>
-
-            <tr>
-              <td>
-                Midterm Review
-              </td>
-
-              <td>
-                ${
-                  midtermScore !== null
-                    ? `Score: ${midtermScore}%`
-                    : "Not Taken"
-                }
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                Midterm Exam
-              </td>
-
-              <td>
-                ${
-                  midtermScore === null
-                    ? "Not Taken"
-                    : midtermScore >= 80
-                    ? `✅ PASSED — ${midtermScore}%`
-                    : `❌ NOT PASSED — ${midtermScore}%`
-                }
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                Final Review
-              </td>
-
-              <td>
-                ${
-                  finalScore !== null
-                    ? `Score: ${finalScore}%`
-                    : "Not Taken"
-                }
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                Final Exam
-              </td>
-
-              <td>
-                ${
-                  finalScore === null
-                    ? "Not Taken"
-                    : finalScore >= 80
-                    ? `✅ PASSED — ${finalScore}%`
-                    : `❌ NOT PASSED — ${finalScore}%`
-                }
-              </td>
-            </tr>
-
-          </table>
-
-          <h2>
-            📝 Parent/Teacher Notes
-          </h2>
-
-          <div class="notes">
             ${
-              notes ||
-              "No parent/teacher notes entered."
+              midtermScore !== null
+                ? `
+                  <p>
+                    Score:
+                    <strong>
+                      ${midtermScore}%
+                    </strong>
+                  </p>
+
+                  <p>
+                    ${
+                      midtermPassed
+                        ? "🎉 PASSED"
+                        : "📖 NOT PASSED"
+                    }
+                  </p>
+                `
+                : `
+                  <p>
+                    Midterm not completed yet.
+                  </p>
+                `
             }
-          </div>
-
-          <div class="signature">
-
-            <div class="signature-line">
-              Parent/Teacher Signature
-            </div>
-
-            <div class="signature-line">
-              Date
-            </div>
 
           </div>
 
-          <div class="footer">
-            Faith Foundations: The M&M Adventure
-            <br>
-            Growing in God's Word — one day at a time.
+          <div class="box">
+
+            <h2>
+              📝 Final
+            </h2>
+
+            ${
+              finalScore !== null
+                ? `
+                  <p>
+                    Score:
+                    <strong>
+                      ${finalScore}%
+                    </strong>
+                  </p>
+
+                  <p>
+                    ${
+                      finalPassed
+                        ? "🎉 PASSED"
+                        : "📖 NOT PASSED"
+                    }
+                  </p>
+                `
+                : `
+                  <p>
+                    Final not completed yet.
+                  </p>
+                `
+            }
+
+          </div>
+
+          <div class="box">
+
+            <h2>
+              📓 Parent Notes
+            </h2>
+
+            <p>
+              ${
+                notes
+                  ? notes.replace(
+                      /\n/g,
+                      "<br>"
+                    )
+                  : "No parent notes."
+              }
+            </p>
+
           </div>
 
         </div>
 
       </body>
+
       </html>
     `);
 
@@ -830,208 +715,116 @@ export default function Parent() {
     }, 500);
   }
 
-  /* =========================
-     PROGRESS
-  ========================= */
-
-  const count = completed.length;
-
-  const percentage = Math.min(
-    100,
-    Math.round(
-      (count / TOTAL_LESSONS) * 100
-    )
-  );
-
-  /* =========================
-     FAITH TREE
-  ========================= */
-
-  let tree = "🌱";
-  let message =
-    "Your faith is taking root!";
-
-  if (count >= 180) {
-    tree = "🌳🏆";
-    message =
-      "Your Faith Tree is fully grown!";
-  } else if (count >= 135) {
-    tree = "🌳⭐";
-    message =
-      "Your faith is shining bright!";
-  } else if (count >= 90) {
-    tree = "🌳🌳";
-    message =
-      "Your Faith Tree is growing beautifully!";
-  } else if (count >= 50) {
-    tree = "🌳";
-    message =
-      "Your Faith Tree is growing strong!";
-  } else if (count >= 25) {
-    tree = "🌿";
-    message =
-      "Your faith is growing stronger!";
-  } else if (count >= 10) {
-    tree = "🌱";
-    message =
-      "You have taken your first big steps!";
-  }
-
-  /* =========================
-     BADGES
-  ========================= */
-
-  const badges = [
-    {
-      icon: "🌱",
-      name: "First Steps",
-      days: 10,
-      message:
-        "You completed your first 10 Bible lessons!",
-    },
-
-    {
-      icon: "🌿",
-      name: "Growing Strong",
-      days: 25,
-      message:
-        "Your faith is growing stronger!",
-    },
-
-    {
-      icon: "🌳",
-      name: "Faith Builder",
-      days: 50,
-      message:
-        "You are building a strong foundation of faith!",
-    },
-
-    {
-      icon: "⭐",
-      name: "Halfway Hero",
-      days: 90,
-      message:
-        "You're halfway through your adventure!",
-    },
-
-    {
-      icon: "🏅",
-      name: "Faith Champion",
-      days: 135,
-      message:
-        "Your faith is shining bright!",
-    },
-
-    {
-      icon: "🏆",
-      name:
-        "Faith Foundations Champion",
-      days: 180,
-      message:
-        "You completed all 180 Bible lessons!",
-    },
-  ];
-
-  const midtermPassed =
-    midtermScore !== null &&
-    midtermScore >= 80;
-
-  const midtermNotPassed =
-    midtermScore !== null &&
-    midtermScore <= 79;
-
-  const finalPassed =
-    finalScore !== null &&
-    finalScore >= 80;
-
-  const finalNotPassed =
-    finalScore !== null &&
-    finalScore <= 79;
-
-  /* =========================
-     PASSWORD SCREEN
-  ========================= */
+  /* =======================================================
+     LOGIN SCREEN
+  ======================================================= */
 
   if (!unlocked) {
     return (
       <main
         style={{
           minHeight: "100vh",
-          background: "#f5f1e8",
-          padding: "30px 20px",
-          fontFamily:
-            "Arial, sans-serif",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          background: "#f8f5ed",
+          padding: "40px 15px",
+          fontFamily: "Arial, sans-serif",
+          color: "#24313a",
         }}
       >
         <div
           style={{
-            width: "100%",
-            maxWidth: "450px",
-            background: "white",
-            borderRadius: "25px",
-            padding: "35px 25px",
-            textAlign: "center",
-            boxShadow:
-              "0 5px 25px rgba(0,0,0,.12)",
+            maxWidth: "500px",
+            margin: "80px auto",
           }}
         >
-          <div
+          <section
             style={{
-              fontSize: "70px",
+              background: "white",
+              borderRadius: "22px",
+              padding: "35px",
+              textAlign: "center",
+              boxShadow:
+                "0 5px 20px rgba(0,0,0,.12)",
             }}
           >
-            🔐
-          </div>
-
-          <h1
-            style={{
-              color: "#315c48",
-            }}
-          >
-            Parent Dashboard
-          </h1>
-
-          <h2>
-            Faith Foundations
-          </h2>
-
-          <p>
-            This area is for parents only.
-            <br />
-            Enter the parent password
-            to continue.
-          </p>
-
-          <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(
-                  e.target.value
-                )
-              }
-              placeholder="Parent password"
-              autoComplete="off"
+            <div
               style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "15px",
-                marginTop: "15px",
-                borderRadius: "12px",
-                border: "2px solid #ddd",
-                fontSize: "17px",
-                textAlign: "center",
+                fontSize: "65px",
               }}
-            />
+            >
+              👩‍🏫🌳
+            </div>
+
+            <h1
+              style={{
+                color: "#315c48",
+              }}
+            >
+              Parent Dashboard
+            </h1>
+
+            <p>
+              Faith Foundations:
+              <br />
+              The M&M Adventure
+            </p>
+
+            <p
+              style={{
+                marginTop: "20px",
+              }}
+            >
+              Enter the parent password to continue.
+            </p>
+
+            <form
+              onSubmit={handleLogin}
+            >
+              <input
+                type="password"
+                value={password}
+                onChange={(e) =>
+                  setPassword(
+                    e.target.value
+                  )
+                }
+                placeholder="Parent password"
+                style={{
+                  width: "100%",
+                  boxSizing:
+                    "border-box",
+                  padding: "15px",
+                  borderRadius: "12px",
+                  border:
+                    "2px solid #ccc",
+                  fontSize: "18px",
+                  marginTop: "15px",
+                }}
+              />
+
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  marginTop: "15px",
+                  padding: "16px",
+                  border: "none",
+                  borderRadius: "12px",
+                  background: "#315c48",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "17px",
+                  cursor: "pointer",
+                }}
+              >
+                🔐 Enter Parent Dashboard
+              </button>
+            </form>
 
             {error && (
               <p
                 style={{
-                  color: "#b3261e",
+                  marginTop: "15px",
+                  color: "#b42318",
                   fontWeight: "bold",
                 }}
               >
@@ -1040,72 +833,55 @@ export default function Parent() {
             )}
 
             <button
-              type="submit"
+              onClick={() =>
+                (window.location.href = "/")
+              }
               style={{
-                width: "100%",
-                marginTop: "15px",
-                padding: "16px",
+                marginTop: "20px",
+                padding: "12px 20px",
                 border: "none",
-                borderRadius: "14px",
-                background: "#315c48",
-                color: "white",
-                fontSize: "18px",
-                fontWeight: "bold",
+                borderRadius: "10px",
+                background: "#eee",
                 cursor: "pointer",
               }}
             >
-              🔓 Enter Parent Dashboard
+              ← Back to Home
             </button>
-          </form>
-
-          <button
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            style={{
-              marginTop: "20px",
-              border: "none",
-              background: "transparent",
-              color: "#315c48",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            ← Back to Home
-          </button>
+          </section>
         </div>
       </main>
     );
   }
 
-  /* =========================
-     PARENT DASHBOARD
-  ========================= */
+  /* =======================================================
+     MAIN PARENT DASHBOARD
+  ======================================================= */
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        padding: "30px 20px 60px",
         background: "#f8f5ed",
-        fontFamily:
-          "Arial, sans-serif",
+        padding: "30px 15px 60px",
+        fontFamily: "Arial, sans-serif",
         color: "#24313a",
       }}
     >
       <div
         style={{
-          maxWidth: "760px",
+          maxWidth: "900px",
           margin: "0 auto",
         }}
       >
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <header
           style={{
             textAlign: "center",
-            marginBottom: "25px",
+            marginBottom: "30px",
           }}
         >
           <div
@@ -1113,39 +889,123 @@ export default function Parent() {
               fontSize: "65px",
             }}
           >
-            👩‍🏫
+            👩‍🏫🌳
           </div>
 
           <h1
             style={{
               color: "#315c48",
+              marginBottom: "8px",
             }}
           >
             Parent Dashboard
           </h1>
 
-          <h2>
+          <p>
             Faith Foundations:
             The M&M Adventure
-          </h2>
-
-          <p>
-            Monitor your child's Bible
-            learning journey.
           </p>
+
+          <button
+            onClick={logout}
+            style={{
+              marginTop: "10px",
+              padding: "10px 18px",
+              border: "none",
+              borderRadius: "10px",
+              background: "#777",
+              color: "white",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            🔒 Lock Parent Dashboard
+          </button>
         </header>
 
-        {/* PARENT TOOLS */}
+        {/* =================================================
+            PROGRESS
+        ================================================= */}
 
         <section
-          className="no-print"
           style={{
             background: "white",
             borderRadius: "20px",
-            padding: "20px",
+            padding: "25px",
             marginBottom: "20px",
             boxShadow:
-              "0 4px 15px rgba(0,0,0,.08)",
+              "0 4px 15px rgba(0,0,0,.1)",
+          }}
+        >
+          <h2>
+            📊 Student Progress
+          </h2>
+
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "20px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "48px",
+                fontWeight: "bold",
+                color: "#315c48",
+              }}
+            >
+              {completedCount}
+            </div>
+
+            <p>
+              of {TOTAL_LESSONS} lessons completed
+            </p>
+
+            <div
+              style={{
+                width: "100%",
+                height: "24px",
+                background: "#e5e5e5",
+                borderRadius: "20px",
+                overflow: "hidden",
+                marginTop: "15px",
+              }}
+            >
+              <div
+                style={{
+                  width: `${progressPercent}%`,
+                  height: "100%",
+                  background: "#6b9e5b",
+                  borderRadius: "20px",
+                  transition:
+                    "width .3s ease",
+                }}
+              />
+            </div>
+
+            <p
+              style={{
+                fontWeight: "bold",
+                marginTop: "10px",
+              }}
+            >
+              {progressPercent}% Complete
+            </p>
+          </div>
+        </section>
+
+        {/* =================================================
+            PARENT TOOLS
+        ================================================= */}
+
+        <section
+          style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "25px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
           <h2>
@@ -1156,18 +1016,19 @@ export default function Parent() {
             style={{
               display: "grid",
               gap: "12px",
+              marginTop: "18px",
             }}
           >
             <button
               onClick={previewLessons}
               style={{
-                padding: "15px",
+                padding: "16px",
                 border: "none",
                 borderRadius: "14px",
                 background: "#315c48",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
+                fontSize: "16px",
                 cursor: "pointer",
               }}
             >
@@ -1177,252 +1038,275 @@ export default function Parent() {
             <button
               onClick={openNextLesson}
               style={{
-                padding: "15px",
+                padding: "16px",
                 border: "none",
                 borderRadius: "14px",
                 background: "#6b9e5b",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
+                fontSize: "16px",
                 cursor: "pointer",
               }}
             >
-              ▶️ Open Next Lesson
+              📚 Open Next Student Lesson
             </button>
 
             <button
               onClick={printReport}
               style={{
-                padding: "15px",
+                padding: "16px",
                 border: "none",
                 borderRadius: "14px",
-                background: "#8b7355",
+                background: "#777",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
+                fontSize: "16px",
                 cursor: "pointer",
               }}
             >
               🖨️ Print Progress Report
             </button>
-
-            <button
-              onClick={logout}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#777",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              🔒 Lock Parent Dashboard
-            </button>
           </div>
+
+          <p
+            style={{
+              marginTop: "15px",
+              fontSize: "13px",
+              color: "#666",
+              textAlign: "center",
+            }}
+          >
+            👀 Parent previews do not count as completed
+            student lessons.
+          </p>
         </section>
 
-        {/* FAITH TREE */}
+        {/* =================================================
+            FAITH TREE
+        ================================================= */}
 
         <section
           style={{
             background: "white",
             borderRadius: "20px",
-            padding: "30px",
+            padding: "25px",
+            marginBottom: "20px",
             textAlign: "center",
-            marginBottom: "22px",
             boxShadow:
               "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
-          <div
-            style={{
-              fontSize: "75px",
-            }}
-          >
-            {tree}
-          </div>
-
           <h2>
-            {message}
+            🌳 Faith Tree
           </h2>
-
-          <p
-            style={{
-              fontSize: "24px",
-              fontWeight: "bold",
-            }}
-          >
-            {count} / 180 Lessons
-            Complete
-          </p>
 
           <div
             style={{
-              width: "100%",
-              height: "28px",
-              background: "#ddd",
-              borderRadius: "20px",
-              overflow: "hidden",
+              fontSize: "90px",
+              margin: "20px 0",
             }}
           >
-            <div
-              style={{
-                width: `${percentage}%`,
-                height: "100%",
-                background: "#315c48",
-              }}
-            />
+            {completedCount >= 180
+              ? "🌳🏆"
+              : completedCount >= 135
+              ? "🌳🌿"
+              : completedCount >= 90
+              ? "🌳"
+              : completedCount >= 50
+              ? "🌿"
+              : completedCount >= 25
+              ? "🌱"
+              : completedCount >= 10
+              ? "🌱"
+              : "🌰"}
           </div>
 
-          <p
+          <h3
             style={{
-              fontSize: "18px",
-              fontWeight: "bold",
+              color: "#315c48",
             }}
           >
-            {percentage}% Complete
+            {completedCount >= 180
+              ? "🏆 Your Faith Tree is fully grown!"
+              : completedCount >= 135
+              ? "Your faith is growing strong!"
+              : completedCount >= 90
+              ? "⭐ Halfway Hero!"
+              : completedCount >= 50
+              ? "Your faith is becoming strong!"
+              : completedCount >= 25
+              ? "🌿 Your faith is growing!"
+              : completedCount >= 10
+              ? "🌱 Your faith is taking root!"
+              : "🌰 Your faith journey is beginning!"}
+          </h3>
+
+          <p>
+            Every completed lesson helps the Faith Tree
+            grow.
           </p>
         </section>
 
-        {/* CURRENT PROGRESS */}
-
-        <section
-          style={{
-            background: "#fffaf0",
-            borderRadius: "20px",
-            padding: "25px",
-            marginBottom: "22px",
-          }}
-        >
-          <h2>
-            📅 Current Progress
-          </h2>
-
-          <p>
-            📖 Next lesson:{" "}
-            <strong>
-              {count >= 180
-                ? "Course Complete"
-                : `Day ${
-                    getNextLesson()
-                  }`}
-            </strong>
-          </p>
-
-          <p>
-            ⭐ Lessons completed:{" "}
-            <strong>
-              {count}
-            </strong>
-          </p>
-
-          <p>
-            📈 Lessons remaining:{" "}
-            <strong>
-              {Math.max(
-                0,
-                180 - count
-              )}
-            </strong>
-          </p>
-        </section>
-
-        {/* =========================
-            MIDTERM
-        ========================= */}
+        {/* =================================================
+            BADGES
+        ================================================= */}
 
         <section
           style={{
             background: "white",
             borderRadius: "20px",
             padding: "25px",
-            marginBottom: "22px",
-            boxShadow:
-              "0 4px 15px rgba(0,0,0,.08)",
+            marginBottom: "20px",
           }}
         >
           <h2>
-            📚 Midterm Reviews & Exam
+            🏆 Badges
           </h2>
 
-          <p
+          <div
             style={{
-              background: "#e9f4ed",
-              padding: "12px",
-              borderRadius: "10px",
-              fontWeight: "bold",
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit,minmax(180px,1fr))",
+              gap: "12px",
+              marginTop: "18px",
             }}
           >
-            👩‍🏫 Parent Preview:
-            These materials are available
-            to you NOW. Your child does
-            not need to complete the
-            lessons first.
-          </p>
+            {badges.map(
+              (badge, index) => {
+                const earned =
+                  completedCount >=
+                  badge[2];
+
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "18px",
+                      borderRadius: "15px",
+                      textAlign: "center",
+                      background: earned
+                        ? "#e9f4ed"
+                        : "#f0eee7",
+                      border: earned
+                        ? "2px solid #6b9e5b"
+                        : "2px solid #ddd",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "40px",
+                      }}
+                    >
+                      {badge[0]}
+                    </div>
+
+                    <strong>
+                      {badge[1]}
+                    </strong>
+
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        marginBottom: 0,
+                      }}
+                    >
+                      {badge[2]} lessons
+                    </p>
+
+                    <p
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {earned
+                        ? "✅ Earned"
+                        : "🔒 Locked"}
+                    </p>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        </section>
+
+        {/* =================================================
+            MIDTERM
+        ================================================= */}
+
+        <section
+          style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "25px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.1)",
+          }}
+        >
+          <h2>
+            📝 Midterm Review & Exam
+          </h2>
+
+          <div
+            style={{
+              marginTop: "15px",
+              padding: "15px",
+              borderRadius: "12px",
+              background: "#fff4df",
+            }}
+          >
+            <strong>
+              Parent Preview Access
+            </strong>
+
+            <p
+              style={{
+                marginBottom: 0,
+              }}
+            >
+              You can view Days 88, 89, and 90 now.
+              You do NOT need to complete the lessons
+              first.
+            </p>
+          </div>
 
           <div
             style={{
               display: "grid",
               gap: "12px",
-              marginTop: "15px",
+              marginTop: "18px",
             }}
           >
-
             <button
-              onClick={openMidtermGuide1}
+              onClick={openMidtermGuideOne}
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
+                borderRadius: "12px",
                 background: "#315c48",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📖 Preview Day 88
-              <br />
-              Midterm Study Guide #1
-              <br />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "normal",
-                }}
-              >
-                Lessons 1–44
-              </span>
+              👀 Preview Day 88 — Study Guide #1
             </button>
 
             <button
-              onClick={openMidtermGuide2}
+              onClick={openMidtermGuideTwo}
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
-                background: "#6b9e5b",
+                borderRadius: "12px",
+                background: "#315c48",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📖 Preview Day 89
-              <br />
-              Midterm Study Guide #2
-              <br />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "normal",
-                }}
-              >
-                Lessons 45–87
-              </span>
+              👀 Preview Day 89 — Study Guide #2
             </button>
 
             <button
@@ -1430,64 +1314,56 @@ export default function Parent() {
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
-                background: "#8b7355",
+                borderRadius: "12px",
+                background: "#6b9e5b",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📝 Preview Day 90
-              <br />
-              Midterm Exam
+              👀 Preview Day 90 — Midterm Exam
             </button>
-
           </div>
-
-          {/* MIDTERM SCORE */}
 
           <div
             style={{
               marginTop: "20px",
-              padding: "15px",
-              background: "#f8f5ed",
+              padding: "18px",
               borderRadius: "14px",
+              background: midtermPassed
+                ? "#e9f4ed"
+                : midtermNotPassed
+                ? "#fff0ed"
+                : "#f5f5f5",
               textAlign: "center",
             }}
           >
             <h3>
-              Midterm Result
+              {midtermPassed
+                ? "🎉 Midterm Passed"
+                : midtermNotPassed
+                ? "📖 Midterm Not Passed"
+                : "⏳ Midterm Not Taken"}
             </h3>
 
-            {midtermScore === null ? (
+            {midtermScore !== null && (
               <p>
-                📝 Midterm has not been
-                completed yet.
-              </p>
-            ) : midtermPassed ? (
-              <p
-                style={{
-                  color: "#315c48",
-                  fontWeight: "bold",
-                  fontSize: "18px",
-                }}
-              >
-                ✅ PASSED —{" "}
-                {midtermScore}%
-              </p>
-            ) : (
-              <p
-                style={{
-                  color: "#b3261e",
-                  fontWeight: "bold",
-                  fontSize: "18px",
-                }}
-              >
-                ❌ NOT PASSED —{" "}
-                {midtermScore}%
+                Score:
+                <strong>
+                  {" "}
+                  {midtermScore}%
+                </strong>
               </p>
             )}
+
+            <p
+              style={{
+                fontSize: "14px",
+              }}
+            >
+              Passing score:
+              <strong> 80% or higher</strong>
+            </p>
 
             <p
               style={{
@@ -1495,106 +1371,89 @@ export default function Parent() {
                 color: "#666",
               }}
             >
-              80% or higher = PASS
-              <br />
-              79% or lower = NOT PASSED
+              Attempts saved:
+              {" "}
+              {midtermAttempts.length}
             </p>
           </div>
         </section>
 
-        {/* =========================
+        {/* =================================================
             FINAL
-        ========================= */}
+        ================================================= */}
 
         <section
           style={{
             background: "white",
             borderRadius: "20px",
             padding: "25px",
-            marginBottom: "22px",
+            marginBottom: "20px",
             boxShadow:
-              "0 4px 15px rgba(0,0,0,.08)",
+              "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
           <h2>
-            🏆 Final Reviews & Exam
+            🏆 Final Review & Exam
           </h2>
 
-          <p
+          <div
             style={{
-              background: "#e9f4ed",
-              padding: "12px",
-              borderRadius: "10px",
-              fontWeight: "bold",
+              marginTop: "15px",
+              padding: "15px",
+              borderRadius: "12px",
+              background: "#fff4df",
             }}
           >
-            👩‍🏫 Parent Preview:
-            These materials are available
-            to you NOW. Your child does
-            not need to complete the
-            lessons first.
-          </p>
+            <strong>
+              Parent Preview Access
+            </strong>
+
+            <p
+              style={{
+                marginBottom: 0,
+              }}
+            >
+              You can preview the Final materials
+              at any time. They do not need to be
+              completed first.
+            </p>
+          </div>
 
           <div
             style={{
               display: "grid",
               gap: "12px",
-              marginTop: "15px",
+              marginTop: "18px",
             }}
           >
-
             <button
-              onClick={openFinalGuide1}
+              onClick={openFinalGuideOne}
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
+                borderRadius: "12px",
                 background: "#315c48",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📖 Preview Day 177
-              <br />
-              Final Study Guide #1
-              <br />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "normal",
-                }}
-              >
-                Lessons 91–134
-              </span>
+              👀 Preview Day 177 — Final Study Guide #1
             </button>
 
             <button
-              onClick={openFinalGuide2}
+              onClick={openFinalGuideTwo}
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
-                background: "#6b9e5b",
+                borderRadius: "12px",
+                background: "#315c48",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📖 Preview Day 178
-              <br />
-              Final Study Guide #2
-              <br />
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "normal",
-                }}
-              >
-                Lessons 135–176
-              </span>
+              👀 Preview Day 178 — Final Study Guide #2
             </button>
 
             <button
@@ -1602,82 +1461,56 @@ export default function Parent() {
               style={{
                 padding: "15px",
                 border: "none",
-                borderRadius: "14px",
-                background: "#8b7355",
+                borderRadius: "12px",
+                background: "#6b9e5b",
                 color: "white",
-                fontSize: "16px",
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
             >
-              📝 Preview Day 179
-              <br />
-              Final Exam
+              👀 Preview Day 179 — Final Exam
             </button>
-
-            <button
-              onClick={openCelebration}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#c69c3c",
-                color: "white",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              🎉 Preview Day 180
-              <br />
-              Celebration
-            </button>
-
           </div>
-
-          {/* FINAL SCORE */}
 
           <div
             style={{
               marginTop: "20px",
-              padding: "15px",
-              background: "#f8f5ed",
+              padding: "18px",
               borderRadius: "14px",
+              background: finalPassed
+                ? "#e9f4ed"
+                : finalNotPassed
+                ? "#fff0ed"
+                : "#f5f5f5",
               textAlign: "center",
             }}
           >
             <h3>
-              Final Exam Result
+              {finalPassed
+                ? "🎉 Final Passed"
+                : finalNotPassed
+                ? "📖 Final Not Passed"
+                : "⏳ Final Not Taken"}
             </h3>
 
-            {finalScore === null ? (
+            {finalScore !== null && (
               <p>
-                📝 Final exam has not
-                been completed yet.
-              </p>
-            ) : finalPassed ? (
-              <p
-                style={{
-                  color: "#315c48",
-                  fontWeight: "bold",
-                  fontSize: "18px",
-                }}
-              >
-                ✅ PASSED —{" "}
-                {finalScore}%
-              </p>
-            ) : (
-              <p
-                style={{
-                  color: "#b3261e",
-                  fontWeight: "bold",
-                  fontSize: "18px",
-                }}
-              >
-                ❌ NOT PASSED —{" "}
-                {finalScore}%
+                Score:
+                <strong>
+                  {" "}
+                  {finalScore}%
+                </strong>
               </p>
             )}
+
+            <p
+              style={{
+                fontSize: "14px",
+              }}
+            >
+              Passing score:
+              <strong> 80% or higher</strong>
+            </p>
 
             <p
               style={{
@@ -1685,178 +1518,49 @@ export default function Parent() {
                 color: "#666",
               }}
             >
-              80% or higher = PASS
-              <br />
-              79% or lower = NOT PASSED
+              Attempts saved:
+              {" "}
+              {finalAttempts.length}
             </p>
           </div>
         </section>
 
-        {/* BADGES */}
+        {/* =================================================
+            PARENT NOTES
+        ================================================= */}
 
         <section
           style={{
             background: "white",
             borderRadius: "20px",
             padding: "25px",
-            marginBottom: "22px",
+            marginBottom: "20px",
+            boxShadow:
+              "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
           <h2>
-            🏅 Faith Badges
+            📝 Parent Notes
           </h2>
 
-          <div
+          <p
             style={{
-              display: "grid",
-              gap: "10px",
+              color: "#666",
+              fontSize: "14px",
             }}
           >
-            {badges.map((badge) => {
-              const earned =
-                count >= badge.days;
-
-              return (
-                <div
-                  key={badge.days}
-                  style={{
-                    padding: "15px",
-                    borderRadius: "14px",
-                    background: earned
-                      ? "#e9f4ed"
-                      : "#f5f5f5",
-                    border:
-                      "1px solid #ddd",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "30px",
-                    }}
-                  >
-                    {badge.icon}
-                  </span>
-
-                  <div>
-                    <strong>
-                      {badge.name}
-                    </strong>
-
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#666",
-                      }}
-                    >
-                      {badge.days} lessons
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        color: earned
-                          ? "#315c48"
-                          : "#888",
-                      }}
-                    >
-                      {earned
-                        ? "✅ Earned"
-                        : "🔒 Not Yet Earned"}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* COMPLETED LESSONS */}
-
-        <section
-          style={{
-            background: "white",
-            borderRadius: "20px",
-            padding: "25px",
-            marginBottom: "22px",
-          }}
-        >
-          <h2>
-            ✅ Completed Lessons
-          </h2>
-
-          {completed.length === 0 ? (
-            <p>
-              No lessons completed yet.
-            </p>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-              }}
-            >
-              {completed.map((day) => (
-                <button
-                  key={day}
-                  onClick={() =>
-                    openLesson(day)
-                  }
-                  style={{
-                    background: "#e9f4ed",
-                    border: "none",
-                    borderRadius: "10px",
-                    padding:
-                      "8px 12px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    color: "#24313a",
-                  }}
-                >
-                  Day {day} ✅
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* PARENT NOTES */}
-
-        <section
-          className="no-print"
-          style={{
-            background: "white",
-            borderRadius: "20px",
-            padding: "25px",
-            marginBottom: "22px",
-          }}
-        >
-          <h2>
-            📝 Parent/Teacher Notes
-          </h2>
-
-          <p>
-            Type notes here. They will
-            automatically save on this
-            device and will also appear
-            on the printable report.
+            These notes automatically save on this device.
           </p>
 
           <textarea
             value={notes}
             onChange={(e) =>
-              saveNotes(
-                e.target.value
-              )
+              saveNotes(e.target.value)
             }
-            placeholder="Enter parent/teacher notes here..."
-            rows={7}
+            placeholder="Write notes about your student's progress..."
             style={{
               width: "100%",
+              minHeight: "220px",
               boxSizing: "border-box",
               padding: "15px",
               borderRadius: "12px",
@@ -1865,55 +1569,94 @@ export default function Parent() {
               fontFamily:
                 "Arial, sans-serif",
               resize: "vertical",
-              background: "white",
-              color: "#24313a",
             }}
           />
 
           <p
             style={{
               fontSize: "13px",
-              color: "#666",
+              color: "#6b9e5b",
+              fontWeight: "bold",
+              marginBottom: 0,
             }}
           >
-            ✅ Notes saved automatically.
+            ✅ Notes save automatically.
           </p>
         </section>
 
-        {/* FOOTER */}
+        {/* =================================================
+            COMPLETION
+        ================================================= */}
 
-        <footer
+        {completedCount >= 180 && (
+          <section
+            style={{
+              background: "#e9f4ed",
+              borderRadius: "20px",
+              padding: "30px",
+              textAlign: "center",
+              border:
+                "2px solid #6b9e5b",
+              marginBottom: "20px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "65px",
+              }}
+            >
+              🏆🌳🎉
+            </div>
+
+            <h2
+              style={{
+                color: "#315c48",
+              }}
+            >
+              Faith Foundations Champion!
+            </h2>
+
+            <p>
+              All 180 school days have been completed!
+            </p>
+
+            <p
+              style={{
+                fontWeight: "bold",
+              }}
+            >
+              The Faith Tree is fully grown! 🌳
+            </p>
+          </section>
+        )}
+
+        {/* =================================================
+            BACK HOME
+        ================================================= */}
+
+        <div
           style={{
             textAlign: "center",
-            padding: "20px",
+            marginTop: "30px",
           }}
         >
-          <div
+          <button
+            onClick={() =>
+              (window.location.href = "/")
+            }
             style={{
-              fontSize: "55px",
-            }}
-          >
-            🌳
-          </div>
-
-          <p
-            style={{
+              padding: "14px 24px",
+              border: "none",
+              borderRadius: "12px",
+              background: "#315c48",
+              color: "white",
               fontWeight: "bold",
+              cursor: "pointer",
             }}
           >
-            Every lesson helps your
-            Faith Tree grow!
-          </p>
-
-          <p
-            style={{
-              color: "#777",
-            }}
-          >
-            Faith Foundations:
-            The M&M Adventure
-          </p>
-        </footer>
+            ← Back to Student Home
+          </button>
+        </div>
 
       </div>
     </main>
