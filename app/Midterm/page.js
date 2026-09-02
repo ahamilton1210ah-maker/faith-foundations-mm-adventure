@@ -27,93 +27,46 @@ const questions = [
   },
   {
     question: "What did Noah build?",
-    answers: [
-      "A temple",
-      "A tower",
-      "An ark",
-      "A palace",
-    ],
+    answers: ["A temple", "A tower", "An ark", "A palace"],
     correct: "An ark",
   },
   {
-    question:
-      "Who trusted God and followed Him to a new land?",
-    answers: [
-      "Abraham",
-      "Jonah",
-      "Samuel",
-      "Solomon",
-    ],
+    question: "Who trusted God and followed Him to a new land?",
+    answers: ["Abraham", "Jonah", "Samuel", "Solomon"],
     correct: "Abraham",
   },
   {
-    question:
-      "Who was known for forgiving his brothers?",
-    answers: [
-      "Joseph",
-      "Joshua",
-      "Daniel",
-      "Elijah",
-    ],
+    question: "Who was known for forgiving his brothers?",
+    answers: ["Joseph", "Joshua", "Daniel", "Elijah"],
     correct: "Joseph",
   },
   {
-    question:
-      "Who was called to lead God's people out of Egypt?",
-    answers: [
-      "David",
-      "Moses",
-      "Peter",
-      "Paul",
-    ],
+    question: "Who was called to lead God's people out of Egypt?",
+    answers: ["David", "Moses", "Peter", "Paul"],
     correct: "Moses",
   },
   {
-    question:
-      "What did God tell Joshua to be?",
-    answers: [
-      "Rich",
-      "Famous",
-      "Strong and courageous",
-      "Angry",
-    ],
+    question: "What did God tell Joshua to be?",
+    answers: ["Rich", "Famous", "Strong and courageous", "Angry"],
     correct: "Strong and courageous",
   },
   {
     question: "Who defeated Goliath?",
-    answers: [
-      "David",
-      "Saul",
-      "Samuel",
-      "Joshua",
-    ],
+    answers: ["David", "Saul", "Samuel", "Joshua"],
     correct: "David",
   },
   {
-    question:
-      "Who was thrown into the lions' den?",
-    answers: [
-      "Daniel",
-      "Joseph",
-      "Moses",
-      "Peter",
-    ],
+    question: "Who was thrown into the lions' den?",
+    answers: ["Daniel", "Joseph", "Moses", "Peter"],
     correct: "Daniel",
   },
   {
-    question:
-      "What did Jesus teach us to do for our neighbors?",
-    answers: [
-      "Ignore them",
-      "Love them",
-      "Avoid them",
-      "Judge them",
-    ],
+    question: "What did Jesus teach us to do for our neighbors?",
+    answers: ["Ignore them", "Love them", "Avoid them", "Judge them"],
     correct: "Love them",
   },
   {
-    question:
-      "What is one important thing prayer does?",
+    question: "What is one important thing prayer does?",
     answers: [
       "Keeps us close to God",
       "Makes us famous",
@@ -184,12 +137,45 @@ export default function Midterm() {
   const [savedPassingScore, setSavedPassingScore] =
     useState(null);
 
+  /*
+    IMPORTANT:
+    Parent preview is determined by:
+    /Midterm?parent=true
+
+    AND
+
+    sessionStorage.parentAccess === "true"
+
+    This prevents someone from simply adding
+    ?parent=true to the URL to bypass the student lock.
+  */
+  const [isParentPreview, setIsParentPreview] =
+    useState(false);
+
   /* =======================================================
-     LOAD SAVED DATA
+     LOAD SAVED DATA + CHECK PARENT ACCESS
   ======================================================= */
 
   useEffect(() => {
     loadProgress();
+
+    try {
+      const params = new URLSearchParams(
+        window.location.search
+      );
+
+      const parentRequested =
+        params.get("parent") === "true";
+
+      const parentAccess =
+        sessionStorage.getItem("parentAccess") === "true";
+
+      setIsParentPreview(
+        parentRequested && parentAccess
+      );
+    } catch {
+      setIsParentPreview(false);
+    }
 
     try {
       const savedAttempts =
@@ -224,7 +210,11 @@ export default function Midterm() {
       if (savedScore !== null) {
         const numericScore = Number(savedScore);
 
-        if (!Number.isNaN(numericScore)) {
+        if (
+          Number.isFinite(numericScore) &&
+          numericScore >= 0 &&
+          numericScore <= 100
+        ) {
           setSavedPassingScore(numericScore);
         }
       }
@@ -356,6 +346,23 @@ export default function Midterm() {
   const day90Complete =
     completed.includes(90);
 
+  /*
+    PARENT PREVIEW:
+    Parents can see ALL Midterm material immediately.
+
+    STUDENT:
+    Must complete Day 87 first.
+  */
+
+  const canViewMidterm =
+    isParentPreview || day87Complete;
+
+  const canViewDay89 =
+    isParentPreview || day88Complete;
+
+  const canViewDay90 =
+    isParentPreview || day89Complete;
+
   /* =======================================================
      SAVE ATTEMPT
   ======================================================= */
@@ -406,11 +413,13 @@ export default function Midterm() {
     /*
       Day 90 is the actual Midterm Exam.
 
-      Day 90 becomes complete ONLY after
-      the student receives 80% or higher.
+      IMPORTANT:
+      Parent preview NEVER completes Day 90.
+
+      Only an actual passing exam completes Day 90.
     */
 
-    if (!day90Complete) {
+    if (!isParentPreview && !day90Complete) {
       markDayComplete(90);
     }
   }
@@ -949,10 +958,13 @@ export default function Midterm() {
   }
 
   /* =======================================================
-     LOCKED BEFORE DAY 87
+     STUDENT LOCK
+     
+     IMPORTANT:
+     Parent preview bypasses this lock.
   ======================================================= */
 
-  if (!day87Complete) {
+  if (!canViewMidterm) {
     return (
       <main
         style={{
@@ -1056,6 +1068,62 @@ export default function Midterm() {
           margin: "0 auto",
         }}
       >
+
+        {/* =================================================
+            PARENT PREVIEW NOTICE
+        ================================================= */}
+
+        {isParentPreview && (
+          <section
+            style={{
+              background: "#e9f4ed",
+              border: "2px solid #6b9e5b",
+              borderRadius: "16px",
+              padding: "18px",
+              marginBottom: "20px",
+              textAlign: "center",
+            }}
+          >
+
+            <div
+              style={{
+                fontSize: "35px",
+              }}
+            >
+              👩‍🏫📚
+            </div>
+
+            <h2
+              style={{
+                margin: "5px 0",
+                color: "#315c48",
+              }}
+            >
+              Parent Preview Mode
+            </h2>
+
+            <p
+              style={{
+                marginBottom: 0,
+              }}
+            >
+              You can preview the Midterm materials
+              without completing Days 87, 88, or 89.
+            </p>
+
+            <p
+              style={{
+                marginTop: "8px",
+                marginBottom: 0,
+                fontWeight: "bold",
+              }}
+            >
+              Previewing does not mark any school day
+              complete.
+            </p>
+
+          </section>
+        )}
 
         {/* =================================================
             HEADER
@@ -1177,6 +1245,19 @@ export default function Midterm() {
             >
               ✅ Day 88 Completed
             </div>
+          ) : isParentPreview ? (
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "15px",
+                borderRadius: "12px",
+                background: "#fff4df",
+                textAlign: "center",
+              }}
+            >
+              👩‍🏫 Parent Preview — Day 88 has not
+              been marked complete.
+            </div>
           ) : (
             <button
               onClick={() => markDayComplete(88)}
@@ -1202,7 +1283,7 @@ export default function Midterm() {
             DAY 89
         ================================================= */}
 
-        {day88Complete ? (
+        {canViewDay89 ? (
           <section
             style={{
               background: "white",
@@ -1272,6 +1353,19 @@ export default function Midterm() {
                 }}
               >
                 ✅ Day 89 Completed
+              </div>
+            ) : isParentPreview ? (
+              <div
+                style={{
+                  marginTop: "15px",
+                  padding: "15px",
+                  borderRadius: "12px",
+                  background: "#fff4df",
+                  textAlign: "center",
+                }}
+              >
+                👩‍🏫 Parent Preview — Day 89 has not
+                been marked complete.
               </div>
             ) : (
               <button
@@ -1394,7 +1488,7 @@ export default function Midterm() {
             DAY 90
         ================================================= */}
 
-        {day89Complete ? (
+        {canViewDay90 ? (
           <>
 
             {/* EXAM MODE */}
