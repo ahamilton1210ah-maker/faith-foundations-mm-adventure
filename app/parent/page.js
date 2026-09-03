@@ -31,9 +31,7 @@ export default function Parent() {
   const [unlocked, setUnlocked] = useState(false);
 
   const [completed, setCompleted] = useState([]);
-
   const [notes, setNotes] = useState("");
-
   const [error, setError] = useState("");
 
   const [midtermScore, setMidtermScore] = useState(null);
@@ -312,10 +310,6 @@ export default function Parent() {
      PROGRESS HELPERS
   ======================================================= */
 
-  function isComplete(day) {
-    return completed.includes(day);
-  }
-
   function getNextLesson() {
     for (
       let day = 1;
@@ -346,9 +340,7 @@ export default function Parent() {
   /* =======================================================
      BADGES
      
-     IMPORTANT:
-     These match the Lessons/Home Faith Tree
-     milestones.
+     Matches the Lessons/Home Faith Tree milestones.
   ======================================================= */
 
   const badges = [
@@ -387,9 +379,7 @@ export default function Parent() {
   /* =======================================================
      STUDENT LESSON PREVIEW
      
-     IMPORTANT:
-     ?parent=true tells Lessons this is a preview.
-     It should NOT mark the lesson complete.
+     Parent previews do NOT mark lessons complete.
   ======================================================= */
 
   function previewLessons() {
@@ -413,48 +403,37 @@ export default function Parent() {
   /* =======================================================
      MIDTERM PREVIEW
      
-     These buttons are ALWAYS available to the
-     logged-in parent.
+     ONE BUTTON opens the Midterm page.
      
-     The parent does NOT have to complete Days
-     1–87, 88, or 89 first.
+     The Midterm page contains:
+       Day 88 — Study Guide #1
+       Day 89 — Study Guide #2
+       Day 90 — Midterm Exam
+     
+     Parent does NOT need to complete Days 1–89 first.
   ======================================================= */
 
-  function openMidtermGuideOne() {
+  function openMidtermPreview() {
     window.location.href =
       "/Midterm?parent=true&day=88";
-  }
-
-  function openMidtermGuideTwo() {
-    window.location.href =
-      "/Midterm?parent=true&day=89";
-  }
-
-  function openMidtermExam() {
-    window.location.href =
-      "/Midterm?parent=true&day=90";
   }
 
   /* =======================================================
      FINAL PREVIEW
      
-     These buttons are ALWAYS available to the
-     logged-in parent.
+     ONE BUTTON opens the Final page.
+     
+     The Final page contains:
+       Day 177 — Study Guide #1
+       Day 178 — Study Guide #2
+       Day 179 — Final Exam
+     
+     Parent does NOT need to complete earlier lessons first.
   ======================================================= */
 
-  function openFinalGuideOne() {
+  function openFinalPreview() {
     window.location.href =
       "/Final?parent=true&day=177";
-  }
-
-  function openFinalGuideTwo() {
-    window.location.href =
-      "/Final?parent=true&day=178";
-  }
-
-  function openFinalExam() {
-    window.location.href =
-      "/Final?parent=true&day=179";
   }
 
   /* =======================================================
@@ -1266,62 +1245,32 @@ export default function Parent() {
                 marginBottom: 0,
               }}
             >
-              You can view Days 88, 89, and 90 now.
-              You do NOT need to complete the lessons
-              first.
+              You can view the entire Midterm
+              Review & Exam now. You do NOT need
+              to complete the lessons first.
             </p>
           </div>
 
           <div
             style={{
-              display: "grid",
-              gap: "12px",
               marginTop: "18px",
             }}
           >
             <button
-              onClick={openMidtermGuideOne}
+              onClick={openMidtermPreview}
               style={{
-                padding: "15px",
+                width: "100%",
+                padding: "17px",
                 border: "none",
-                borderRadius: "12px",
+                borderRadius: "14px",
                 background: "#315c48",
                 color: "white",
                 fontWeight: "bold",
+                fontSize: "17px",
                 cursor: "pointer",
               }}
             >
-              👀 Preview Day 88 — Study Guide #1
-            </button>
-
-            <button
-              onClick={openMidtermGuideTwo}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "12px",
-                background: "#315c48",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Day 89 — Study Guide #2
-            </button>
-
-            <button
-              onClick={openMidtermExam}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "12px",
-                background: "#6b9e5b",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Day 90 — Midterm Exam
+              👀 Preview Midterm Review & Exam — Days 88–90
             </button>
           </div>
 
@@ -1413,62 +1362,32 @@ export default function Parent() {
                 marginBottom: 0,
               }}
             >
-              You can preview the Final materials
-              at any time. They do not need to be
-              completed first.
+              You can preview the entire Final
+              Review & Exam now. You do NOT need
+              to complete the lessons first.
             </p>
           </div>
 
           <div
             style={{
-              display: "grid",
-              gap: "12px",
               marginTop: "18px",
             }}
           >
             <button
-              onClick={openFinalGuideOne}
+              onClick={openFinalPreview}
               style={{
-                padding: "15px",
+                width: "100%",
+                padding: "17px",
                 border: "none",
-                borderRadius: "12px",
+                borderRadius: "14px",
                 background: "#315c48",
                 color: "white",
                 fontWeight: "bold",
+                fontSize: "17px",
                 cursor: "pointer",
               }}
             >
-              👀 Preview Day 177 — Final Study Guide #1
-            </button>
-
-            <button
-              onClick={openFinalGuideTwo}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "12px",
-                background: "#315c48",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Day 178 — Final Study Guide #2
-            </button>
-
-            <button
-              onClick={openFinalExam}
-              style={{
-                padding: "15px",
-                border: "none",
-                borderRadius: "12px",
-                background: "#6b9e5b",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Day 179 — Final Exam
+              👀 Preview Final Review & Exam — Days 177–179
             </button>
           </div>
 
