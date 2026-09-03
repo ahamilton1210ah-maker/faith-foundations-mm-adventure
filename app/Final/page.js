@@ -404,6 +404,16 @@ export default function Final() {
   ========================= */
 
   function completeStudyGuide(day) {
+    /*
+      Parent Preview is view-only.
+      A parent cannot accidentally mark
+      Day 177 or 178 complete while previewing.
+    */
+
+    if (isParent) {
+      return;
+    }
+
     if (isDayComplete(day)) {
       return;
     }
@@ -417,6 +427,14 @@ export default function Final() {
   ========================= */
 
   function markDay179Complete() {
+    /*
+      Day 179 is completed only when
+      the student earns 80% or higher.
+
+      Parent preview itself does not
+      automatically complete the day.
+    */
+
     addCompletedDay(FINAL_EXAM_DAY);
   }
 
@@ -535,7 +553,17 @@ export default function Final() {
         "true"
       );
 
-      markDay179Complete();
+      /*
+        Only mark Day 179 complete for
+        an actual student exam.
+
+        Parent preview can view the exam,
+        but does not complete the course.
+      */
+
+      if (!isParent) {
+        markDay179Complete();
+      }
     } else if (!alreadyPassed) {
       setPassed(false);
 
@@ -649,7 +677,17 @@ export default function Final() {
         "true"
       );
 
-      markDay179Complete();
+      /*
+        If parent is previewing, do not
+        automatically mark Day 179 complete.
+
+        The parent can still record the
+        actual score and attempt history.
+      */
+
+      if (!isParent) {
+        markDay179Complete();
+      }
     } else if (!alreadyPassed) {
       setPassed(false);
 
@@ -1285,86 +1323,6 @@ export default function Final() {
         )}
 
         {/* =========================
-            PROGRESS STATUS
-        ========================= */}
-
-        <section
-          style={{
-            background: "white",
-            borderRadius: "20px",
-            padding: "20px",
-            marginBottom: "20px",
-            boxShadow:
-              "0 4px 15px rgba(0,0,0,.08)",
-          }}
-        >
-          <h2>
-            🌳 Final Course Progress
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gap: "10px",
-            }}
-          >
-            <ProgressRow
-              day={177}
-              label="Final Study Guide #1"
-              complete={isDayComplete(177)}
-            />
-
-            <ProgressRow
-              day={178}
-              label="Final Study Guide #2"
-              complete={isDayComplete(178)}
-            />
-
-            <ProgressRow
-              day={179}
-              label="Final Exam"
-              complete={isDayComplete(179)}
-            />
-
-            <ProgressRow
-              day={180}
-              label="Celebration / Completion Day"
-              complete={isDayComplete(180)}
-            />
-          </div>
-
-          {!isDayComplete(179) && (
-            <p
-              style={{
-                marginTop: "15px",
-                marginBottom: 0,
-                fontSize: "14px",
-                color: "#666",
-              }}
-            >
-              Day 179 is completed only after
-              earning a final exam score of
-              80% or higher.
-            </p>
-          )}
-
-          {isDayComplete(179) &&
-            !isDayComplete(180) && (
-              <p
-                style={{
-                  marginTop: "15px",
-                  marginBottom: 0,
-                  fontWeight: "bold",
-                }}
-              >
-                🏆 Final Exam complete!
-                Day 180 is your separate
-                Celebration / Completion Day.
-              </p>
-            )}
-        </section>
-
-        {/* =========================
             DAY 177
         ========================= */}
 
@@ -1424,7 +1382,20 @@ export default function Final() {
             🖨️ Print Final Study Guide #1
           </button>
 
-          {!isDayComplete(177) ? (
+          {isParent ? (
+            <div
+              style={{
+                padding: "18px",
+                borderRadius: "12px",
+                background: "#fff4df",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              👩‍🏫 Parent Preview — Day 177
+              has not been marked complete.
+            </div>
+          ) : !isDayComplete(177) ? (
             <button
               onClick={() =>
                 completeStudyGuide(177)
@@ -1517,7 +1488,20 @@ export default function Final() {
             🖨️ Print Final Study Guide #2
           </button>
 
-          {!isDayComplete(178) ? (
+          {isParent ? (
+            <div
+              style={{
+                padding: "18px",
+                borderRadius: "12px",
+                background: "#fff4df",
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              👩‍🏫 Parent Preview — Day 178
+              has not been marked complete.
+            </div>
+          ) : !isDayComplete(178) ? (
             <button
               onClick={() =>
                 completeStudyGuide(178)
@@ -1643,6 +1627,22 @@ export default function Final() {
             </div>
           ) : (
             <>
+              {isParent && (
+                <div
+                  style={{
+                    padding: "18px",
+                    marginBottom: "20px",
+                    background: "#fff4df",
+                    borderRadius: "15px",
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  👩‍🏫 Parent Preview — Day 179
+                  has not been marked complete.
+                </div>
+              )}
+
               <p>
                 Choose how the Final Exam will be
                 given:
@@ -1874,9 +1874,23 @@ export default function Final() {
                   <p>
                     {Number(parentScore) >=
                     PASSING_SCORE
-                      ? "Great job! Day 179 is complete!"
+                      ? "Great job! The Final Exam has been passed."
                       : "Review your study guides and try again."}
                   </p>
+
+                  {isParent && (
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        color: "#666",
+                      }}
+                    >
+                      👩‍🏫 Parent Preview:
+                      Day 179 has not been marked
+                      complete from this preview.
+                    </p>
+                  )}
                 </div>
               )}
             </section>
@@ -1894,6 +1908,7 @@ export default function Final() {
               score={score}
               calculateScore={calculateScore}
               resetExam={resetExam}
+              isParent={isParent}
             />
           )}
 
@@ -2052,59 +2067,6 @@ export default function Final() {
 }
 
 /* =========================
-   PROGRESS ROW
-========================= */
-
-function ProgressRow({
-  day,
-  label,
-  complete,
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-        padding: "12px 15px",
-        borderRadius: "12px",
-        background: complete
-          ? "#e9f4ed"
-          : "#f7f7f7",
-      }}
-    >
-      <div>
-        <strong>
-          Day {day}
-        </strong>
-
-        <div
-          style={{
-            fontSize: "14px",
-            color: "#666",
-            marginTop: "3px",
-          }}
-        >
-          {label}
-        </div>
-      </div>
-
-      <div
-        style={{
-          fontWeight: "bold",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {complete
-          ? "✅ Complete"
-          : "🔒 Incomplete"}
-      </div>
-    </div>
-  );
-}
-
-/* =========================
    SYSTEM EXAM CONTENT
 ========================= */
 
@@ -2114,6 +2076,7 @@ function ExamContent({
   score,
   calculateScore,
   resetExam,
+  isParent,
 }) {
   return (
     <section
@@ -2128,6 +2091,22 @@ function ExamContent({
       <h2>
         💻 System-Led Final Exam
       </h2>
+
+      {isParent && (
+        <div
+          style={{
+            padding: "18px",
+            marginBottom: "20px",
+            borderRadius: "15px",
+            background: "#fff4df",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          👩‍🏫 Parent Preview — Day 179
+          has not been marked complete.
+        </div>
+      )}
 
       <p>
         Answer all 10 questions and then
@@ -2246,7 +2225,9 @@ function ExamContent({
                   fontWeight: "bold",
                 }}
               >
-                🌳 Day 179 is complete!
+                {isParent
+                  ? "👩‍🏫 Parent Preview: Day 179 has not been marked complete."
+                  : "🌳 Day 179 is complete!"}
               </p>
 
               <p>
