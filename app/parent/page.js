@@ -12,11 +12,9 @@ const STORAGE_KEY = "faithTreeCompleted";
 const NOTES_KEY = "faithParentNotes";
 
 const MIDTERM_ATTEMPTS_KEY = "faithMidtermAttempts";
-const MIDTERM_PASS_KEY = "faithMidtermPassed";
 const MIDTERM_PASS_SCORE_KEY = "faithMidtermPassingScore";
 
 const FINAL_ATTEMPTS_KEY = "faithFinalAttempts";
-const FINAL_PASS_KEY = "faithFinalPassed";
 const FINAL_PASS_SCORE_KEY = "faithFinalPassingScore";
 
 const TOTAL_LESSONS = 180;
@@ -122,58 +120,56 @@ export default function Parent() {
      LOAD EXAM DATA
   ======================================================= */
 
+  function getScore(primaryKey, fallbackKey = null) {
+    try {
+      const keys = fallbackKey
+        ? [primaryKey, fallbackKey]
+        : [primaryKey];
+
+      for (const key of keys) {
+        const saved =
+          localStorage.getItem(key);
+
+        if (
+          saved !== null &&
+          saved !== ""
+        ) {
+          const numeric = Number(saved);
+
+          if (
+            Number.isFinite(numeric) &&
+            numeric >= 0 &&
+            numeric <= 100
+          ) {
+            return numeric;
+          }
+        }
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
   function loadExamData() {
     /* ---------------- MIDTERM SCORE ---------------- */
 
-    try {
-      const saved =
-        localStorage.getItem(
-          MIDTERM_PASS_SCORE_KEY
-        );
-
-      if (
-        saved !== null &&
-        saved !== ""
-      ) {
-        const numeric = Number(saved);
-
-        if (
-          Number.isFinite(numeric) &&
-          numeric >= 0 &&
-          numeric <= 100
-        ) {
-          setMidtermScore(numeric);
-        }
-      }
-    } catch {
-      setMidtermScore(null);
-    }
+    setMidtermScore(
+      getScore(
+        MIDTERM_PASS_SCORE_KEY,
+        "faithMidtermScore"
+      )
+    );
 
     /* ---------------- FINAL SCORE ---------------- */
 
-    try {
-      const saved =
-        localStorage.getItem(
-          FINAL_PASS_SCORE_KEY
-        );
-
-      if (
-        saved !== null &&
-        saved !== ""
-      ) {
-        const numeric = Number(saved);
-
-        if (
-          Number.isFinite(numeric) &&
-          numeric >= 0 &&
-          numeric <= 100
-        ) {
-          setFinalScore(numeric);
-        }
-      }
-    } catch {
-      setFinalScore(null);
-    }
+    setFinalScore(
+      getScore(
+        FINAL_PASS_SCORE_KEY,
+        "faithFinalScore"
+      )
+    );
 
     /* ---------------- MIDTERM ATTEMPTS ---------------- */
 
@@ -188,7 +184,11 @@ export default function Parent() {
 
         if (Array.isArray(parsed)) {
           setMidtermAttempts(parsed);
+        } else {
+          setMidtermAttempts([]);
         }
+      } else {
+        setMidtermAttempts([]);
       }
     } catch {
       setMidtermAttempts([]);
@@ -207,7 +207,11 @@ export default function Parent() {
 
         if (Array.isArray(parsed)) {
           setFinalAttempts(parsed);
+        } else {
+          setFinalAttempts([]);
         }
+      } else {
+        setFinalAttempts([]);
       }
     } catch {
       setFinalAttempts([]);
@@ -215,36 +219,36 @@ export default function Parent() {
   }
 
   /* =======================================================
-     LIVE PROGRESS UPDATES
+     LIVE UPDATES
   ======================================================= */
 
   useEffect(() => {
     if (!unlocked) return;
 
-    function refreshProgress() {
+    function refreshData() {
       loadProgress();
       loadExamData();
     }
 
     window.addEventListener(
       "faithTreeProgressUpdated",
-      refreshProgress
+      refreshData
     );
 
     window.addEventListener(
       "storage",
-      refreshProgress
+      refreshData
     );
 
     return () => {
       window.removeEventListener(
         "faithTreeProgressUpdated",
-        refreshProgress
+        refreshData
       );
 
       window.removeEventListener(
         "storage",
-        refreshProgress
+        refreshData
       );
     };
   }, [unlocked]);
@@ -307,8 +311,18 @@ export default function Parent() {
   }
 
   /* =======================================================
-     PROGRESS HELPERS
+     PROGRESS
   ======================================================= */
+
+  const completedCount =
+    completed.length;
+
+  const progressPercent =
+    Math.round(
+      (completedCount /
+        TOTAL_LESSONS) *
+        100
+    );
 
   function getNextLesson() {
     for (
@@ -324,23 +338,11 @@ export default function Parent() {
     return null;
   }
 
-  const completedCount =
-    completed.length;
-
-  const progressPercent =
-    Math.round(
-      (completedCount /
-        TOTAL_LESSONS) *
-        100
-    );
-
   const nextLesson =
     getNextLesson();
 
   /* =======================================================
      BADGES
-     
-     Matches the Lessons/Home Faith Tree milestones.
   ======================================================= */
 
   const badges = [
@@ -378,8 +380,6 @@ export default function Parent() {
 
   /* =======================================================
      STUDENT LESSON PREVIEW
-     
-     Parent previews do NOT mark lessons complete.
   ======================================================= */
 
   function previewLessons() {
@@ -392,7 +392,6 @@ export default function Parent() {
       alert(
         "🎉 All 180 lessons are complete!"
       );
-
       return;
     }
 
@@ -401,43 +400,35 @@ export default function Parent() {
   }
 
   /* =======================================================
-     MIDTERM PREVIEW
+     MIDTERM
      
-     ONE BUTTON opens the Midterm page.
+     ONE BUTTON ONLY
      
-     The Midterm page contains:
-       Day 88 — Study Guide #1
-       Day 89 — Study Guide #2
-       Day 90 — Midterm Exam
-     
-     Parent does NOT need to complete Days 1–89 first.
+     Opens the Midterm page starting at Day 88.
+     Parent can move between Days 88–90 from there.
   ======================================================= */
 
-  function openMidtermPreview() {
+  function openMidterm() {
     window.location.href =
       "/Midterm?parent=true&day=88";
   }
 
   /* =======================================================
-     FINAL PREVIEW
+     FINAL
      
-     ONE BUTTON opens the Final page.
+     ONE BUTTON ONLY
      
-     The Final page contains:
-       Day 177 — Study Guide #1
-       Day 178 — Study Guide #2
-       Day 179 — Final Exam
-     
-     Parent does NOT need to complete earlier lessons first.
+     Opens the Final page starting at Day 177.
+     Parent can move between Days 177–180 from there.
   ======================================================= */
 
-  function openFinalPreview() {
+  function openFinal() {
     window.location.href =
       "/Final?parent=true&day=177";
   }
 
   /* =======================================================
-     PRINT PROGRESS REPORT
+     PRINT REPORT
   ======================================================= */
 
   function printReport() {
@@ -452,7 +443,6 @@ export default function Parent() {
       alert(
         "Please allow pop-ups so the progress report can open."
       );
-
       return;
     }
 
@@ -625,12 +615,17 @@ export default function Parent() {
                 `
             }
 
+            <p>
+              Passing score:
+              <strong>80% or higher</strong>
+            </p>
+
           </div>
 
           <div class="box">
 
             <h2>
-              📝 Final
+              🏆 Final
             </h2>
 
             ${
@@ -657,6 +652,11 @@ export default function Parent() {
                   </p>
                 `
             }
+
+            <p>
+              Passing score:
+              <strong>80% or higher</strong>
+            </p>
 
           </div>
 
@@ -833,7 +833,7 @@ export default function Parent() {
   }
 
   /* =======================================================
-     MAIN PARENT DASHBOARD
+     MAIN DASHBOARD
   ======================================================= */
 
   return (
@@ -853,9 +853,7 @@ export default function Parent() {
         }}
       >
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        {/* HEADER */}
 
         <header
           style={{
@@ -902,9 +900,7 @@ export default function Parent() {
           </button>
         </header>
 
-        {/* =================================================
-            PROGRESS
-        ================================================= */}
+        {/* PROGRESS */}
 
         <section
           style={{
@@ -973,9 +969,7 @@ export default function Parent() {
           </div>
         </section>
 
-        {/* =================================================
-            PARENT TOOLS
-        ================================================= */}
+        {/* PARENT TOOLS */}
 
         <section
           style={{
@@ -1060,9 +1054,7 @@ export default function Parent() {
           </p>
         </section>
 
-        {/* =================================================
-            FAITH TREE
-        ================================================= */}
+        {/* FAITH TREE */}
 
         <section
           style={{
@@ -1126,9 +1118,7 @@ export default function Parent() {
           </p>
         </section>
 
-        {/* =================================================
-            BADGES
-        ================================================= */}
+        {/* BADGES */}
 
         <section
           style={{
@@ -1212,6 +1202,7 @@ export default function Parent() {
 
         {/* =================================================
             MIDTERM
+            ONE BUTTON
         ================================================= */}
 
         <section
@@ -1245,34 +1236,29 @@ export default function Parent() {
                 marginBottom: 0,
               }}
             >
-              You can view the entire Midterm
-              Review & Exam now. You do NOT need
-              to complete the lessons first.
+              You can view Days 88, 89, and 90 now.
+              You do NOT need to complete the lessons
+              first.
             </p>
           </div>
 
-          <div
+          <button
+            onClick={openMidterm}
             style={{
+              width: "100%",
               marginTop: "18px",
+              padding: "16px",
+              border: "none",
+              borderRadius: "14px",
+              background: "#315c48",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "17px",
+              cursor: "pointer",
             }}
           >
-            <button
-              onClick={openMidtermPreview}
-              style={{
-                width: "100%",
-                padding: "17px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#315c48",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "17px",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Midterm Review & Exam — Days 88–90
-            </button>
-          </div>
+            👀 Preview Midterm — Days 88–90
+          </button>
 
           <div
             style={{
@@ -1329,6 +1315,7 @@ export default function Parent() {
 
         {/* =================================================
             FINAL
+            ONE BUTTON
         ================================================= */}
 
         <section
@@ -1362,34 +1349,29 @@ export default function Parent() {
                 marginBottom: 0,
               }}
             >
-              You can preview the entire Final
-              Review & Exam now. You do NOT need
-              to complete the lessons first.
+              You can preview Days 177, 178, 179,
+              and 180 at any time. They do NOT need
+              to be completed first.
             </p>
           </div>
 
-          <div
+          <button
+            onClick={openFinal}
             style={{
+              width: "100%",
               marginTop: "18px",
+              padding: "16px",
+              border: "none",
+              borderRadius: "14px",
+              background: "#315c48",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "17px",
+              cursor: "pointer",
             }}
           >
-            <button
-              onClick={openFinalPreview}
-              style={{
-                width: "100%",
-                padding: "17px",
-                border: "none",
-                borderRadius: "14px",
-                background: "#315c48",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "17px",
-                cursor: "pointer",
-              }}
-            >
-              👀 Preview Final Review & Exam — Days 177–179
-            </button>
-          </div>
+            👀 Preview Final — Days 177–180
+          </button>
 
           <div
             style={{
@@ -1444,9 +1426,7 @@ export default function Parent() {
           </div>
         </section>
 
-        {/* =================================================
-            PARENT NOTES
-        ================================================= */}
+        {/* PARENT NOTES */}
 
         <section
           style={{
@@ -1503,9 +1483,7 @@ export default function Parent() {
           </p>
         </section>
 
-        {/* =================================================
-            COMPLETION
-        ================================================= */}
+        {/* COMPLETION */}
 
         {completedCount >= 180 && (
           <section
@@ -1549,9 +1527,7 @@ export default function Parent() {
           </section>
         )}
 
-        {/* =================================================
-            BACK HOME
-        ================================================= */}
+        {/* BACK HOME */}
 
         <div
           style={{
