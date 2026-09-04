@@ -669,623 +669,1253 @@ export default function Parent() {
   ========================================================= */
 
   function printReport() {
-    const reportWindow =
-      window.open(
-        "",
-        "_blank",
-        "width=1000,height=1100"
-      );
+  const reportWindow =
+    window.open(
+      "",
+      "_blank",
+      "width=1000,height=1100"
+    );
 
-    if (!reportWindow) {
-      alert(
-        "Please allow pop-ups so the progress report can open."
-      );
-      return;
+  if (!reportWindow) {
+    alert(
+      "Please allow pop-ups so the progress report can open."
+    );
+    return;
+  }
+
+  const today =
+    new Date().toLocaleDateString();
+
+  /* =====================================================
+     REPORT STATUS
+  ===================================================== */
+
+  const status =
+    completedCount >= TOTAL_LESSONS
+      ? "COURSE COMPLETED"
+      : completedCount > 0
+      ? "IN PROGRESS"
+      : "NOT YET STARTED";
+
+  const statusClass =
+    completedCount >= TOTAL_LESSONS
+      ? "complete"
+      : completedCount > 0
+      ? "progress"
+      : "not-started";
+
+  /* =====================================================
+     BADGES
+  ===================================================== */
+
+  const badgeRows = badges
+    .map((badge) => {
+      const earned =
+        completedCount >= badge[2];
+
+      return `
+        <tr>
+          <td class="badge-icon">
+            ${badge[0]}
+          </td>
+
+          <td>
+            <strong>
+              ${escapeHtml(badge[1])}
+            </strong>
+          </td>
+
+          <td>
+            ${badge[2]} lessons
+          </td>
+
+          <td>
+            ${
+              earned
+                ? `<span class="earned">
+                    ✓ EARNED
+                   </span>`
+                : `<span class="not-earned">
+                    Not Yet Earned
+                   </span>`
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  /* =====================================================
+     COMPLETED LESSONS
+  ===================================================== */
+
+  const completedLessonRows =
+    completed.length > 0
+      ? completed
+          .map(
+            (day) => `
+              <span class="lesson-chip">
+                ${day}
+              </span>
+            `
+          )
+          .join("")
+      : `
+          <div class="empty-progress">
+            No lessons completed yet.
+          </div>
+        `;
+
+  /* =====================================================
+     EXAM INFORMATION
+  ===================================================== */
+
+  const midtermExamStatus =
+    midtermScore === null
+      ? "NOT COMPLETED"
+      : midtermPassed
+      ? "PASSED"
+      : "NOT PASSED";
+
+  const finalExamStatus =
+    finalScore === null
+      ? "NOT COMPLETED"
+      : finalPassed
+      ? "PASSED"
+      : "NOT PASSED";
+
+  const midtermStatusClass =
+    midtermPassed
+      ? "status-pass"
+      : midtermNotPassed
+      ? "status-fail"
+      : "status-neutral";
+
+  const finalStatusClass =
+    finalPassed
+      ? "status-pass"
+      : finalNotPassed
+      ? "status-fail"
+      : "status-neutral";
+
+  /* =====================================================
+     EXAM ATTEMPTS
+  ===================================================== */
+
+  function buildAttemptsRows(attempts) {
+    if (
+      !Array.isArray(attempts) ||
+      attempts.length === 0
+    ) {
+      return `
+        <tr>
+          <td
+            colspan="5"
+            class="empty-cell"
+          >
+            No exam attempts recorded.
+          </td>
+        </tr>
+      `;
     }
 
-    const today =
-      new Date().toLocaleDateString();
+    return attempts
+      .map((attempt, index) => {
+        const score =
+          getAttemptScore(attempt);
 
-    const status =
-      completedCount >= TOTAL_LESSONS
-        ? "COURSE COMPLETED"
-        : completedCount > 0
-        ? "IN PROGRESS"
-        : "NOT YET STARTED";
+        const date =
+          getAttemptDate(attempt);
 
-    const statusClass =
-      completedCount >= TOTAL_LESSONS
-        ? "complete"
-        : completedCount > 0
-        ? "progress"
-        : "not-started";
+        const incorrect =
+          getIncorrectCount(attempt);
 
-    const completedLessonRows =
-      completed.length > 0
-        ? completed
-            .map(
-              (day) => `
-                <span class="lesson-chip completed">
-                  ${day}
-                </span>
-              `
-            )
-            .join("")
-        : `
-            <div class="empty-progress">
-              No lessons completed yet.
-            </div>
-          `;
+        const attemptStatus =
+          getAttemptStatus(attempt);
 
-    const badgeRows = badges
-      .map((badge) => {
-        const earned =
-          completedCount >= badge[2];
+        const attemptStatusClass =
+          attemptStatus === "PASSED"
+            ? "status-pass"
+            : attemptStatus === "NOT PASSED"
+            ? "status-fail"
+            : "status-neutral";
 
         return `
           <tr>
-            <td class="badge-icon">
-              ${badge[0]}
-            </td>
             <td>
-              <strong>
-                ${escapeHtml(badge[1])}
-              </strong>
+              ${index + 1}
             </td>
+
             <td>
-              ${badge[2]} lessons
+              ${escapeHtml(
+                date || "—"
+              )}
             </td>
+
             <td>
               ${
-                earned
-                  ? `<span class="earned">✓ EARNED</span>`
-                  : `<span class="not-earned">Not Yet Earned</span>`
+                score !== null
+                  ? `${escapeHtml(score)}%`
+                  : "—"
               }
+            </td>
+
+            <td>
+              ${
+                incorrect !== null
+                  ? escapeHtml(
+                      incorrect
+                    )
+                  : "—"
+              }
+            </td>
+
+            <td>
+              <span class="${attemptStatusClass}">
+                ${escapeHtml(
+                  attemptStatus
+                )}
+              </span>
             </td>
           </tr>
         `;
       })
       .join("");
+  }
 
-    const midtermExamStatus =
-      midtermScore === null
-        ? "Not completed"
-        : midtermPassed
-        ? "PASSED"
-        : "NOT PASSED";
+  /* =====================================================
+     REPORT
+  ===================================================== */
 
-    const finalExamStatus =
-      finalScore === null
-        ? "Not completed"
-        : finalPassed
-        ? "PASSED"
-        : "NOT PASSED";
+  reportWindow.document.write(`
+    <!DOCTYPE html>
 
-    const midtermStatusClass =
-      midtermPassed
-        ? "status-pass"
-        : midtermNotPassed
-        ? "status-fail"
-        : "status-neutral";
+    <html>
 
-    const finalStatusClass =
-      finalPassed
-        ? "status-pass"
-        : finalNotPassed
-        ? "status-fail"
-        : "status-neutral";
+    <head>
 
-    reportWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8" />
+      <meta charset="UTF-8" />
 
-        <title>
-          Faith Foundations Progress Report
-        </title>
+      <title>
+        Faith Foundations Bible Curriculum Report Card
+      </title>
 
-        <style>
+      <style>
 
-          * {
-            box-sizing: border-box;
-          }
+        * {
+          box-sizing: border-box;
+        }
 
-          @page {
-            size: Letter;
-            margin: 0.45in;
-          }
+        @page {
+          size: Letter;
+          margin: 0.45in;
+        }
+
+        body {
+          margin: 0;
+          background: #eef3ef;
+          color: #27352f;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .report {
+          max-width: 8in;
+          margin: 0 auto;
+          background: white;
+          padding: 30px;
+        }
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .report-header {
+          text-align: center;
+          border-bottom: 4px solid #315c48;
+          padding-bottom: 18px;
+          margin-bottom: 20px;
+        }
+
+        .tree {
+          font-size: 43px;
+          line-height: 1;
+        }
+
+        .school-name {
+          color: #315c48;
+          font-size: 28px;
+          font-weight: 800;
+          margin-top: 6px;
+        }
+
+        .adventure {
+          color: #68766f;
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        .report-title {
+          margin-top: 14px;
+          font-size: 21px;
+          font-weight: 800;
+          letter-spacing: .8px;
+          text-transform: uppercase;
+        }
+
+        .report-subtitle {
+          color: #7a857f;
+          font-size: 11px;
+          margin-top: 3px;
+        }
+
+        /* =========================================
+           SECTIONS
+        ========================================= */
+
+        .section {
+          margin-top: 20px;
+          page-break-inside: avoid;
+        }
+
+        .section-title {
+          background: #315c48;
+          color: white;
+          padding: 9px 12px;
+          border-radius: 7px 7px 0 0;
+          font-size: 14px;
+          font-weight: 800;
+          letter-spacing: .4px;
+        }
+
+        /* =========================================
+           STUDENT INFORMATION
+        ========================================= */
+
+        .info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border:
+            1px solid #d5ddd8;
+          border-top: 0;
+        }
+
+        .info-item {
+          padding: 11px 13px;
+          min-height: 55px;
+          border-bottom:
+            1px solid #d5ddd8;
+        }
+
+        .info-item:nth-child(odd) {
+          border-right:
+            1px solid #d5ddd8;
+        }
+
+        .info-label {
+          display: block;
+          color: #77847e;
+          font-size: 9px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: .7px;
+          margin-bottom: 4px;
+        }
+
+        .info-value {
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        /* =========================================
+           OVERALL PROGRESS
+        ========================================= */
+
+        .progress-card {
+          border:
+            1px solid #d5ddd8;
+          border-top: 0;
+          padding: 20px;
+        }
+
+        .progress-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .progress-number {
+          font-size: 34px;
+          font-weight: 800;
+          color: #315c48;
+          white-space: nowrap;
+        }
+
+        .progress-number span {
+          font-size: 15px;
+          color: #7a857f;
+          font-weight: 600;
+        }
+
+        .progress-percent {
+          font-size: 26px;
+          font-weight: 800;
+          color: #315c48;
+        }
+
+        .progress-bar {
+          height: 17px;
+          background: #e3e9e5;
+          border-radius: 30px;
+          overflow: hidden;
+          margin-top: 14px;
+        }
+
+        .progress-fill {
+          height: 100%;
+          width: ${progressPercent}%;
+          background: #315c48;
+          border-radius: 30px;
+        }
+
+        .progress-caption {
+          margin-top: 8px;
+          color: #6e7b74;
+          font-size: 11px;
+        }
+
+        .status-box {
+          margin-top: 14px;
+          padding: 9px;
+          text-align: center;
+          border-radius: 7px;
+          font-weight: 800;
+          font-size: 12px;
+          letter-spacing: .5px;
+        }
+
+        .status-box.complete {
+          background: #e4f2e8;
+          color: #245c38;
+          border: 1px solid #afd0b9;
+        }
+
+        .status-box.progress {
+          background: #eef4ef;
+          color: #315c48;
+          border: 1px solid #c8d8ce;
+        }
+
+        .status-box.not-started {
+          background: #f3f4f3;
+          color: #68736d;
+          border: 1px solid #d8dcda;
+        }
+
+        /* =========================================
+           FAITH GROWTH
+        ========================================= */
+
+        .faith-growth {
+          display: grid;
+          grid-template-columns: 180px 1fr;
+          border:
+            1px solid #d5ddd8;
+          border-top: 0;
+        }
+
+        .faith-tree-box {
+          text-align: center;
+          padding: 18px;
+          border-right:
+            1px solid #d5ddd8;
+        }
+
+        .faith-tree-icon {
+          font-size: 60px;
+        }
+
+        .faith-tree-title {
+          color: #315c48;
+          font-weight: 800;
+          margin-top: 4px;
+        }
+
+        .faith-tree-message {
+          color: #77847e;
+          font-size: 10px;
+          margin-top: 4px;
+        }
+
+        .badges-box {
+          padding: 0;
+        }
+
+        .badges-box table {
+          border: 0;
+        }
+
+        /* =========================================
+           TABLES
+        ========================================= */
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        th {
+          background: #f0f4f1;
+          color: #536159;
+          padding: 7px;
+          border:
+            1px solid #d5ddd8;
+          text-align: left;
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: .5px;
+        }
+
+        td {
+          padding: 7px;
+          border:
+            1px solid #d5ddd8;
+        }
+
+        .badge-icon {
+          width: 42px;
+          text-align: center;
+          font-size: 21px;
+        }
+
+        .earned {
+          background: #e2f1e7;
+          color: #245c38;
+          border-radius: 20px;
+          padding: 3px 8px;
+          font-size: 8px;
+          font-weight: 800;
+        }
+
+        .not-earned {
+          color: #89918c;
+          font-size: 9px;
+        }
+
+        /* =========================================
+           EXAMS
+        ========================================= */
+
+        .exam-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .exam-card {
+          border:
+            1px solid #d5ddd8;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .exam-header {
+          background: #f0f4f1;
+          color: #315c48;
+          padding: 9px 11px;
+          font-weight: 800;
+        }
+
+        .exam-body {
+          padding: 13px;
+        }
+
+        .exam-score {
+          font-size: 29px;
+          color: #315c48;
+          font-weight: 800;
+          margin-bottom: 4px;
+        }
+
+        .exam-detail {
+          color: #748079;
+          font-size: 10px;
+          margin-top: 8px;
+        }
+
+        .status-pass,
+        .status-fail,
+        .status-neutral {
+          display: inline-block;
+          border-radius: 20px;
+          padding: 3px 8px;
+          font-size: 8px;
+          font-weight: 800;
+        }
+
+        .status-pass {
+          background: #e2f1e7;
+          color: #245c38;
+        }
+
+        .status-fail {
+          background: #f8e7e4;
+          color: #8a382d;
+        }
+
+        .status-neutral {
+          background: #eeeeeb;
+          color: #6c746f;
+        }
+
+        /* =========================================
+           LESSON RECORD
+        ========================================= */
+
+        .lesson-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 12px;
+          border:
+            1px solid #d5ddd8;
+          border-top: 0;
+        }
+
+        .lesson-chip {
+          width: 27px;
+          height: 23px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          background: #315c48;
+          color: white;
+          font-size: 8px;
+          font-weight: 700;
+        }
+
+        .empty-progress {
+          width: 100%;
+          text-align: center;
+          padding: 15px;
+          color: #7b857f;
+        }
+
+        /* =========================================
+           ATTEMPT HISTORY
+        ========================================= */
+
+        .attempt-note {
+          color: #78847e;
+          font-size: 10px;
+          margin-bottom: 8px;
+        }
+
+        .empty-cell {
+          text-align: center;
+          color: #7c8781;
+          padding: 14px;
+        }
+
+        /* =========================================
+           NOTES
+        ========================================= */
+
+        .notes-box {
+          border:
+            1px solid #d5ddd8;
+          border-top: 0;
+          min-height: 110px;
+          padding: 14px;
+          line-height: 1.6;
+        }
+
+        .no-notes {
+          color: #8a928d;
+          font-style: italic;
+        }
+
+        /* =========================================
+           SIGNATURE
+        ========================================= */
+
+        .signature-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 35px;
+          margin-top: 35px;
+        }
+
+        .signature-line {
+          height: 28px;
+          border-bottom:
+            1px solid #4b554f;
+        }
+
+        .signature-label {
+          margin-top: 5px;
+          color: #77847e;
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        .footer {
+          border-top:
+            2px solid #d5ddd8;
+          margin-top: 28px;
+          padding-top: 12px;
+          text-align: center;
+          color: #7a857f;
+          font-size: 8px;
+        }
+
+        .footer strong {
+          color: #315c48;
+        }
+
+        /* =========================================
+           PRINT
+        ========================================= */
+
+        @media print {
 
           body {
-            margin: 0;
-            padding: 0;
-            background: #eef3ef;
-            color: #27352f;
-            font-family:
-              Arial,
-              Helvetica,
-              sans-serif;
-            font-size: 13px;
-            line-height: 1.45;
+            background: white;
           }
 
           .report {
-            max-width: 8in;
-            margin: 0 auto;
-            background: white;
-            padding: 28px;
+            max-width: none;
+            margin: 0;
+            padding: 0;
           }
 
-          /* =========================
-             HEADER
-          ========================= */
-
-          .report-header {
-            text-align: center;
-            border-bottom: 4px solid #315c48;
-            padding-bottom: 18px;
-            margin-bottom: 20px;
-          }
-
-          .tree {
-            font-size: 44px;
-            line-height: 1;
-            margin-bottom: 5px;
-          }
-
-          .school-name {
-            color: #315c48;
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-          }
-
-          .adventure {
-            font-size: 19px;
-            font-weight: 600;
-            color: #65756c;
-            margin-top: 2px;
-          }
-
-          .report-title {
-            font-size: 22px;
-            font-weight: 800;
-            margin-top: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-
-          .report-subtitle {
-            color: #68766f;
-            margin-top: 3px;
-          }
-
-          /* =========================
-             STUDENT INFO
-          ========================= */
-
-          .section {
-            margin-top: 20px;
+          .section,
+          .exam-card,
+          .progress-card,
+          .faith-growth {
             page-break-inside: avoid;
           }
 
-          .section-title {
-            background: #315c48;
-            color: white;
-            padding: 9px 12px;
-            border-radius: 7px 7px 0 0;
-            font-size: 15px;
-            font-weight: 800;
-            letter-spacing: 0.3px;
-          }
+        }
 
-          .info-grid {
-            display: grid;
-            grid-template-columns:
-              1fr 1fr;
-            border:
-              1px solid #d5ddd8;
-            border-top: 0;
-          }
+      </style>
 
-          .info-item {
-            min-height: 58px;
-            padding: 10px 13px;
-            border-bottom:
-              1px solid #d5ddd8;
-          }
+    </head>
 
-          .info-item:nth-child(odd) {
-            border-right:
-              1px solid #d5ddd8;
-          }
+    <body>
 
-          .info-label {
-            display: block;
-            color: #728079;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 3px;
-          }
+      <div class="report">
 
-          .info-value {
-            font-size: 15px;
-            font-weight: 700;
-            min-height: 20px;
-          }
+        <!-- ======================================
+             HEADER
+        ======================================= -->
 
-          /* =========================
-             PROGRESS HERO
-          ========================= */
+        <div class="report-header">
 
-          .progress-card {
-            margin-top: 20px;
-            border:
-              1px solid #cdd8d1;
-            border-radius: 10px;
-            overflow: hidden;
-          }
+          <div class="tree">
+            ${faithTree.emoji}
+          </div>
 
-          .progress-top {
-            display: grid;
-            grid-template-columns:
-              145px 1fr 125px;
-            align-items: center;
-            gap: 18px;
-            padding: 18px;
-          }
+          <div class="school-name">
+            Faith Foundations
+          </div>
 
-          .percent-circle {
-            width: 112px;
-            height: 112px;
-            border-radius: 50%;
-            border:
-              9px solid #dce7df;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: auto;
-            font-size: 27px;
-            font-weight: 800;
-            color: #315c48;
-          }
+          <div class="adventure">
+            The M&amp;M Adventure
+          </div>
 
-          .progress-heading {
-            font-size: 20px;
-            font-weight: 800;
-            color: #315c48;
-          }
+          <div class="report-title">
+            Bible Curriculum Progress Report
+          </div>
 
-          .progress-detail {
-            color: #65736c;
-            margin-top: 4px;
-          }
+          <div class="report-subtitle">
+            Parent / Teacher Report Card
+          </div>
 
-          .progress-bar {
-            height: 14px;
-            background: #e3e9e5;
-            border-radius: 99px;
-            overflow: hidden;
-            margin-top: 14px;
-          }
+        </div>
 
-          .progress-fill {
-            height: 100%;
-            width: ${progressPercent}%;
-            background: #315c48;
-            border-radius: 99px;
-          }
 
-          .tree-card {
-            text-align: center;
-            border-left:
-              1px solid #d5ddd8;
-            padding-left: 18px;
-          }
+        <!-- ======================================
+             STUDENT INFORMATION
+        ======================================= -->
 
-          .tree-card .tree-icon {
-            font-size: 45px;
-          }
+        <div class="section">
 
-          .tree-stage {
-            font-size: 12px;
-            font-weight: 800;
-            color: #315c48;
-            margin-top: 3px;
-          }
+          <div class="section-title">
+            STUDENT INFORMATION
+          </div>
 
-          .tree-message {
-            font-size: 10px;
-            color: #718078;
-          }
+          <div class="info-grid">
 
-          .progress-stats {
-            display: grid;
-            grid-template-columns:
-              repeat(3, 1fr);
-            border-top:
-              1px solid #d5ddd8;
-            background: #f6f8f6;
-          }
+            <div class="info-item">
+              <span class="info-label">
+                Student
+              </span>
 
-          .stat {
-            text-align: center;
-            padding: 11px;
-            border-right:
-              1px solid #d5ddd8;
-          }
+              <div class="info-value">
+                ______________________________
+              </div>
+            </div>
 
-          .stat:last-child {
-            border-right: 0;
-          }
+            <div class="info-item">
+              <span class="info-label">
+                Grade
+              </span>
 
-          .stat-number {
-            font-size: 20px;
-            font-weight: 800;
-            color: #315c48;
-          }
+              <div class="info-value">
+                3rd Grade
+              </div>
+            </div>
 
-          .stat-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #77847e;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-          }
+            <div class="info-item">
+              <span class="info-label">
+                School Year
+              </span>
 
-          /* =========================
-             STATUS
-          ========================= */
+              <div class="info-value">
+                2026–2027
+              </div>
+            </div>
 
-          .status-box {
-            margin-top: 16px;
-            text-align: center;
-            padding: 11px;
-            border-radius: 7px;
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 0.7px;
-          }
+            <div class="info-item">
+              <span class="info-label">
+                Parent / Teacher
+              </span>
 
-          .status-box.complete {
-            background: #e4f2e8;
-            color: #245c38;
-            border: 1px solid #acd0b8;
-          }
+              <div class="info-value">
+                ______________________________
+              </div>
+            </div>
 
-          .status-box.progress {
-            background: #eef4ef;
-            color: #315c48;
-            border: 1px solid #c8d8ce;
-          }
+          </div>
 
-          .status-box.not-started {
-            background: #f5f5f4;
-            color: #66706b;
-            border: 1px solid #d8dbd9;
-          }
+        </div>
 
-          /* =========================
-             BADGES
-          ========================= */
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
+        <!-- ======================================
+             OVERALL PROGRESS
+        ======================================= -->
 
-          th {
-            background: #f0f4f1;
-            color: #526159;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: left;
-            padding: 8px;
-            border:
-              1px solid #d5ddd8;
-          }
+        <div class="section">
 
-          td {
-            padding: 8px;
-            border:
-              1px solid #d5ddd8;
-            vertical-align: middle;
-          }
+          <div class="section-title">
+            OVERALL COURSE PROGRESS
+          </div>
 
-          .badge-icon {
-            width: 45px;
-            font-size: 24px;
-            text-align: center;
-          }
+          <div class="progress-card">
 
-          .earned {
-            display: inline-block;
-            background: #e2f1e7;
-            color: #246039;
-            border-radius: 20px;
-            padding: 3px 8px;
-            font-size: 9px;
-            font-weight: 800;
-          }
+            <div class="progress-header">
 
-          .not-earned {
-            color: #8a928d;
-            font-size: 10px;
-          }
+              <div class="progress-number">
+                ${completedCount}
+                <span>
+                  / ${TOTAL_LESSONS} lessons
+                </span>
+              </div>
 
-          /* =========================
-             EXAMS
-          ========================= */
+              <div class="progress-percent">
+                ${progressPercent}%
+              </div>
 
-          .exam-grid {
-            display: grid;
-            grid-template-columns:
-              1fr 1fr;
-            gap: 12px;
-          }
+            </div>
 
-          .exam-card {
-            border:
-              1px solid #d5ddd8;
-            border-radius: 8px;
-            overflow: hidden;
-          }
+            <div class="progress-bar">
 
-          .exam-header {
-            background: #f0f4f1;
-            padding: 10px 12px;
-            font-weight: 800;
-            color: #315c48;
-          }
+              <div class="progress-fill"></div>
 
-          .exam-body {
-            padding: 12px;
-          }
+            </div>
 
-          .exam-score {
-            font-size: 28px;
-            font-weight: 800;
-            color: #315c48;
-          }
+            <div class="progress-caption">
+              Bible curriculum completion
+            </div>
 
-          .exam-label {
-            color: #77847e;
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: 700;
-          }
+            <div class="status-box ${statusClass}">
+              ${status}
+            </div>
 
-          .status-pass,
-          .status-fail,
-          .status-neutral {
-            display: inline-block;
-            border-radius: 20px;
-            padding: 3px 8px;
-            font-size: 9px;
-            font-weight: 800;
-          }
+          </div>
 
-          .status-pass {
-            background: #e2f1e7;
-            color: #245c38;
-          }
+        </div>
 
-          .status-fail {
-            background: #f8e7e4;
-            color: #8a382d;
-          }
 
-          .status-neutral {
-            background: #eeeeeb;
-            color: #6c746f;
-          }
+        <!-- ======================================
+             FAITH GROWTH + BADGES
+        ======================================= -->
 
-          .exam-note {
-            margin-top: 8px;
-            color: #68756e;
-            font-size: 10px;
-          }
+        <div class="section">
 
-          /* =========================
-             LESSON PROGRESS
-          ========================= */
+          <div class="section-title">
+            FAITH GROWTH &amp; ACHIEVEMENTS
+          </div>
 
-          .lesson-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            padding: 12px;
-            border:
-              1px solid #d5ddd8;
-            border-top: 0;
-          }
+          <div class="faith-growth">
 
-          .lesson-chip {
-            width: 28px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: 700;
-          }
+            <div class="faith-tree-box">
 
-          .lesson-chip.completed {
-            background: #315c48;
-            color: white;
-          }
+              <div class="faith-tree-icon">
+                ${faithTree.emoji}
+              </div>
 
-          .empty-progress {
-            width: 100%;
-            padding: 15px;
-            text-align: center;
-            color: #77847e;
-          }
+              <div class="faith-tree-title">
+                ${escapeHtml(
+                  faithTree.title
+                )}
+              </div>
 
-          /* =========================
-             NOTES
-          ========================= */
+              <div class="faith-tree-message">
+                ${escapeHtml(
+                  faithTree.message
+                )}
+              </div>
 
-          .notes-box {
-            min-height: 120px;
-            border:
-              1px solid #d5ddd8;
-            padding: 15px;
-            line-height: 1.6;
-          }
+            </div>
 
-          .no-notes {
-            color: #8a928d;
-            font-style: italic;
-          }
+            <div class="badges-box">
 
-          /* =========================
+              <table>
+
+                <thead>
+
+                  <tr>
+                    <th>
+                      Badge
+                    </th>
+
+                    <th>
+                      Achievement
+                    </th>
+
+                    <th>
+                      Requirement
+                    </th>
+
+                    <th>
+                      Status
+                    </th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+                  ${badgeRows}
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================
+             REVIEWS & EXAMS
+        ======================================= -->
+
+        <div class="section">
+
+          <div class="section-title">
+            REVIEWS &amp; EXAMS
+          </div>
+
+          <div class="exam-grid">
+
+            <div class="exam-card">
+
+              <div class="exam-header">
+                📖 Midterm Review &amp; Exam
+              </div>
+
+              <div class="exam-body">
+
+                <div class="exam-score">
+                  ${
+                    midtermScore !== null
+                      ? `${midtermScore}%`
+                      : "—"
+                  }
+                </div>
+
+                <span class="${midtermStatusClass}">
+                  ${midtermExamStatus}
+                </span>
+
+                <div class="exam-detail">
+                  Days 88–90
+                  <br />
+                  Passing score: 80% or higher
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="exam-card">
+
+              <div class="exam-header">
+                🏆 Final Review &amp; Exam
+              </div>
+
+              <div class="exam-body">
+
+                <div class="exam-score">
+                  ${
+                    finalScore !== null
+                      ? `${finalScore}%`
+                      : "—"
+                  }
+                </div>
+
+                <span class="${finalStatusClass}">
+                  ${finalExamStatus}
+                </span>
+
+                <div class="exam-detail">
+                  Days 177–179
+                  <br />
+                  Passing score: 80% or higher
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================
+             ATTEMPT HISTORY
+        ======================================= -->
+
+        ${
+          midtermAttempts.length > 0
+            ? `
+              <div class="section">
+
+                <div class="section-title">
+                  MIDTERM ATTEMPT HISTORY
+                </div>
+
+                <div
+                  style="
+                    border:1px solid #d5ddd8;
+                    border-top:0;
+                    padding:10px;
+                  "
+                >
+
+                  <div class="attempt-note">
+                    All recorded Midterm attempts are shown below.
+                  </div>
+
+                  <table>
+
+                    <thead>
+                      <tr>
+                        <th>Attempt</th>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Incorrect</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${buildAttemptsRows(
+                        midtermAttempts
+                      )}
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+            `
+            : ""
+        }
+
+
+        ${
+          finalAttempts.length > 0
+            ? `
+              <div class="section">
+
+                <div class="section-title">
+                  FINAL ATTEMPT HISTORY
+                </div>
+
+                <div
+                  style="
+                    border:1px solid #d5ddd8;
+                    border-top:0;
+                    padding:10px;
+                  "
+                >
+
+                  <div class="attempt-note">
+                    All recorded Final attempts are shown below.
+                  </div>
+
+                  <table>
+
+                    <thead>
+                      <tr>
+                        <th>Attempt</th>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Incorrect</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${buildAttemptsRows(
+                        finalAttempts
+                      )}
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+            `
+            : ""
+        }
+
+
+        <!-- ======================================
+             LESSON RECORD
+        ======================================= -->
+
+        <div class="section">
+
+          <div class="section-title">
+            LESSON COMPLETION RECORD
+          </div>
+
+          <div class="lesson-grid">
+
+            ${completedLessonRows}
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================
+             PARENT NOTES
+        ======================================= -->
+
+        <div class="section">
+
+          <div class="section-title">
+            PARENT / TEACHER NOTES
+          </div>
+
+          <div class="notes-box">
+
+            ${
+              notes
+                ? formatNotes(notes)
+                : `
+                  <span class="no-notes">
+                    No parent or teacher notes have been entered.
+                  </span>
+                `
+            }
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================
              SIGNATURES
-          ========================= */
+        ======================================= -->
 
-          .signature-grid {
-            display: grid;
-            grid-template-columns:
-              1fr 1fr;
-            gap: 35px;
-            margin-top: 35px;
-          }
+        <div class="signature-grid">
 
-          .signature-line {
-            border-bottom:
-              1px solid #4b554f;
-            height: 28px;
-          }
+          <div>
 
-          .signature-label {
-            font-size: 9px;
-            color: #77847e;
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-top: 5px;
-          }
+            <div class="signature-line"></div>
 
-          /* =========================
+            <div class="signature-label">
+              Parent / Teacher Signature
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="signature-line">
+              ${escapeHtml(today)}
+            </div>
+
+            <div class="signature-label">
+              Date
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================
              FOOTER
-          ========================= */
+        ======================================= -->
 
-          .footer {
-            border-top:
-              2px solid #d5ddd8;
-            margin-top: 28px;
-            padding-top: 12px;
-            text-align: center;
-            color: #7a857f;
-            font-size: 9px;
-          }
+        <div class="footer">
 
-          .footer strong {
-            color: #315c48;
-          }
+          <strong>
+            Faith Foundations: The M&amp;M Adventure
+          </strong>
+
+          <br />
+
+          180-Day Homeschool Bible Curriculum
+          • School Year 2026–2027
+
+          <br />
+
+          Every lesson is a step toward growing in God's Word. 🌱
+
+        </div>
+
+      </div>
+
+      <script>
+
+        setTimeout(function () {
+          window.focus();
+          window.print();
+        }, 600);
+
+      </script>
+
+    </body>
+
+    </html>
+  `);
+
+  reportWindow.document.close();
+}
 
           /* =========================
              PRINT
