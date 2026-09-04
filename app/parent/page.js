@@ -241,10 +241,12 @@ export default function Parent() {
     e.preventDefault();
 
     if (password === PARENT_PASSWORD) {
-      sessionStorage.setItem(
-        "parentAccess",
-        "true"
-      );
+      try {
+        sessionStorage.setItem(
+          "parentAccess",
+          "true"
+        );
+      } catch {}
 
       setUnlocked(true);
       setPassword("");
@@ -260,9 +262,11 @@ export default function Parent() {
   }
 
   function logout() {
-    sessionStorage.removeItem(
-      "parentAccess"
-    );
+    try {
+      sessionStorage.removeItem(
+        "parentAccess"
+      );
+    } catch {}
 
     setUnlocked(false);
     setPassword("");
@@ -318,6 +322,10 @@ export default function Parent() {
 
   /* =========================================================
      BADGES
+     
+     IMPORTANT:
+     These milestones match the Student Home page:
+     10, 25, 50, 90, 135, 180
   ========================================================= */
 
   const badges = [
@@ -356,13 +364,16 @@ export default function Parent() {
 
   /* =========================================================
      FAITH TREE
+
+     EXACT SAME MILESTONES AS STUDENT HOME
   ========================================================= */
 
   function getFaithTreeStage(count) {
     if (count >= 180) {
       return {
-        emoji: "🌳",
-        title: "Faith Foundations Champion",
+        emoji: "🌲🌳🌲🌳🌲",
+        title:
+          "Faith Foundations Champion",
         message:
           "Your Faith Tree is fully grown!",
       };
@@ -370,7 +381,7 @@ export default function Parent() {
 
     if (count >= 135) {
       return {
-        emoji: "🌲",
+        emoji: "🌲🌳🌲🌳",
         title: "Faith Champion",
         message:
           "Your Faith Tree is growing beautifully!",
@@ -379,7 +390,7 @@ export default function Parent() {
 
     if (count >= 90) {
       return {
-        emoji: "🌳",
+        emoji: "🌳🌳🌳",
         title: "Halfway Hero",
         message:
           "Your faith is growing strong!",
@@ -388,19 +399,19 @@ export default function Parent() {
 
     if (count >= 50) {
       return {
-        emoji: "🌿",
+        emoji: "🌳",
         title: "Faith Builder",
         message:
-          "Your Faith Tree is taking root!",
+          "Your Faith Tree is growing strong!",
       };
     }
 
     if (count >= 25) {
       return {
-        emoji: "🌱",
+        emoji: "🌿",
         title: "Growing Strong",
         message:
-          "Keep growing in God's Word!",
+          "Your faith is growing stronger every day!",
       };
     }
 
@@ -410,6 +421,15 @@ export default function Parent() {
         title: "First Steps",
         message:
           "Every lesson helps your faith grow!",
+      };
+    }
+
+    if (count >= 1) {
+      return {
+        emoji: "🌱",
+        title: "Faith Seed Planted",
+        message:
+          "Your Faith Seed has been planted. Keep growing in God's Word!",
       };
     }
 
@@ -456,7 +476,7 @@ export default function Parent() {
   }
 
   /* =========================================================
-     SAFE HTML FOR PRINT REPORT
+     SAFE HTML
   ========================================================= */
 
   function escapeHtml(value) {
@@ -577,7 +597,9 @@ export default function Parent() {
     ];
 
     for (const value of possibleValues) {
-      if (typeof value === "number") {
+      if (
+        typeof value === "number"
+      ) {
         return value;
       }
 
@@ -730,12 +752,6 @@ export default function Parent() {
 
   /* =========================================================
      PRINTABLE PARENT REPORT
-     
-     IMPORTANT:
-     This is a standalone school-style report.
-     It does NOT print the dashboard screen.
-     It intentionally avoids repeating the same
-     progress information in multiple sections.
   ========================================================= */
 
   function printReport() {
@@ -770,10 +786,6 @@ export default function Parent() {
         ? "progress"
         : "not-started";
 
-    /* -----------------------------------------
-       BADGE TABLE
-    ----------------------------------------- */
-
     const badgeRows = badges
       .map((badge) => {
         const earned =
@@ -803,10 +815,10 @@ export default function Parent() {
                 earned
                   ? `<span class="earned">
                       ✓ EARNED
-                     </span>`
+                    </span>`
                   : `<span class="not-earned">
                       Not Yet Earned
-                     </span>`
+                    </span>`
               }
             </td>
 
@@ -814,10 +826,6 @@ export default function Parent() {
         `;
       })
       .join("");
-
-    /* -----------------------------------------
-       LESSON RECORD
-    ----------------------------------------- */
 
     const completedLessonRows =
       completed.length > 0
@@ -835,10 +843,6 @@ export default function Parent() {
               No lessons completed yet.
             </div>
           `;
-
-    /* -----------------------------------------
-       EXAM STATUS
-    ----------------------------------------- */
 
     const midtermExamStatus =
       midtermScore === null
@@ -868,11 +872,6 @@ export default function Parent() {
         ? "status-fail"
         : "status-neutral";
 
-    /* -----------------------------------------
-       ATTEMPT HISTORY
-       Only appears when attempts exist.
-    ----------------------------------------- */
-
     const midtermAttemptSection =
       buildAttemptSection(
         "MIDTERM EXAM ATTEMPT HISTORY",
@@ -884,10 +883,6 @@ export default function Parent() {
         "FINAL EXAM ATTEMPT HISTORY",
         finalAttempts
       );
-
-    /* -----------------------------------------
-       REPORT
-    ----------------------------------------- */
 
     reportWindow.document.write(`
       <!DOCTYPE html>
@@ -933,10 +928,6 @@ export default function Parent() {
             padding: 28px;
           }
 
-          /* =========================
-             HEADER
-          ========================= */
-
           .report-header {
             text-align: center;
             border-bottom:
@@ -977,10 +968,6 @@ export default function Parent() {
             margin-top: 3px;
           }
 
-          /* =========================
-             SECTIONS
-          ========================= */
-
           .section {
             margin-top: 20px;
             page-break-inside: avoid;
@@ -996,10 +983,6 @@ export default function Parent() {
             font-weight: 800;
             letter-spacing: 0.3px;
           }
-
-          /* =========================
-             STUDENT INFO
-          ========================= */
 
           .info-grid {
             display: grid;
@@ -1037,10 +1020,6 @@ export default function Parent() {
             font-weight: 700;
             min-height: 20px;
           }
-
-          /* =========================
-             OVERALL PROGRESS
-          ========================= */
 
           .progress-card {
             border:
@@ -1187,10 +1166,6 @@ export default function Parent() {
               1px solid #d8dbd9;
           }
 
-          /* =========================
-             TABLES
-          ========================= */
-
           table {
             width: 100%;
             border-collapse: collapse;
@@ -1215,10 +1190,6 @@ export default function Parent() {
             vertical-align: middle;
           }
 
-          /* =========================
-             BADGES
-          ========================= */
-
           .badge-icon {
             width: 45px;
             font-size: 24px;
@@ -1239,10 +1210,6 @@ export default function Parent() {
             color: #8a928d;
             font-size: 10px;
           }
-
-          /* =========================
-             EXAMS
-          ========================= */
 
           .exam-grid {
             display: grid;
@@ -1313,10 +1280,6 @@ export default function Parent() {
             font-size: 10px;
           }
 
-          /* =========================
-             LESSON RECORD
-          ========================= */
-
           .lesson-grid {
             display: flex;
             flex-wrap: wrap;
@@ -1347,10 +1310,6 @@ export default function Parent() {
             color: #77847e;
           }
 
-          /* =========================
-             NOTES
-          ========================= */
-
           .notes-box {
             min-height: 120px;
             border:
@@ -1363,10 +1322,6 @@ export default function Parent() {
             color: #8a928d;
             font-style: italic;
           }
-
-          /* =========================
-             SIGNATURES
-          ========================= */
 
           .signature-grid {
             display: grid;
@@ -1390,10 +1345,6 @@ export default function Parent() {
             margin-top: 5px;
           }
 
-          /* =========================
-             FOOTER
-          ========================= */
-
           .footer {
             border-top:
               2px solid #d5ddd8;
@@ -1407,10 +1358,6 @@ export default function Parent() {
           .footer strong {
             color: #315c48;
           }
-
-          /* =========================
-             MOBILE / PRINT
-          ========================= */
 
           @media print {
 
@@ -1445,10 +1392,6 @@ export default function Parent() {
 
         <div class="report">
 
-          <!-- =====================================
-               HEADER
-          ====================================== -->
-
           <div class="report-header">
 
             <div class="tree">
@@ -1473,11 +1416,6 @@ export default function Parent() {
 
           </div>
 
-
-          <!-- =====================================
-               STUDENT INFORMATION
-          ====================================== -->
-
           <div class="section">
 
             <div class="section-title">
@@ -1487,7 +1425,6 @@ export default function Parent() {
             <div class="info-grid">
 
               <div class="info-item">
-
                 <span class="info-label">
                   Student
                 </span>
@@ -1495,11 +1432,9 @@ export default function Parent() {
                 <div class="info-value">
                   ______________________________
                 </div>
-
               </div>
 
               <div class="info-item">
-
                 <span class="info-label">
                   Grade
                 </span>
@@ -1507,11 +1442,9 @@ export default function Parent() {
                 <div class="info-value">
                   3rd Grade
                 </div>
-
               </div>
 
               <div class="info-item">
-
                 <span class="info-label">
                   School Year
                 </span>
@@ -1519,11 +1452,9 @@ export default function Parent() {
                 <div class="info-value">
                   2026–2027
                 </div>
-
               </div>
 
               <div class="info-item">
-
                 <span class="info-label">
                   Parent / Teacher
                 </span>
@@ -1531,20 +1462,11 @@ export default function Parent() {
                 <div class="info-value">
                   ______________________________
                 </div>
-
               </div>
 
             </div>
 
           </div>
-
-
-          <!-- =====================================
-               OVERALL COURSE PROGRESS
-               
-               This is the ONLY section containing
-               the main course-progress numbers.
-          ====================================== -->
 
           <div class="section">
 
@@ -1578,11 +1500,7 @@ export default function Parent() {
                   </div>
 
                   <div class="progress-bar">
-
-                    <div
-                      class="progress-fill"
-                    ></div>
-
+                    <div class="progress-fill"></div>
                   </div>
 
                 </div>
@@ -1655,18 +1573,11 @@ export default function Parent() {
 
             </div>
 
-            <div
-              class="status-box ${statusClass}"
-            >
+            <div class="status-box ${statusClass}">
               ${courseStatus}
             </div>
 
           </div>
-
-
-          <!-- =====================================
-               FAITH GROWTH & ACHIEVEMENTS
-          ====================================== -->
 
           <div class="section">
 
@@ -1679,23 +1590,10 @@ export default function Parent() {
               <thead>
 
                 <tr>
-
-                  <th>
-                    Badge
-                  </th>
-
-                  <th>
-                    Achievement
-                  </th>
-
-                  <th>
-                    Requirement
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
+                  <th>Badge</th>
+                  <th>Achievement</th>
+                  <th>Requirement</th>
+                  <th>Status</th>
                 </tr>
 
               </thead>
@@ -1708,11 +1606,6 @@ export default function Parent() {
 
           </div>
 
-
-          <!-- =====================================
-               REVIEWS & EXAMS
-          ====================================== -->
-
           <div class="section">
 
             <div class="section-title">
@@ -1720,8 +1613,6 @@ export default function Parent() {
             </div>
 
             <div class="exam-grid">
-
-              <!-- MIDTERM -->
 
               <div class="exam-card">
 
@@ -1736,13 +1627,11 @@ export default function Parent() {
                   </div>
 
                   <div class="exam-score">
-
                     ${
                       midtermScore !== null
                         ? `${midtermScore}%`
                         : "—"
                     }
-
                   </div>
 
                   <div>
@@ -1756,22 +1645,16 @@ export default function Parent() {
                   </div>
 
                   <div class="exam-note">
-
                     Review &amp; Exam:
                     Days 88–90
                     <br />
-
                     Passing standard:
                     80% or higher
-
                   </div>
 
                 </div>
 
               </div>
-
-
-              <!-- FINAL -->
 
               <div class="exam-card">
 
@@ -1786,13 +1669,11 @@ export default function Parent() {
                   </div>
 
                   <div class="exam-score">
-
                     ${
                       finalScore !== null
                         ? `${finalScore}%`
                         : "—"
                     }
-
                   </div>
 
                   <div>
@@ -1806,14 +1687,11 @@ export default function Parent() {
                   </div>
 
                   <div class="exam-note">
-
                     Review &amp; Exam:
                     Days 177–180
                     <br />
-
                     Passing standard:
                     80% or higher
-
                   </div>
 
                 </div>
@@ -1824,22 +1702,9 @@ export default function Parent() {
 
           </div>
 
-
-          <!-- =====================================
-               ATTEMPT HISTORIES
-               
-               These ONLY print when attempts
-               actually exist.
-          ====================================== -->
-
           ${midtermAttemptSection}
 
           ${finalAttemptSection}
-
-
-          <!-- =====================================
-               LESSON COMPLETION RECORD
-          ====================================== -->
 
           <div class="section">
 
@@ -1848,17 +1713,10 @@ export default function Parent() {
             </div>
 
             <div class="lesson-grid">
-
               ${completedLessonRows}
-
             </div>
 
           </div>
-
-
-          <!-- =====================================
-               PARENT / TEACHER NOTES
-          ====================================== -->
 
           <div class="section">
 
@@ -1882,11 +1740,6 @@ export default function Parent() {
             </div>
 
           </div>
-
-
-          <!-- =====================================
-               SIGNATURES
-          ====================================== -->
 
           <div class="signature-grid">
 
@@ -1914,11 +1767,6 @@ export default function Parent() {
 
           </div>
 
-
-          <!-- =====================================
-               FOOTER
-          ====================================== -->
-
           <div class="footer">
 
             <strong>
@@ -1940,7 +1788,6 @@ export default function Parent() {
           </div>
 
         </div>
-
 
         <script>
 
@@ -2141,9 +1988,7 @@ export default function Parent() {
         }}
       >
 
-        {/* =====================================
-            HEADER
-        ====================================== */}
+        {/* HEADER */}
 
         <header
           style={{
@@ -2212,10 +2057,7 @@ export default function Parent() {
 
         </header>
 
-
-        {/* =====================================
-            PROGRESS
-        ====================================== */}
+        {/* PROGRESS */}
 
         <section
           style={{
@@ -2298,10 +2140,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            FAITH TREE
-        ====================================== */}
+        {/* FAITH TREE */}
 
         <section
           style={{
@@ -2353,10 +2192,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            BADGES
-        ====================================== */}
+        {/* BADGES */}
 
         <section
           style={{
@@ -2459,10 +2295,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            PARENT TOOLS
-        ====================================== */}
+        {/* PARENT TOOLS */}
 
         <section
           style={{
@@ -2515,8 +2348,7 @@ export default function Parent() {
 
             <ParentButton
               onClick={() =>
-                (window.location.href =
-                  "/")
+                (window.location.href = "/")
               }
               text="🏠 Back to Student Home"
             />
@@ -2525,10 +2357,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            MIDTERM
-        ====================================== */}
+        {/* MIDTERM */}
 
         <section
           style={{
@@ -2600,10 +2429,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            FINAL
-        ====================================== */}
+        {/* FINAL */}
 
         <section
           style={{
@@ -2675,10 +2501,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            NOTES
-        ====================================== */}
+        {/* NOTES */}
 
         <section
           style={{
@@ -2733,10 +2556,7 @@ export default function Parent() {
 
         </section>
 
-
-        {/* =====================================
-            COMPLETION
-        ====================================== */}
+        {/* COMPLETION */}
 
         {completedCount >=
           TOTAL_LESSONS && (
@@ -2790,7 +2610,6 @@ export default function Parent() {
   );
 }
 
-
 /* =========================================================
    DASHBOARD STAT
 ========================================================= */
@@ -2834,7 +2653,6 @@ function DashboardStat({
     </div>
   );
 }
-
 
 /* =========================================================
    PARENT BUTTON
