@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "faithTreeCompleted";
+const TOTAL_LESSONS = 180;
 
 const FAITH_BADGES = [
   ["🌱", "Faith Seed", 1],
@@ -20,32 +21,35 @@ export default function Home() {
   useEffect(() => {
     function loadProgress() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved =
+          localStorage.getItem(STORAGE_KEY);
 
-        if (saved) {
-          const parsed = JSON.parse(saved);
-
-          if (Array.isArray(parsed)) {
-            const clean = [
-              ...new Set(
-                parsed
-                  .map(Number)
-                  .filter(
-                    (day) =>
-                      Number.isInteger(day) &&
-                      day >= 1 &&
-                      day <= 180
-                  )
-              ),
-            ].sort((a, b) => a - b);
-
-            setCompleted(clean);
-          } else {
-            setCompleted([]);
-          }
-        } else {
+        if (!saved) {
           setCompleted([]);
+          return;
         }
+
+        const parsed = JSON.parse(saved);
+
+        if (!Array.isArray(parsed)) {
+          setCompleted([]);
+          return;
+        }
+
+        const clean = [
+          ...new Set(
+            parsed
+              .map(Number)
+              .filter(
+                (day) =>
+                  Number.isInteger(day) &&
+                  day >= 1 &&
+                  day <= TOTAL_LESSONS
+              )
+          ),
+        ].sort((a, b) => a - b);
+
+        setCompleted(clean);
       } catch {
         setCompleted([]);
       }
@@ -83,7 +87,7 @@ export default function Home() {
   const count = completed.length;
 
   const percentage = Math.round(
-    (count / 180) * 100
+    (count / TOTAL_LESSONS) * 100
   );
 
   /*
@@ -92,53 +96,73 @@ export default function Home() {
 
   let nextLesson = 1;
 
-  for (let day = 1; day <= 180; day++) {
+  for (
+    let day = 1;
+    day <= TOTAL_LESSONS;
+    day++
+  ) {
     if (!completed.includes(day)) {
       nextLesson = day;
       break;
     }
   }
 
-  if (count >= 180) {
-    nextLesson = 180;
+  if (count >= TOTAL_LESSONS) {
+    nextLesson = TOTAL_LESSONS;
   }
 
   function startTodayLesson() {
-    window.location.href = `/Lessons?day=${nextLesson}`;
+    window.location.href =
+      `/Lessons?day=${nextLesson}`;
   }
 
   /*
    * FAITH TREE
+   *
+   * IMPORTANT:
+   * Tree milestones match the badge milestones exactly:
+   *
+   * 1   = Faith Seed
+   * 10  = First Steps
+   * 25  = Growing Strong
+   * 50  = Faith Builder
+   * 90  = Halfway Hero
+   * 135 = Faith Champion
+   * 180 = Faith Foundations Champion
    */
 
-  let tree = "🌱";
+  let tree = "🌰";
   let treeMessage =
-    "Your faith is taking root!";
+    "Your faith journey is just beginning!";
 
   if (count >= 180) {
     tree = "🌲🌳🌲🌳🌲";
     treeMessage =
       "🏆 Your Faith Tree is fully grown!";
-  } else if (count >= 150) {
+  } else if (count >= 135) {
     tree = "🌲🌳🌲🌳";
     treeMessage =
-      "Your Faith Tree is almost fully grown! ⭐";
-  } else if (count >= 120) {
-    tree = "🌲🌳🌲";
-    treeMessage =
-      "Your Faith Tree is growing strong!";
+      "⭐ Your Faith Tree is growing beautifully!";
   } else if (count >= 90) {
     tree = "🌳🌳🌳";
     treeMessage =
-      "You're halfway through your adventure!";
-  } else if (count >= 60) {
+      "🏆 You're halfway through your adventure!";
+  } else if (count >= 50) {
     tree = "🌳";
     treeMessage =
-      "Look how much your Faith Tree has grown!";
-  } else if (count >= 30) {
+      "Your Faith Tree is growing strong!";
+  } else if (count >= 25) {
     tree = "🌿";
     treeMessage =
-      "Your faith is growing!";
+      "Your faith is growing stronger every day!";
+  } else if (count >= 10) {
+    tree = "🌱";
+    treeMessage =
+      "You've taken your First Steps in faith!";
+  } else if (count >= 1) {
+    tree = "🌱";
+    treeMessage =
+      "Your Faith Seed has been planted!";
   }
 
   return (
@@ -247,7 +271,7 @@ export default function Home() {
               cursor: "pointer",
             }}
           >
-            {count >= 180
+            {count >= TOTAL_LESSONS
               ? "🏆 Review Day 180"
               : `🌱 Start Day ${nextLesson}`}
           </button>
@@ -259,7 +283,7 @@ export default function Home() {
               color: "#777",
             }}
           >
-            {count >= 180
+            {count >= TOTAL_LESSONS
               ? "You've completed all 180 lessons!"
               : `Your next lesson is Day ${nextLesson}.`}
           </p>
@@ -296,7 +320,7 @@ export default function Home() {
               margin: "10px 0",
             }}
           >
-            {count} / 180
+            {count} / {TOTAL_LESSONS}
           </div>
 
           <p
@@ -384,8 +408,9 @@ export default function Home() {
             }}
           >
             {FAITH_BADGES.map(
-              ([icon, name, required], index) => {
-                const earned = count >= required;
+              ([icon, name, required]) => {
+                const earned =
+                  count >= required;
 
                 return (
                   <div
@@ -400,7 +425,9 @@ export default function Home() {
                       border: earned
                         ? "2px solid #6b9e5b"
                         : "2px solid #ddd",
-                      opacity: earned ? 1 : 0.55,
+                      opacity: earned
+                        ? 1
+                        : 0.55,
                       transition:
                         "all .3s ease",
                     }}
@@ -464,6 +491,7 @@ export default function Home() {
             style={{
               fontSize: "65px",
               marginBottom: "10px",
+              lineHeight: "1.2",
             }}
           >
             {tree}
@@ -497,7 +525,8 @@ export default function Home() {
         >
           <button
             onClick={() => {
-              window.location.href = "/parent";
+              window.location.href =
+                "/parent";
             }}
             style={{
               padding: "13px 22px",
