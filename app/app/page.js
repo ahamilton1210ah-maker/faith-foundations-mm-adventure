@@ -144,7 +144,7 @@ export default function Home() {
     treeMessage =
       "⭐ Your Faith Tree is growing beautifully!";
   } else if (count >= 90) {
-    tree = "🌳🌳🌳";
+    tree = "🌳🌳";
     treeMessage =
       "🏆 You're halfway through your adventure!";
   } else if (count >= 50) {
