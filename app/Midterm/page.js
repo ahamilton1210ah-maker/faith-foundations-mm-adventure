@@ -31,42 +31,84 @@ const questions = [
     correct: "An ark",
   },
   {
-    question: "Who trusted God and followed Him to a new land?",
-    answers: ["Abraham", "Jonah", "Samuel", "Solomon"],
+    question:
+      "Who trusted God and followed Him to a new land?",
+    answers: [
+      "Abraham",
+      "Jonah",
+      "Samuel",
+      "Solomon",
+    ],
     correct: "Abraham",
   },
   {
-    question: "Who was known for forgiving his brothers?",
-    answers: ["Joseph", "Joshua", "Daniel", "Elijah"],
+    question:
+      "Who was known for forgiving his brothers?",
+    answers: [
+      "Joseph",
+      "Joshua",
+      "Daniel",
+      "Elijah",
+    ],
     correct: "Joseph",
   },
   {
-    question: "Who was called to lead God's people out of Egypt?",
-    answers: ["David", "Moses", "Peter", "Paul"],
+    question:
+      "Who was called to lead God's people out of Egypt?",
+    answers: [
+      "David",
+      "Moses",
+      "Peter",
+      "Paul",
+    ],
     correct: "Moses",
   },
   {
-    question: "What did God tell Joshua to be?",
-    answers: ["Rich", "Famous", "Strong and courageous", "Angry"],
+    question:
+      "What did God tell Joshua to be?",
+    answers: [
+      "Rich",
+      "Famous",
+      "Strong and courageous",
+      "Angry",
+    ],
     correct: "Strong and courageous",
   },
   {
     question: "Who defeated Goliath?",
-    answers: ["David", "Saul", "Samuel", "Joshua"],
+    answers: [
+      "David",
+      "Saul",
+      "Samuel",
+      "Joshua",
+    ],
     correct: "David",
   },
   {
-    question: "Who was thrown into the lions' den?",
-    answers: ["Daniel", "Joseph", "Moses", "Peter"],
+    question:
+      "Who was thrown into the lions' den?",
+    answers: [
+      "Daniel",
+      "Joseph",
+      "Moses",
+      "Peter",
+    ],
     correct: "Daniel",
   },
   {
-    question: "What did Jesus teach us to do for our neighbors?",
-    answers: ["Ignore them", "Love them", "Avoid them", "Judge them"],
+    question:
+      "What did Jesus teach us to do for our neighbors?",
+    answers: [
+      "Ignore them",
+      "Love them",
+      "Avoid them",
+      "Judge them",
+    ],
     correct: "Love them",
   },
   {
-    question: "What is one important thing prayer does?",
+    question:
+      "What is one important thing prayer does?",
     answers: [
       "Keeps us close to God",
       "Makes us famous",
@@ -138,17 +180,15 @@ export default function Midterm() {
     useState(null);
 
   /*
-    IMPORTANT:
-    Parent preview is determined by:
+    Parent preview requires BOTH:
+
     /Midterm?parent=true
 
     AND
 
     sessionStorage.parentAccess === "true"
-
-    This prevents someone from simply adding
-    ?parent=true to the URL to bypass the student lock.
   */
+
   const [isParentPreview, setIsParentPreview] =
     useState(false);
 
@@ -159,6 +199,10 @@ export default function Midterm() {
   useEffect(() => {
     loadProgress();
 
+    /* -----------------------------------------------
+       CHECK PARENT PREVIEW ACCESS
+    ----------------------------------------------- */
+
     try {
       const params = new URLSearchParams(
         window.location.search
@@ -168,7 +212,8 @@ export default function Midterm() {
         params.get("parent") === "true";
 
       const parentAccess =
-        sessionStorage.getItem("parentAccess") === "true";
+        sessionStorage.getItem("parentAccess") ===
+        "true";
 
       setIsParentPreview(
         parentRequested && parentAccess
@@ -177,9 +222,15 @@ export default function Midterm() {
       setIsParentPreview(false);
     }
 
+    /* -----------------------------------------------
+       LOAD ATTEMPTS
+    ----------------------------------------------- */
+
     try {
       const savedAttempts =
-        localStorage.getItem(MIDTERM_ATTEMPTS_KEY);
+        localStorage.getItem(
+          MIDTERM_ATTEMPTS_KEY
+        );
 
       if (savedAttempts) {
         const parsed = JSON.parse(savedAttempts);
@@ -192,6 +243,10 @@ export default function Midterm() {
       setAttempts([]);
     }
 
+    /* -----------------------------------------------
+       LOAD PASS STATUS
+    ----------------------------------------------- */
+
     try {
       const savedPassed =
         localStorage.getItem(MIDTERM_PASS_KEY);
@@ -200,6 +255,10 @@ export default function Midterm() {
     } catch {
       setPassed(false);
     }
+
+    /* -----------------------------------------------
+       LOAD PASSING SCORE
+    ----------------------------------------------- */
 
     try {
       const savedScore =
@@ -221,6 +280,10 @@ export default function Midterm() {
     } catch {
       setSavedPassingScore(null);
     }
+
+    /* -----------------------------------------------
+       LOAD EXAM MODE
+    ----------------------------------------------- */
 
     try {
       const savedMode =
@@ -347,18 +410,26 @@ export default function Midterm() {
     completed.includes(90);
 
   /*
-    PARENT PREVIEW:
-    Parents can see ALL Midterm material immediately.
+    PARENT:
+    Can view all material immediately.
 
     STUDENT:
-    Must complete Day 87 first.
+    Must complete Day 87 before Midterm review.
   */
 
   const canViewMidterm =
     isParentPreview || day87Complete;
 
+  /*
+    Day 89 unlocks after Day 88.
+  */
+
   const canViewDay89 =
     isParentPreview || day88Complete;
+
+  /*
+    Day 90 unlocks after Day 89.
+  */
 
   const canViewDay90 =
     isParentPreview || day89Complete;
@@ -413,15 +484,47 @@ export default function Midterm() {
     /*
       Day 90 is the actual Midterm Exam.
 
-      IMPORTANT:
       Parent preview NEVER completes Day 90.
 
       Only an actual passing exam completes Day 90.
     */
 
-    if (!isParentPreview && !day90Complete) {
+    if (
+      !isParentPreview &&
+      !day90Complete
+    ) {
       markDayComplete(90);
     }
+  }
+
+  /* =======================================================
+     BUILD INCORRECT ITEM
+  ======================================================= */
+
+  function buildIncorrectItem(
+    number,
+    selectedAnswer
+  ) {
+    const q = questions[number - 1];
+
+    if (!q) {
+      return null;
+    }
+
+    return {
+      number,
+      question: q.question,
+      selectedAnswer:
+        selectedAnswer || "No answer",
+      correctAnswer: q.correct,
+
+      /*
+        These fields make the information easy for
+        the Parent Progress Report to display.
+      */
+      questionNumber: number,
+      missed: true,
+    };
   }
 
   /* =======================================================
@@ -448,13 +551,15 @@ export default function Midterm() {
       if (answers[index] === q.correct) {
         totalCorrect++;
       } else {
-        incorrect.push({
-          number: index + 1,
-          question: q.question,
-          selectedAnswer:
-            answers[index] || "No answer",
-          correctAnswer: q.correct,
-        });
+        const incorrectItem =
+          buildIncorrectItem(
+            index + 1,
+            answers[index]
+          );
+
+        if (incorrectItem) {
+          incorrect.push(incorrectItem);
+        }
       }
     });
 
@@ -465,13 +570,49 @@ export default function Midterm() {
     const didPass =
       finalScore >= PASSING_SCORE;
 
+    /*
+      IMPORTANT:
+      Save BOTH the detailed incorrect array
+      and a simple list of missed question numbers.
+
+      This gives the Parent Progress Report
+      multiple reliable ways to display them.
+    */
+
+    const incorrectNumbers =
+      incorrect.map(
+        (item) => item.number
+      );
+
+    const missedItems =
+      incorrect.map((item) => ({
+        number: item.number,
+        question: item.question,
+        correctAnswer:
+          item.correctAnswer,
+      }));
+
     const attempt = {
       id: Date.now(),
+
       date: new Date().toLocaleString(),
+
       mode: "System-Led",
+
       score: finalScore,
+
       passed: didPass,
+
       incorrect,
+
+      /*
+        New reliable fields for Parent Report
+      */
+      incorrectNumbers,
+
+      missedItems,
+
+      missedCount: incorrect.length,
     };
 
     saveAttempt(attempt);
@@ -514,6 +655,44 @@ export default function Midterm() {
   }
 
   /* =======================================================
+     PARSE PARENT MISSED QUESTIONS
+  ======================================================= */
+
+  function parseParentMissedQuestions() {
+    /*
+      Accepts:
+
+      2, 5, 7
+
+      Also safely handles:
+      2 5 7
+      2,5,7
+      Question 2, Question 5
+
+      Only valid question numbers 1–10
+      are saved.
+    */
+
+    const matches =
+      parentMissed.match(/\d+/g) || [];
+
+    const missedNumbers = [
+      ...new Set(
+        matches
+          .map((item) => Number(item))
+          .filter(
+            (number) =>
+              Number.isInteger(number) &&
+              number >= 1 &&
+              number <= questions.length
+          )
+      ),
+    ];
+
+    return missedNumbers;
+  }
+
+  /* =======================================================
      PARENT-LED EXAM
   ======================================================= */
 
@@ -534,43 +713,73 @@ export default function Midterm() {
       return;
     }
 
-    const missedNumbers = [
-      ...new Set(
-        parentMissed
-          .split(",")
-          .map((item) => Number(item.trim()))
-          .filter(
-            (number) =>
-              Number.isInteger(number) &&
-              number >= 1 &&
-              number <= questions.length
-          )
-      ),
-    ];
+    /*
+      Convert the parent's missed-question entry
+      into actual question records.
+    */
 
-    const incorrect =
-      missedNumbers.map((number) => {
-        const q = questions[number - 1];
+    const missedNumbers =
+      parseParentMissedQuestions();
 
-        return {
+    const incorrect = missedNumbers
+      .map((number) =>
+        buildIncorrectItem(
           number,
-          question: q.question,
-          selectedAnswer:
-            "Parent-Led Exam",
-          correctAnswer: q.correct,
-        };
-      });
+          "Parent-Led Exam"
+        )
+      )
+      .filter(Boolean);
+
+    /*
+      Save a clean list specifically for the
+      Parent Progress Report.
+    */
+
+    const incorrectNumbers =
+      incorrect.map(
+        (item) => item.number
+      );
+
+    const missedItems =
+      incorrect.map((item) => ({
+        number: item.number,
+        question: item.question,
+        correctAnswer:
+          item.correctAnswer,
+      }));
 
     const didPass =
       numericScore >= PASSING_SCORE;
 
     const attempt = {
       id: Date.now(),
+
       date: new Date().toLocaleString(),
+
       mode: "Parent-Led",
+
       score: numericScore,
+
       passed: didPass,
+
       incorrect,
+
+      /*
+        New reliable fields for Parent Report
+      */
+      incorrectNumbers,
+
+      missedItems,
+
+      missedCount: incorrect.length,
+
+      /*
+        Keep the original entry too.
+        This is useful if the parent typed
+        something such as "2, 5, 7".
+      */
+      parentMissedEntry:
+        parentMissed.trim(),
     };
 
     saveAttempt(attempt);
@@ -580,6 +789,14 @@ export default function Midterm() {
     if (didPass) {
       savePassingResult(numericScore);
     }
+
+    /*
+      Clear the entry fields after saving so the
+      next attempt starts fresh.
+    */
+
+    setParentScore("");
+    setParentMissed("");
   }
 
   /* =======================================================
@@ -631,7 +848,9 @@ export default function Midterm() {
 
     guideWindow.document.write(`
       <!DOCTYPE html>
+
       <html>
+
       <head>
 
         <title>${title}</title>
@@ -729,6 +948,7 @@ export default function Midterm() {
         </div>
 
       </body>
+
       </html>
     `);
 
@@ -959,9 +1179,6 @@ export default function Midterm() {
 
   /* =======================================================
      STUDENT LOCK
-     
-     IMPORTANT:
-     Parent preview bypasses this lock.
   ======================================================= */
 
   if (!canViewMidterm) {
@@ -975,14 +1192,12 @@ export default function Midterm() {
           color: "#24313a",
         }}
       >
-
         <div
           style={{
             maxWidth: "800px",
             margin: "0 auto",
           }}
         >
-
           <section
             style={{
               background: "white",
@@ -993,7 +1208,6 @@ export default function Midterm() {
                 "0 4px 15px rgba(0,0,0,.1)",
             }}
           >
-
             <div
               style={{
                 fontSize: "65px",
@@ -1038,11 +1252,8 @@ export default function Midterm() {
             >
               ← Back to Home
             </button>
-
           </section>
-
         </div>
-
       </main>
     );
   }
@@ -1061,7 +1272,6 @@ export default function Midterm() {
         color: "#24313a",
       }}
     >
-
       <div
         style={{
           maxWidth: "800px",
@@ -1084,7 +1294,6 @@ export default function Midterm() {
               textAlign: "center",
             }}
           >
-
             <div
               style={{
                 fontSize: "35px",
@@ -1121,7 +1330,6 @@ export default function Midterm() {
               Previewing does not mark any school day
               complete.
             </p>
-
           </section>
         )}
 
@@ -1135,7 +1343,6 @@ export default function Midterm() {
             marginBottom: "30px",
           }}
         >
-
           <div
             style={{
               fontSize: "60px",
@@ -1168,7 +1375,6 @@ export default function Midterm() {
           >
             Midterm Days 88–90
           </div>
-
         </header>
 
         {/* =================================================
@@ -1185,7 +1391,6 @@ export default function Midterm() {
               "0 4px 15px rgba(0,0,0,.1)",
           }}
         >
-
           <h2>
             📚 Day 88 — Midterm Study Guide #1
           </h2>
@@ -1200,7 +1405,6 @@ export default function Midterm() {
           </p>
 
           <ul>
-
             {studyGuideOne.map((item, index) => (
               <li
                 key={index}
@@ -1212,7 +1416,6 @@ export default function Midterm() {
                 {item}
               </li>
             ))}
-
           </ul>
 
           <button
@@ -1276,7 +1479,6 @@ export default function Midterm() {
               ✅ Complete Day 88
             </button>
           )}
-
         </section>
 
         {/* =================================================
@@ -1294,7 +1496,6 @@ export default function Midterm() {
                 "0 4px 15px rgba(0,0,0,.1)",
             }}
           >
-
             <h2>
               📚 Day 89 — Midterm Study Guide #2
             </h2>
@@ -1309,7 +1510,6 @@ export default function Midterm() {
             </p>
 
             <ul>
-
               {studyGuideTwo.map((item, index) => (
                 <li
                   key={index}
@@ -1321,7 +1521,6 @@ export default function Midterm() {
                   {item}
                 </li>
               ))}
-
             </ul>
 
             <button
@@ -1385,7 +1584,6 @@ export default function Midterm() {
                 ✅ Complete Day 89
               </button>
             )}
-
           </section>
         ) : (
           <section
@@ -1397,7 +1595,6 @@ export default function Midterm() {
               textAlign: "center",
             }}
           >
-
             <div
               style={{
                 fontSize: "45px",
@@ -1413,7 +1610,6 @@ export default function Midterm() {
             <p>
               Complete Day 88 first.
             </p>
-
           </section>
         )}
 
@@ -1432,7 +1628,6 @@ export default function Midterm() {
               border: "2px solid #6b9e5b",
             }}
           >
-
             <div
               style={{
                 fontSize: "55px",
@@ -1480,7 +1675,6 @@ export default function Midterm() {
                 ✅ Day 90 — Midterm Exam Completed
               </p>
             )}
-
           </section>
         )}
 
@@ -1490,7 +1684,6 @@ export default function Midterm() {
 
         {canViewDay90 ? (
           <>
-
             {/* EXAM MODE */}
 
             {!passed && (
@@ -1502,7 +1695,6 @@ export default function Midterm() {
                   marginBottom: "20px",
                 }}
               >
-
                 <h2>
                   📝 Day 90 — Midterm Exam
                 </h2>
@@ -1518,7 +1710,6 @@ export default function Midterm() {
                     marginTop: "15px",
                   }}
                 >
-
                   <button
                     onClick={() =>
                       changeMode("system")
@@ -1562,7 +1753,6 @@ export default function Midterm() {
                   >
                     👩‍🏫 Parent-Led Exam
                   </button>
-
                 </div>
 
                 <div
@@ -1574,7 +1764,6 @@ export default function Midterm() {
                     textAlign: "center",
                   }}
                 >
-
                   <strong>
                     Passing Score: 80% or higher
                   </strong>
@@ -1584,9 +1773,7 @@ export default function Midterm() {
                   <span>
                     79% or lower = Not Passed
                   </span>
-
                 </div>
-
               </section>
             )}
 
@@ -1605,7 +1792,6 @@ export default function Midterm() {
                     "0 4px 15px rgba(0,0,0,.1)",
                 }}
               >
-
                 <h2>
                   👩‍🏫 Parent-Led Midterm Exam
                 </h2>
@@ -1725,7 +1911,6 @@ export default function Midterm() {
                       textAlign: "center",
                     }}
                   >
-
                     <div
                       style={{
                         fontSize: "45px",
@@ -1758,10 +1943,8 @@ export default function Midterm() {
                         ? "Great job! You passed the Midterm Exam!"
                         : "Review the study guides and try again."}
                     </p>
-
                   </div>
                 )}
-
               </section>
             )}
 
@@ -1778,7 +1961,6 @@ export default function Midterm() {
                 resetExam={resetExam}
               />
             )}
-
           </>
         ) : (
           <section
@@ -1790,7 +1972,6 @@ export default function Midterm() {
               textAlign: "center",
             }}
           >
-
             <div
               style={{
                 fontSize: "60px",
@@ -1822,7 +2003,6 @@ export default function Midterm() {
             <p>
               Then the Midterm Exam will unlock.
             </p>
-
           </section>
         )}
 
@@ -1838,7 +2018,6 @@ export default function Midterm() {
             marginTop: "20px",
           }}
         >
-
           <h2>
             📊 My Midterm Attempts
           </h2>
@@ -1851,7 +2030,10 @@ export default function Midterm() {
             attempts.map(
               (attempt, index) => (
                 <div
-                  key={attempt.id}
+                  key={
+                    attempt.id ||
+                    `${index}-${attempt.date}`
+                  }
                   style={{
                     padding: "15px",
                     marginTop: "12px",
@@ -1862,7 +2044,6 @@ export default function Midterm() {
                         : "#fff0ed",
                   }}
                 >
-
                   <strong>
                     Attempt {index + 1}
                   </strong>
@@ -1891,46 +2072,43 @@ export default function Midterm() {
                     {attempt.date}
                   </p>
 
+                  {/* ---------------------------------------
+                      MISSED QUESTIONS
+                  --------------------------------------- */}
+
                   {attempt.incorrect?.length >
                     0 && (
                     <div>
-
                       <strong>
                         Questions missed:
                       </strong>
 
                       <ul>
-
                         {attempt.incorrect.map(
-                          (item) => (
+                          (item, itemIndex) => (
                             <li
-                              key={
-                                item.number
-                              }
+                              key={`${item.number}-${itemIndex}`}
                             >
                               #{item.number} —{" "}
                               {item.question}
                             </li>
                           )
                         )}
-
                       </ul>
-
                     </div>
                   )}
 
-                  {attempt.incorrect?.length ===
-                    0 && (
+                  {(!attempt.incorrect ||
+                    attempt.incorrect.length ===
+                      0) && (
                     <p>
                       ✅ No questions missed.
                     </p>
                   )}
-
                 </div>
               )
             )
           )}
-
         </section>
 
         {/* =================================================
@@ -1943,7 +2121,6 @@ export default function Midterm() {
             marginTop: "30px",
           }}
         >
-
           <button
             onClick={() =>
               (window.location.href = "/")
@@ -1960,11 +2137,8 @@ export default function Midterm() {
           >
             ← Back to Home
           </button>
-
         </div>
-
       </div>
-
     </main>
   );
 }
@@ -1990,7 +2164,6 @@ function ExamContent({
           "0 4px 15px rgba(0,0,0,.1)",
       }}
     >
-
       <h2>
         💻 System-Led Midterm Exam
       </h2>
@@ -2022,7 +2195,6 @@ function ExamContent({
               "1px solid #ddd",
           }}
         >
-
           <h3>
             {index + 1}. {q.question}
           </h3>
@@ -2042,7 +2214,6 @@ function ExamContent({
                 cursor: "pointer",
               }}
             >
-
               <input
                 type="radio"
                 name={`question-${index}`}
@@ -2060,10 +2231,8 @@ function ExamContent({
               {" "}
 
               {answer}
-
             </label>
           ))}
-
         </div>
       ))}
 
@@ -2098,7 +2267,6 @@ function ExamContent({
             textAlign: "center",
           }}
         >
-
           <div
             style={{
               fontSize: "50px",
@@ -2149,10 +2317,8 @@ function ExamContent({
               🔄 Retake Exam
             </button>
           )}
-
         </div>
       )}
-
     </section>
   );
 }
