@@ -390,7 +390,7 @@ export default function Parent() {
 
     if (count >= 90) {
       return {
-        emoji: "🌳🌳🌳",
+        emoji: "🌳🌳",
         title: "Halfway Hero",
         message:
           "Your faith is growing strong!",
