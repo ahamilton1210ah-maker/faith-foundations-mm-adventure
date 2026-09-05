@@ -322,10 +322,8 @@ export default function Parent() {
 
   /* =========================================================
      BADGES
-     
-     IMPORTANT:
-     These milestones match the Student Home page:
-     10, 25, 50, 90, 135, 180
+
+     EXACT SAME MILESTONES AS STUDENT HOME
   ========================================================= */
 
   const badges = [
@@ -333,7 +331,7 @@ export default function Parent() {
     ["🌿", "Growing Strong", 25],
     ["🌳", "Faith Builder", 50],
     ["⭐", "Halfway Hero", 90],
-    ["🏅", "Faith Champion", 135],
+    ["⭐", "Faith Champion", 135],
     ["🏆", "Faith Foundations Champion", 180],
   ];
 
@@ -366,6 +364,14 @@ export default function Parent() {
      FAITH TREE
 
      EXACT SAME MILESTONES AS STUDENT HOME
+
+     1   = Faith Seed Planted
+     10  = First Steps
+     25  = Growing Strong
+     50  = Faith Builder
+     90  = Halfway Hero
+     135 = Faith Champion
+     180 = Faith Foundations Champion
   ========================================================= */
 
   function getFaithTreeStage(count) {
@@ -390,10 +396,10 @@ export default function Parent() {
 
     if (count >= 90) {
       return {
-        emoji: "🌳🌳",
+        emoji: "🌳🌳🌳",
         title: "Halfway Hero",
         message:
-          "Your faith is growing strong!",
+          "🏆 You're halfway through your adventure!",
       };
     }
 
@@ -420,7 +426,7 @@ export default function Parent() {
         emoji: "🌱",
         title: "First Steps",
         message:
-          "Every lesson helps your faith grow!",
+          "You've taken your First Steps in faith!",
       };
     }
 
