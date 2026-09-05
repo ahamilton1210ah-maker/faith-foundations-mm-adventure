@@ -439,7 +439,7 @@ function getFaithTree(completedCount) {
 
   if (completedCount >= 135) {
     return {
-      tree: "🌲🌳🌲",
+      tree: "🌲🌳🌲🌳",
       icon: "⭐",
       title: "Faith Champion!",
       message:
